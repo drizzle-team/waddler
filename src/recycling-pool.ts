@@ -1,6 +1,5 @@
 import duckdb from 'duckdb';
 import * as genericPool from 'generic-pool';
-
 import type { Options } from 'generic-pool';
 
 export class RecyclingPool<T> extends genericPool.Pool<T> {
