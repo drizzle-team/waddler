@@ -231,7 +231,7 @@ const users = await sql<{ name: string; age: number }>`
     from users;
 `;
 
-// type of users: {name: string; age: number}
+// type of users: {name: string; age: number}[]
 ```
 
 Note: It is not about data validation.
