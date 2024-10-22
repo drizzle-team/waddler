@@ -1,0 +1,10 @@
+node_modules
+.env
+db
+src/test.ts
+dist
+package.tgz
+.DS_Store
+seedFromParquet.ts
+storage
+nodejs_connection_pool_*
