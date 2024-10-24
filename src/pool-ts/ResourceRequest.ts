@@ -1,4 +1,4 @@
-import Deferred from './Deferred.ts';
+import { Deferred } from './Deferred.ts';
 import { TimeoutError } from './errors.ts';
 
 function fbind(fn: () => void, ctx: any) {
@@ -12,7 +12,7 @@ function fbind(fn: () => void, ctx: any) {
  * Basically a promise mashed in with a timeout
  * @private
  */
-class ResourceRequest<T> extends Deferred<T> {
+export class ResourceRequest<T> extends Deferred<T> {
 	private _creationTimestamp: number;
 	private _timeout: NodeJS.Timeout | null;
 
@@ -74,5 +74,3 @@ class ResourceRequest<T> extends Deferred<T> {
 		super.resolve(value);
 	}
 }
-
-export default ResourceRequest;

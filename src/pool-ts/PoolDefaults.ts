@@ -3,7 +3,7 @@
  *
  * @class
  */
-class PoolDefaults {
+export class PoolDefaults {
 	fifo: boolean;
 	priorityRange: number;
 	testOnBorrow: boolean;
@@ -46,6 +46,3 @@ class PoolDefaults {
 		this.promiseConstructor = Promise;
 	}
 }
-
-
-export default PoolDefaults;

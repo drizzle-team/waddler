@@ -3,7 +3,7 @@ import type { DoublyLinkedList, Node } from './DoublyLinkedList.ts';
 /**
  * Thin wrapper around an underlying DDL iterator
  */
-class DequeIterator<T> implements Iterator<T> {
+export class DequeIterator<T> implements Iterator<T> {
 	private _list: DoublyLinkedList<T>;
 	private _direction: 'prev' | 'next';
 	private _startPosition: 'tail' | 'head';
@@ -94,5 +94,3 @@ class DequeIterator<T> implements Iterator<T> {
 		);
 	}
 }
-
-export default DequeIterator;

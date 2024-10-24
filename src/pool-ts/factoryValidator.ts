@@ -4,7 +4,7 @@ interface Factory<T> {
 	validate?(connection: T): Promise<boolean>;
 }
 
-export default function validateFactory<T = unknown>(factory: Factory<T>): void {
+export function validateFactory<T = unknown>(factory: Factory<T>): void {
 	if (typeof factory.create !== 'function') {
 		throw new TypeError('factory.create must be a function');
 	}

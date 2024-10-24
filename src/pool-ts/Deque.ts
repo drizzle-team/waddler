@@ -1,11 +1,11 @@
-import DequeIterator from './DequeIterator.ts';
+import { DequeIterator } from './DequeIterator.ts';
 import { DoublyLinkedList, Node } from './DoublyLinkedList.ts';
 
 /**
  * DoublyLinkedList backed double ended queue
  * implements just enough to keep the Pool
  */
-class Deque<T> {
+export class Deque<T> {
 	protected _list: DoublyLinkedList<T>;
 	constructor() {
 		this._list = new DoublyLinkedList<T>();
@@ -102,5 +102,3 @@ class Deque<T> {
 		return this._list.length;
 	}
 }
-
-export default Deque;

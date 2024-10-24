@@ -1,13 +1,13 @@
-import Queue from './Queue.ts';
-import type ResourceRequest from './ResourceRequest.ts';
+import { Queue } from './Queue.ts';
+import type { ResourceRequest } from './ResourceRequest.ts';
 
 /**
  * @class
  * @private
  */
-class PriorityQueue<T> {
+export class PriorityQueue<T> {
 	private _size: number;
-	private _slots: Queue<ResourceRequest<T>>[];
+	private _slots: Queue<T>[];
 
 	constructor(size: number) {
 		this._size = Math.max(Math.trunc(+size), 1);
@@ -66,5 +66,3 @@ class PriorityQueue<T> {
 		return null;
 	}
 }
-
-export default PriorityQueue;

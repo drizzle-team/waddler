@@ -1,7 +1,7 @@
-import type PooledResource from './PooledResource.ts';
+import type { PooledResource } from './PooledResource.ts';
 import type { IEvictorConfig } from './types.ts';
 
-class DefaultEvictor<T> {
+export class DefaultEvictor<T> {
 	evict(config: IEvictorConfig, pooledResource: PooledResource<T>, availableObjectsCount: number) {
 		const idleTime = Date.now() - pooledResource.lastIdleTime!;
 
@@ -20,5 +20,3 @@ class DefaultEvictor<T> {
 		return false;
 	}
 }
-
-export default DefaultEvictor;

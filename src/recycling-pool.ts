@@ -1,9 +1,9 @@
 import duckdb from 'duckdb';
+import { DefaultEvictor } from './pool-ts/DefaultEvictor.ts';
+import { Deque } from './pool-ts/Deque.ts';
+import { Pool } from './pool-ts/Pool.ts';
+import { PriorityQueue } from './pool-ts/PriorityQueue.ts';
 import type { Factory, Options } from './pool-ts/types.ts';
-import DefaultEvictor from './pool-ts/DefaultEvictor.ts';
-import Deque from './pool-ts/Deque.ts';
-import Pool from './pool-ts/Pool.ts';
-import PriorityQueue from './pool-ts/PriorityQueue.ts';
 
 export class RecyclingPool<T> extends Pool<T> {
 	private recycleTimeout?: number;

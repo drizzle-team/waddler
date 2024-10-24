@@ -1,4 +1,4 @@
-import type PooledResource from './PooledResource';
+import type { PooledResource } from './PooledResource.ts';
 
 export interface IEvictorConfig {
 	softIdleTimeoutMillis: number;

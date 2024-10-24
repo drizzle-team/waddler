@@ -1,22 +1,22 @@
 'use strict';
 
-import type DefaultEvictor from './DefaultEvictor.ts';
-import Deferred from './Deferred.ts';
-import type Deque from './Deque.ts';
-import type DequeIterator from './DequeIterator.ts';
-import factoryValidator from './factoryValidator.ts';
-import PooledResource from './PooledResource.ts';
-import PoolOptions from './PoolOptions.ts';
-import type PriorityQueue from './PriorityQueue.ts';
-import ResourceLoan from './ResourceLoan.ts';
-import ResourceRequest from './ResourceRequest.ts';
+import type { DefaultEvictor } from './DefaultEvictor.ts';
+import { Deferred } from './Deferred.ts';
+import type { Deque } from './Deque.ts';
+import type { DequeIterator } from './DequeIterator.ts';
+import { validateFactory as factoryValidator } from './factoryValidator.ts';
+import { PooledResource } from './PooledResource.ts';
+import { PoolOptions } from './PoolOptions.ts';
+import type { PriorityQueue } from './PriorityQueue.ts';
+import { ResourceLoan } from './ResourceLoan.ts';
+import { ResourceRequest } from './ResourceRequest.ts';
 import type { Factory, Options } from './types.ts';
 import { reflector } from './utils.ts';
 
 // const FACTORY_CREATE_ERROR = "factoryCreateError";
 // const FACTORY_DESTROY_ERROR = "factoryDestroyError";
 
-class Pool<T> {
+export class Pool<T> {
 	private _config: PoolOptions;
 	private promiseConstructor: typeof Promise;
 	private _factory: Factory<T>;
@@ -507,5 +507,3 @@ class Pool<T> {
 		return this._config.min;
 	}
 }
-
-export default Pool;

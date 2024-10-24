@@ -68,3 +68,4 @@ rules:
   "@typescript-eslint/no-empty-interface": "off"
   "@typescript-eslint/no-unsafe-declaration-merging": "off"
   "no-inner-declarations": "off"
+ignorePatterns: ["src/test.ts"]

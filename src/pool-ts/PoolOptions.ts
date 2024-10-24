@@ -1,4 +1,4 @@
-import PoolDefaults from './PoolDefaults.ts';
+import { PoolDefaults } from './PoolDefaults.ts';
 
 interface PoolOptionsConfig {
 	max?: number;
@@ -18,7 +18,7 @@ interface PoolOptionsConfig {
 	promiseConstructor?: typeof Promise;
 }
 
-class PoolOptions {
+export class PoolOptions {
 	max: number;
 	min: number;
 	maxWaitingClients: number | undefined;
@@ -37,9 +37,9 @@ class PoolOptions {
 
 	constructor(opts: PoolOptionsConfig = {}) {
 		const poolDefaults = new PoolDefaults();
-		
+
 		this.fifo = opts.fifo ?? poolDefaults.fifo;
-	
+
 		// TODO: check later: opts.priorityRange shouldn't equal 0, therefore using || operator
 		this.priorityRange = opts.priorityRange || poolDefaults.priorityRange;
 
@@ -48,7 +48,7 @@ class PoolOptions {
 		// TODO: rewrite without casting fields and add assertion check on the fields below
 		this.testOnReturn = opts.testOnReturn ?? poolDefaults.testOnReturn;
 
-		this.autostart = opts.autostart?? poolDefaults.autostart;
+		this.autostart = opts.autostart ?? poolDefaults.autostart;
 
 		this.acquireTimeoutMillis = opts.acquireTimeoutMillis === undefined
 			? undefined
@@ -78,5 +78,3 @@ class PoolOptions {
 			: opts.promiseConstructor;
 	}
 }
-
-export default PoolOptions;

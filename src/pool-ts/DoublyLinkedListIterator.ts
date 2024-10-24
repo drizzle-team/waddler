@@ -13,7 +13,7 @@ import type { DoublyLinkedList, Node } from './DoublyLinkedList';
  *
  * The created object is an es6 compatible iterator
  */
-class DoublyLinkedListIterator<T> {
+export class DoublyLinkedListIterator<T> {
 	private _list: DoublyLinkedList<T>;
 	private _direction: 'prev' | 'next';
 	private _startPosition: 'tail' | 'head';
@@ -103,5 +103,3 @@ class DoublyLinkedListIterator<T> {
 		);
 	}
 }
-
-export default DoublyLinkedListIterator;

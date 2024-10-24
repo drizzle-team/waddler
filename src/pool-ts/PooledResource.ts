@@ -10,7 +10,7 @@ enum PooledResourceState {
  * @class
  * @private
  */
-class PooledResource<T> {
+export class PooledResource<T> {
 	creationTime: number;
 	lastReturnTime: number | null;
 	lastBorrowTime: number | null;
@@ -56,5 +56,3 @@ class PooledResource<T> {
 		this.state = PooledResourceState.RETURNING;
 	}
 }
-
-export default PooledResource;

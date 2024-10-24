@@ -2,7 +2,7 @@
  * This is apparently a bit like a Jquery deferred, hence the name
  */
 
-class Deferred<T> {
+export class Deferred<T> {
 	static readonly PENDING = 'PENDING';
 	static readonly FULFILLED = 'FULFILLED';
 	static readonly REJECTED = 'REJECTED';
@@ -47,5 +47,3 @@ class Deferred<T> {
 		this._resolve!(value);
 	}
 }
-
-export default Deferred;

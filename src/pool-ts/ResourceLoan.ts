@@ -1,11 +1,11 @@
-import Deferred from './Deferred.ts';
-import type PooledResource from './PooledResource.ts';
+import { Deferred } from './Deferred.ts';
+import type { PooledResource } from './PooledResource.ts';
 
 /**
  * Plan is to maybe add tracking via Error objects
  * and other fun stuff!
  */
-class ResourceLoan<T> extends Deferred<T> {
+export class ResourceLoan<T> extends Deferred<T> {
 	private _creationTimestamp: number;
 	pooledResource: PooledResource<T>;
 
@@ -25,5 +25,3 @@ class ResourceLoan<T> extends Deferred<T> {
 		 */
 	}
 }
-
-export default ResourceLoan;
