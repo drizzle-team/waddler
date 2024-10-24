@@ -1,6 +1,5 @@
 import type duckdb from 'duckdb';
-import type { RecyclingPool } from './recycling-pool.ts';
-import { createFactory, createRecyclingPool } from './recycling-pool.ts';
+import { createFactory, RecyclingPool } from './recycling-pool.ts';
 import type { Identifier, Raw, SQLParamType, Values } from './sql-template.ts';
 import { SQLDefault, SQLIndetifier, SQLRaw, SQLTemplate, SQLValues } from './sql-template.ts';
 
@@ -35,20 +34,34 @@ const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>): SQL => {
 };
 
 export function waddler(
-	{ dbUrl, min = 0, max = 1, accessMode = 'read_write' }: {
+	{
+		dbUrl,
+		min = 0,
+		max = 1,
+		accessMode = 'read_write',
+		maxMemory = '512MB',
+		threads = '4',
+	}: {
 		dbUrl: string;
 		min?: number;
 		max?: number;
 		accessMode?: 'read_only' | 'read_write';
+		maxMemory?: string;
+		threads?: string;
 	},
 ) {
-	const factory = createFactory({ dbUrl, accessMode });
-	const opts = {
+	const factory = createFactory({
+		dbUrl,
+		accessMode,
+		maxMemory,
+		threads,
+	});
+	const options = {
 		max, // maximum size of the pool
 		min, // minimum size of the pool
 	};
 
-	const pool = createRecyclingPool<duckdb.Database>(factory, opts);
+	const pool = new RecyclingPool<duckdb.Database>(factory, options);
 
 	return createSqlTemplate(pool);
 }

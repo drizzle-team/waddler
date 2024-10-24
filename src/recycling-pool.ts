@@ -44,19 +44,35 @@ interface Factory<T> {
 }
 
 // Equivalent to createPool function from generic-pool
-export function createRecyclingPool<T>(factory: Factory<T>, config: Options) {
-	return new RecyclingPool<T>(factory, config);
+export function createRecyclingPool<T>(
+	factory: Factory<T>,
+	options: {
+		recycleTimeout?: number;
+		recycleJitter?: number;
+	} & Options,
+) {
+	return new RecyclingPool<T>(factory, options);
 }
 
 export const createFactory = (
-	{ dbUrl, accessMode = 'read_write' }: { dbUrl: string; accessMode?: 'read_only' | 'read_write' },
+	{
+		dbUrl,
+		accessMode = 'read_write',
+		maxMemory = '512MB',
+		threads = '4',
+	}: {
+		dbUrl: string;
+		accessMode?: 'read_only' | 'read_write';
+		maxMemory?: string;
+		threads?: string;
+	},
 ) => {
 	const factory = {
 		create: async function() {
-			const connection = new duckdb.Database(dbUrl, {
+			const db = new duckdb.Database(dbUrl, {
 				access_mode: accessMode,
-				max_memory: '512MB',
-				threads: '4',
+				max_memory: maxMemory,
+				threads: threads,
 			}, (err) => {
 				if (err) {
 					console.error(err);
@@ -64,12 +80,11 @@ export const createFactory = (
 			});
 
 			// Run any connection initialization commands here
-			connection.all("SET THREADS='1';");
 
-			return connection;
+			return db;
 		},
-		destroy: async function(connection: duckdb.Database) {
-			return connection.close();
+		destroy: async function(db: duckdb.Database) {
+			return db.close();
 		},
 	};
 
