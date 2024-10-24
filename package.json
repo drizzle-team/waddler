@@ -1,13 +1,15 @@
 {
 	"name": "waddler",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"main": "index.js",
 	"type": "module",
+	"repository": "https://github.com/drizzle-team/waddler",
+	"license": "MIT",
 	"scripts": {
 		"start": "npx tsx ./src/test.ts",
 		"test": "vitest --config ./vitest.config.ts",
 		"lint": "concurrently -n eslint,dprint \"eslint --ext ts .\" \"dprint check --list-different\"",
-		"build": "tsx scripts/build.ts",
+		"build": "tsx build.ts",
 		"pack": "(cd dist && npm pack --pack-destination ..) && rm -f package.tgz && mv *.tgz package.tgz"
 	},
 	"exports": {
@@ -24,30 +26,27 @@
 			"default": "./index.mjs"
 		}
 	},
-	"dependencies": {
-		"duckdb": "^1.1.1",
-		"generic-pool": "^3.9.0"
-	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "^0.16.4",
 		"@rollup/plugin-terser": "^0.4.4",
 		"@rollup/plugin-typescript": "^12.1.1",
-		"@types/generic-pool": "^3.1.11",
 		"@types/node": "^22.7.6",
 		"@typescript-eslint/eslint-plugin": "^8.10.0",
 		"concurrently": "^8.2.1",
 		"cpy": "^11.1.0",
 		"dprint": "^0.46.2",
+		"duckdb": "^1.1.1",
 		"eslint": "^8.50.0",
 		"eslint-plugin-import": "^2.31.0",
 		"eslint-plugin-no-instanceof": "^1.0.1",
 		"eslint-plugin-unicorn": "^56.0.0",
 		"eslint-plugin-unused-imports": "^4.1.4",
+		"generic-pool": "^3.9.0",
 		"resolve-tspaths": "^0.8.22",
 		"rollup": "^4.24.0",
 		"tsx": "^4.19.1",
+		"typescript": "^5.5.4",
 		"vitest": "^2.1.2",
-		"zx": "^8.1.9",
-		"typescript": "^5.5.4"
+		"zx": "^8.1.9"
 	}
 }
