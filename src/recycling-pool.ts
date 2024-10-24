@@ -1,8 +1,11 @@
 import duckdb from 'duckdb';
-import * as genericPool from 'generic-pool';
-import type { Options } from 'generic-pool';
+import type { Factory, Options } from './pool-ts/types.ts';
+import DefaultEvictor from './pool-ts/DefaultEvictor.ts';
+import Deque from './pool-ts/Deque.ts';
+import Pool from './pool-ts/Pool.ts';
+import PriorityQueue from './pool-ts/PriorityQueue.ts';
 
-export class RecyclingPool<T> extends genericPool.Pool<T> {
+export class RecyclingPool<T> extends Pool<T> {
 	private recycleTimeout?: number;
 	private recycleJitter?: number;
 
@@ -13,8 +16,7 @@ export class RecyclingPool<T> extends genericPool.Pool<T> {
 			recycleJitter?: number;
 		} & Options,
 	) {
-		// @ts-ignore
-		super(genericPool.DefaultEvictor, genericPool.Deque, genericPool.PriorityQueue, factory, options);
+		super(DefaultEvictor, Deque, PriorityQueue, factory, options);
 
 		this.recycleTimeout = options.recycleTimeout ??= 900_000; // 15 min
 		this.recycleJitter = options.recycleJitter ??= 60_000; // 1 min
@@ -28,19 +30,13 @@ export class RecyclingPool<T> extends genericPool.Pool<T> {
 		// If the connection has been in use for longer than the recycleTimeoutMillis, then destroy it instead of releasing it back into the pool.
 		// If that deletion brings the pool size below the min, a new connection will automatically be created within the destroy method.
 		if (
-			new Date(createdAt + this.recycleTimeout - (Math.random() * this.recycleJitter!))
+			new Date(createdAt + this.recycleTimeout! - (Math.random() * this.recycleJitter!))
 				<= new Date()
 		) {
 			return this.destroy(resource);
 		}
 		return super.release(resource);
 	}
-}
-
-interface Factory<T> {
-	create(): Promise<T>;
-	destroy(connection: T): Promise<void>;
-	validate?(connection: T): Promise<boolean>;
 }
 
 // Equivalent to createPool function from generic-pool
