@@ -21,7 +21,7 @@ export default defineConfig([
 				sourcemap: true,
 			},
 		],
-		external: ['duckdb', 'generic-pool', 'util'],
+		external: ['duckdb', 'util'],
 		plugins: [
 			typescript({
 				tsconfig: 'tsconfig.build.json',
