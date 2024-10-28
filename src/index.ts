@@ -36,13 +36,16 @@ const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>): SQL => {
 export function waddler(
 	{
 		dbUrl,
+		url,
 		min = 0,
 		max = 1,
 		accessMode = 'read_write',
 		maxMemory = '512MB',
 		threads = '4',
 	}: {
-		dbUrl: string;
+		/** @deprecated */
+		dbUrl?: string;
+		url: string;
 		min?: number;
 		max?: number;
 		accessMode?: 'read_only' | 'read_write';
@@ -50,8 +53,10 @@ export function waddler(
 		threads?: string;
 	},
 ) {
+	url = url === undefined && dbUrl !== undefined ? dbUrl : url;
+
 	const factory = createFactory({
-		dbUrl,
+		url,
 		accessMode,
 		maxMemory,
 		threads,

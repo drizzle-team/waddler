@@ -52,12 +52,12 @@ export function createRecyclingPool<T>(
 
 export const createFactory = (
 	{
-		dbUrl,
+		url,
 		accessMode = 'read_write',
 		maxMemory = '512MB',
 		threads = '4',
 	}: {
-		dbUrl: string;
+		url: string;
 		accessMode?: 'read_only' | 'read_write';
 		maxMemory?: string;
 		threads?: string;
@@ -65,7 +65,7 @@ export const createFactory = (
 ) => {
 	const factory = {
 		create: async function() {
-			const db = new duckdb.Database(dbUrl, {
+			const db = new duckdb.Database(url, {
 				access_mode: accessMode,
 				max_memory: maxMemory,
 				threads: threads,

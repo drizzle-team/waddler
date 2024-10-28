@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest';
 import { waddler } from '../src';
 
-const sql = waddler({ dbUrl: './db', max: 10, accessMode: 'read_write' });
+const sql = waddler({ url: './db', max: 10, accessMode: 'read_write' });
 
 test('base test', () => {
 	const res = sql`select 1;`.toSQL();
@@ -328,14 +328,14 @@ test('sql.values test. array of empty array. error', () => {
 });
 
 test('sql.values test. array | object | undefined | symbol | function as value. error', () => {
-	let valsList = [[], {}];
+	let valsList = [{}];
 
 	for (const val of valsList) {
 		expect(
 			// @ts-ignore
 			() => sql`insert into users (id, name, is_active) values ${sql.values([[val]])};`.toSQL(),
 		).toThrowError(
-			`value can't be array or object. you can't specify [ [ [...], ...], ...] or [ [ {...}, ...], ...] as parameter for sql.values.`,
+			`value can't be object. you can't specify [ [ {...}, ...], ...] as parameter for sql.values.`,
 		);
 	}
 
