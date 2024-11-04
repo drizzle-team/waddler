@@ -235,6 +235,7 @@ export class Pool<T> {
 				// TODO: handle
 				// this.emit(FACTORY_CREATE_ERROR, reason);
 				this._dispense();
+				throw _reason;
 			});
 	}
 
@@ -314,7 +315,7 @@ export class Pool<T> {
 		this._ensureMinimum();
 	}
 
-	acquire(priority?: number): Promise<any> {
+	acquire(priority?: number) {
 		if (this._started === false && this._config.autostart === false) {
 			this.start();
 		}

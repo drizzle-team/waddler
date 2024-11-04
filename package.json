@@ -7,6 +7,7 @@
 	"license": "MIT",
 	"scripts": {
 		"start": "npx tsx ./src/test.ts",
+		"start:db": "npx tsx ./src/db-test.ts ",
 		"test": "vitest --config ./vitest.config.ts",
 		"lint": "concurrently -n eslint,dprint \"eslint --ext ts .\" \"dprint check --list-different\"",
 		"build": "tsx build.ts",
@@ -28,6 +29,7 @@
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "^0.16.4",
+		"@duckdb/node-api": "1.1.2-alpha.2",
 		"@rollup/plugin-terser": "^0.4.4",
 		"@rollup/plugin-typescript": "^12.1.1",
 		"@types/node": "^22.7.6",

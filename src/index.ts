@@ -1,10 +1,11 @@
-import type duckdb from 'duckdb';
-import { createFactory, RecyclingPool } from './recycling-pool.ts';
+import duckdb from 'duckdb';
+import type { Factory } from './pool-ts/types.ts';
+import { RecyclingPool } from './recycling-pool.ts';
 import type { Identifier, Raw, SQLParamType, Values } from './sql-template.ts';
-import { SQLDefault, SQLIndetifier, SQLRaw, SQLTemplate, SQLValues } from './sql-template.ts';
+import { DefaultSQLTemplate, SQLDefault, SQLIndetifier, SQLRaw, SQLValues } from './sql-template.ts';
 
 interface SQL {
-	<T = duckdb.RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLTemplate<T>;
+	<T = duckdb.RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): DefaultSQLTemplate<T>;
 	identifier(value: Identifier): SQLIndetifier;
 	values(value: Values): SQLValues;
 	raw(value: Raw): SQLRaw;
@@ -13,8 +14,8 @@ interface SQL {
 
 const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>): SQL => {
 	// [strings, params]: Parameters<SQL>
-	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLTemplate<T> => {
-		return new SQLTemplate<T>(strings, params, pool);
+	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): DefaultSQLTemplate<T> => {
+		return new DefaultSQLTemplate<T>(strings, params, pool);
 	};
 
 	Object.assign(fn, {
@@ -31,6 +32,43 @@ const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>): SQL => {
 	});
 
 	return fn as any;
+};
+
+const createFactory = (
+	{
+		url,
+		accessMode = 'read_write',
+		maxMemory = '512MB',
+		threads = '4',
+	}: {
+		url: string;
+		accessMode?: 'read_only' | 'read_write';
+		maxMemory?: string;
+		threads?: string;
+	},
+) => {
+	const factory: Factory<duckdb.Database> = {
+		create: async function() {
+			const db = new duckdb.Database(url, {
+				access_mode: accessMode,
+				max_memory: maxMemory,
+				threads: threads,
+			}, (err) => {
+				if (err) {
+					// console.error("that error:", err);
+				}
+			});
+
+			// Run any connection initialization commands here
+
+			return db;
+		},
+		destroy: async function(db: duckdb.Database) {
+			return db.close();
+		},
+	};
+
+	return factory;
 };
 
 export function waddler(

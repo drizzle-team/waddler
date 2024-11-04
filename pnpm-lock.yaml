@@ -11,6 +11,9 @@ importers:
       '@arethetypeswrong/cli':
         specifier: ^0.16.4
         version: 0.16.4
+      '@duckdb/node-api':
+        specifier: 1.1.2-alpha.2
+        version: 1.1.2-alpha.2
       '@rollup/plugin-terser':
         specifier: ^0.4.4
         version: 0.4.4(rollup@4.24.0)
@@ -137,6 +140,27 @@ packages:
     resolution: {integrity: sha512-xvj4DSEilf0gGdT7CqnwNEgfWNuWqT6eIBxHDEUbmcn1vZ7IwirtqRq/nm3lmYtQaJ4EbtMQZvACHZwxC7G96w==}
     cpu: [x64]
     os: [win32]
+
+  '@duckdb/node-api@1.1.2-alpha.2':
+    resolution: {integrity: sha512-X6xzmJ/4c7suTyKGavPzGhkK8pEJ0zZ2cQtbeztPY9fBr3CxMGHEX+33TVqq8UgDVE0BC8ZORAAFLDif7Lu58g==}
+
+  '@duckdb/node-bindings-darwin-arm64@1.1.2-alpha.2':
+    resolution: {integrity: sha512-O0fFJnfKO6gzY9hq51WSMUolh/UsdSPE1Wk2/sAdI7hFImeURXrEqJS3so+GtbaeudZfwNSyg1xYwPX1UK+YLg==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@duckdb/node-bindings-linux-x64@1.1.2-alpha.2':
+    resolution: {integrity: sha512-uCztjQXQNPV0Lr/SSGKWmRqJ21vcLJnf32/fyf6RYYQ50GA5Dn5Cq1XkwO7zUdTrGQuTmJwgPDMJXESIwlITig==}
+    cpu: [x64]
+    os: [linux]
+
+  '@duckdb/node-bindings-win32-x64@1.1.2-alpha.2':
+    resolution: {integrity: sha512-ftHPO3X5qo7XWrL+N8bt+ZSh+UXSaWq+eq8zS296Dyo/21leP026ai0ZqZ8gIbfP1Innz9vRsPLJgcTdnNHbyA==}
+    cpu: [x64]
+    os: [win32]
+
+  '@duckdb/node-bindings@1.1.2-alpha.2':
+    resolution: {integrity: sha512-asoCN2wo/ZW1Zm7Php3Df1DYaKOUnusWbw+4pogXTmCJGJlj/PHknIILB5YYKJBH+NJ5knXXpAq+NdoH+wGqIw==}
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -2527,6 +2551,25 @@ snapshots:
 
   '@dprint/win32-x64@0.46.3':
     optional: true
+
+  '@duckdb/node-api@1.1.2-alpha.2':
+    dependencies:
+      '@duckdb/node-bindings': 1.1.2-alpha.2
+
+  '@duckdb/node-bindings-darwin-arm64@1.1.2-alpha.2':
+    optional: true
+
+  '@duckdb/node-bindings-linux-x64@1.1.2-alpha.2':
+    optional: true
+
+  '@duckdb/node-bindings-win32-x64@1.1.2-alpha.2':
+    optional: true
+
+  '@duckdb/node-bindings@1.1.2-alpha.2':
+    optionalDependencies:
+      '@duckdb/node-bindings-darwin-arm64': 1.1.2-alpha.2
+      '@duckdb/node-bindings-linux-x64': 1.1.2-alpha.2
+      '@duckdb/node-bindings-win32-x64': 1.1.2-alpha.2
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true

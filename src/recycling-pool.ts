@@ -1,4 +1,3 @@
-import duckdb from 'duckdb';
 import { DefaultEvictor } from './pool-ts/DefaultEvictor.ts';
 import { Deque } from './pool-ts/Deque.ts';
 import { Pool } from './pool-ts/Pool.ts';
@@ -49,40 +48,3 @@ export function createRecyclingPool<T>(
 ) {
 	return new RecyclingPool<T>(factory, options);
 }
-
-export const createFactory = (
-	{
-		url,
-		accessMode = 'read_write',
-		maxMemory = '512MB',
-		threads = '4',
-	}: {
-		url: string;
-		accessMode?: 'read_only' | 'read_write';
-		maxMemory?: string;
-		threads?: string;
-	},
-) => {
-	const factory = {
-		create: async function() {
-			const db = new duckdb.Database(url, {
-				access_mode: accessMode,
-				max_memory: maxMemory,
-				threads: threads,
-			}, (err) => {
-				if (err) {
-					console.error(err);
-				}
-			});
-
-			// Run any connection initialization commands here
-
-			return db;
-		},
-		destroy: async function(db: duckdb.Database) {
-			return db.close();
-		},
-	};
-
-	return factory;
-};

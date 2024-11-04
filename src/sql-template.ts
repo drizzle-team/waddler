@@ -1,5 +1,7 @@
 import duckdb from 'duckdb';
+import type { DuckDBConnectionObj } from './neo.ts';
 import type { RecyclingPool } from './recycling-pool.ts';
+import type { ParamType } from './types.ts';
 import { methodPromisify } from './utils.ts';
 
 const dbAllAsync = methodPromisify<duckdb.Database, duckdb.TableData>(
@@ -12,30 +14,24 @@ export type SQLParamType =
 	| bigint
 	| Date
 	| boolean
+	| null
 	| SQLIndetifier
 	| SQLValues
 	| SQLRaw
-	| SQLDefault
-	| null;
+	| SQLDefault;
 
-export class SQLTemplate<T> {
-	constructor(
-		private readonly strings: readonly string[],
-		private readonly params: SQLParamType[],
-		private readonly pool: RecyclingPool<duckdb.Database>,
-	) {
-		this.strings = strings;
-		this.params = params;
-		this.pool = pool;
-	}
+export abstract class SQLTemplate<T> {
+	protected abstract readonly strings: readonly string[];
+	protected abstract readonly params: SQLParamType[];
+	protected abstract readonly pool: RecyclingPool<duckdb.Database> | RecyclingPool<DuckDBConnectionObj>;
 
 	// Method to extract raw SQL
 	toSQL() {
 		if (this.params.length === 0) {
-			return { query: this.strings[0], params: this.params };
+			return { query: this.strings[0] ?? '', params: [] };
 		}
 
-		const filteredParams = [];
+		const filteredParams: ParamType[] = [];
 		let query = '',
 			idxShift = 0;
 		for (const [idx, stringI] of this.strings.entries()) {
@@ -57,7 +53,7 @@ export class SQLTemplate<T> {
 				continue;
 			}
 
-			// need to use toString cause duckdb can't handle node js BigInt type as parameter.
+			// need to use toString cause node duckdb driver can't handle node js BigInt type as parameter.
 			if (typeof this.params[idx] === 'bigint') {
 				typedPlaceholder = `${this.params[idx]}`;
 				idxShift += 1;
@@ -112,7 +108,47 @@ export class SQLTemplate<T> {
 		return Promise.resolve(result).then(onfulfilled, onrejected);
 	}
 
-	private async executeQuery() {
+	protected abstract executeQuery(): Promise<T[]>;
+
+	abstract stream(): AsyncGenerator<Awaited<T>, void, unknown>;
+
+	async *chunked(chunkSize: number = 1) {
+		let rows: T[] = [];
+		let row: T;
+		const asyncIterator = this.stream();
+		let iterResult = await asyncIterator.next();
+
+		while (!iterResult.done) {
+			row = iterResult.value as T;
+			rows.push(row);
+
+			if (rows.length % chunkSize === 0) {
+				yield rows;
+				rows = [];
+			}
+
+			iterResult = await asyncIterator.next();
+		}
+
+		if (rows.length !== 0) {
+			yield rows;
+		}
+	}
+}
+
+export class DefaultSQLTemplate<T> extends SQLTemplate<T> {
+	constructor(
+		protected readonly strings: readonly string[],
+		protected readonly params: SQLParamType[],
+		protected readonly pool: RecyclingPool<duckdb.Database>,
+	) {
+		super();
+		this.strings = strings;
+		this.params = params;
+		this.pool = pool;
+	}
+
+	protected async executeQuery() {
 		// Implement your actual DB execution logic here
 		// This could be a fetch or another async operation
 		// gets connection from pool, runs query, release connection
@@ -144,29 +180,6 @@ export class SQLTemplate<T> {
 		}
 
 		await this.pool.release(db);
-	}
-
-	async *chunked(chunkSize: number = 1) {
-		let rows: T[] = [];
-		let row: T;
-		const asyncIterator = this.stream();
-		let iterResult = await asyncIterator.next();
-
-		while (!iterResult.done) {
-			row = iterResult.value as T;
-			rows.push(row);
-
-			if (rows.length % chunkSize === 0) {
-				yield rows;
-				rows = [];
-			}
-
-			iterResult = await asyncIterator.next();
-		}
-
-		if (rows.length !== 0) {
-			yield rows;
-		}
 	}
 }
 
