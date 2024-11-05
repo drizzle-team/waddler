@@ -16,7 +16,7 @@ export type UnsafeParamType =
 	| JSONObject
 	| JSONArray;
 
-type JSONValue = string | number | boolean | null | JSONObject | JSONArray;
+type JSONValue = string | number | bigint | boolean | null | Date | JSONObject | JSONArray;
 
 type JSONArray = Array<JSONValue>;
 

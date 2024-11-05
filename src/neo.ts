@@ -1,8 +1,10 @@
 import type { DuckDBConnection } from '@duckdb/node-api';
 import { DuckDBInstance } from '@duckdb/node-api';
+import { transformResultToArrays, transformResultToObjects } from './duckdb-neo/result-transformers.ts';
+import { bindParams } from './duckdb-neo/utils.ts';
 import type { Factory } from './pool-ts/types.ts';
 import { RecyclingPool } from './recycling-pool.ts';
-import { bindParams, NeoSQLTemplate, transformResultToArrays, transformResultToObjects } from './sql-template-neo.ts';
+import { NeoSQLTemplate } from './sql-template-neo.ts';
 import type { Identifier, Raw, SQLParamType, Values } from './sql-template.ts';
 import { SQLDefault, SQLIndetifier, SQLRaw, SQLValues } from './sql-template.ts';
 import type { UnsafeParamType } from './types.ts';
@@ -113,10 +115,7 @@ const createFactory = (
 
 			return connObj;
 		},
-		destroy: async function(connObj: DuckDBConnectionObj) {
-			await connObj.connection.dispose();
-			await connObj.instance.dispose();
-		},
+		destroy: async function() {},
 	};
 
 	return factory;
