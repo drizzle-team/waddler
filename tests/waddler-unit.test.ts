@@ -1,8 +1,13 @@
-import { expect, test } from 'vitest';
-import { waddler } from '../src';
+import { beforeAll, expect, test } from 'vitest';
+import { waddler } from '../src/index.ts';
+import type { SQL } from '../src/index.ts';
 
-const sql = waddler({ url: './db', max: 10, accessMode: 'read_write' });
+let sql: SQL;
+beforeAll(async () => {
+	sql = waddler({ url: ':memory:', max: 10, accessMode: 'read_write' });
+});
 
+// toSQL
 test('base test', () => {
 	const res = sql`select 1;`.toSQL();
 
@@ -18,7 +23,7 @@ test('base test with number param', () => {
 test('base test with bigint param', () => {
 	const res = sql`select ${BigInt(10)};`.toSQL();
 
-	expect(res).toStrictEqual({ query: `select 10;`, params: [] });
+	expect(res).toStrictEqual({ query: `select $1;`, params: [10n] });
 });
 
 test('base test with string param', () => {
@@ -50,16 +55,6 @@ test('base test with undefined param. error', () => {
 	// @ts-ignore
 	expect(() => sql`select ${undefined};`.toSQL())
 		.toThrowError("you can't specify undefined as parameter");
-});
-
-test('base test with object or array param. error', () => {
-	// @ts-ignore
-	expect(() => sql`select ${({ a: 1 })};`.toSQL())
-		.toThrowError("you can't specify array or object as parameter");
-
-	// @ts-ignore
-	expect(() => sql`select ${[1, 2, 3]};`.toSQL())
-		.toThrowError("you can't specify array or object as parameter");
 });
 
 test('base test with symbol param. error', () => {
@@ -401,4 +396,154 @@ test('sql.default test using with sql.values.', () => {
 test('sql.default test using with sql`${}` as parameter.', () => {
 	const res = sql`insert into users (id, name) values (${sql.default}, 'name1');`.toSQL();
 	expect(res).toStrictEqual({ query: "insert into users (id, name) values (default, 'name1');", params: [] });
+});
+
+// sql template
+test('sql template types test', async () => {
+	await sql`
+		create table sql_template_table (
+			smallint_ smallint,
+		    integer_ integer,
+			bigint_ bigint,
+		    double_ double,
+		    varchar_ varchar,
+			boolean_ boolean,
+			time_ time,
+			date_ date,
+			timestamp_ timestamp,
+			json_ json,
+		    arrayInt integer[3],
+		    listInt integer[],
+			listBigint bigint[],
+			arrayBoolean boolean[3],
+			listBoolean boolean[],
+			arrayDouble double[3],
+			listDouble double[],
+			arrayJson json[1],
+			listJson json[],
+			arrayVarchar varchar[3],
+			listVarchar varchar[],
+			arrayTime time[3],
+			listTime time[],
+			arrayDate date[3],
+			listDate date[],
+			arrayTimestamp timestamp[3],
+			listTimestamp timestamp[]
+			);
+	`;
+
+	const date = new Date('2024-10-31T14:25:29.425Z');
+	const dates = [
+		new Date('2024-10-31T14:25:29.425Z'),
+		new Date('2024-10-30T14:25:29.425Z'),
+		new Date('2024-10-29T14:25:29.425Z'),
+	];
+	await sql`
+		insert into sql_template_table values (
+			${1}, ${10}, ${BigInt('9007199254740992') + BigInt(1)}, 
+			${20.4}, ${'qwerty'}, ${true}, ${date}, ${date}, ${date}, 
+			${{
+		name: 'alex',
+		age: 26,
+		bookIds: [1, 2, 3],
+		vacationRate: 2.5,
+		aliases: ['sasha', 'sanya'],
+		isMarried: true,
+	}}, 
+			${[1, 2, 3]}, ${[1, 2, 3, 4, 5]},
+			${[BigInt('9007199254740992') + BigInt(1), BigInt('9007199254740992') + BigInt(3)]},
+			${[true, false, true]},
+			${[true, false]},
+			${[3.4, 52.6, 3.5]},
+			${[3.4, 52.6, 3.5]},
+			${[{
+		name: 'alex',
+		age: 26,
+		bookIds: [1, 2, 3],
+		vacationRate: 2.5,
+		aliases: ['sasha', 'sanya'],
+		isMarried: true,
+	}]},
+			${[{
+		name: 'alex',
+		age: 26,
+		bookIds: [1, 2, 3],
+		vacationRate: 2.5,
+		aliases: ['sasha', 'sanya'],
+		isMarried: true,
+	}]},
+			['hel,lo', 'world', '!'],
+			['hel,lo', 'world', '!'],
+			${dates},
+			${dates},
+			${dates},
+			${dates},
+			${dates},
+			${dates}
+			);
+	`;
+
+	const res = await sql`select * from sql_template_table;`;
+
+	const dateWithoutTime = new Date(date);
+	dateWithoutTime.setUTCHours(0, 0, 0, 0);
+
+	const datesWithoutTime = [...dates];
+	for (const date of datesWithoutTime) date.setUTCHours(0, 0, 0, 0);
+
+	const expectedRes = {
+		smallint_: 1,
+		integer_: 10,
+		bigint_: BigInt('9007199254740993'),
+		double_: 20.4,
+		varchar_: 'qwerty',
+		boolean_: true,
+		time_: '14:25:29.425',
+		date_: dateWithoutTime,
+		timestamp_: date,
+		json_: {
+			name: 'alex',
+			age: 26,
+			bookIds: [1, 2, 3],
+			vacationRate: 2.5,
+			aliases: ['sasha', 'sanya'],
+			isMarried: true,
+		},
+		arrayInt: [1, 2, 3],
+		listInt: [1, 2, 3, 4, 5],
+		listBigint: [BigInt('9007199254740992') + BigInt(1), BigInt('9007199254740992') + BigInt(3)],
+		arrayBoolean: [true, false, true],
+		listBoolean: [true, false],
+		arrayDouble: [3.4, 52.6, 3.5],
+		listDouble: [3.4, 52.6, 3.5],
+		arrayJson: [{
+			name: 'alex',
+			age: 26,
+			bookIds: [1, 2, 3],
+			vacationRate: 2.5,
+			aliases: ['sasha', 'sanya'],
+			isMarried: true,
+		}],
+		listJson: [{
+			name: 'alex',
+			age: 26,
+			bookIds: [1, 2, 3],
+			vacationRate: 2.5,
+			aliases: ['sasha', 'sanya'],
+			isMarried: true,
+		}],
+		arrayVarchar: '[hel,lo, world, !]',
+		listVarchar: ['hel,lo', 'world', '!'],
+		arrayTime: '[14:25:29.425, 14:25:29.425, 14:25:29.425]',
+		arrayDate: '[2024-10-31, 2024-10-30, 2024-10-29]',
+		arrayTimestamp: '[2024-10-31 14:25:29.425, 2024-10-30 14:25:29.425, 2024-10-29 14:25:29.425]',
+		listTime: ['14:25:29.425', '14:25:29.425', '14:25:29.425'],
+		listDate: datesWithoutTime,
+		listTimestamp: [
+			new Date('2024-10-31T14:25:29.425Z'),
+			new Date('2024-10-30T14:25:29.425Z'),
+			new Date('2024-10-29T14:25:29.425Z'),
+		],
+	};
+	expect(res[0]).toStrictEqual(expectedRes);
 });

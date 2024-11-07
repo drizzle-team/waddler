@@ -25,6 +25,18 @@
 			},
 			"types": "./index.d.ts",
 			"default": "./index.mjs"
+		},
+		"./neo": {
+			"import": {
+				"types": "./neo.d.mts",
+				"default": "./neo.mjs"
+			},
+			"require": {
+				"types": "./neo.d.cjs",
+				"default": "./neo.cjs"
+			},
+			"types": "./neo.d.ts",
+			"default": "./neo.mjs"
 		}
 	},
 	"devDependencies": {

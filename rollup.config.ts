@@ -4,24 +4,27 @@ import { defineConfig } from 'rollup';
 
 export default defineConfig([
 	{
-		input: 'src/index.ts',
+		input: [
+			'src/index.ts',
+			'src/neo.ts',
+		],
 		output: [
 			{
 				format: 'esm',
 				dir: 'dist',
-				entryFileNames: 'index.mjs',
-				// chunkFileNames: '[name]-[hash].mjs',
+				entryFileNames: '[name].mjs',
+				chunkFileNames: '[name]-[hash].mjs',
 				sourcemap: true,
 			},
 			{
 				format: 'cjs',
 				dir: 'dist',
-				entryFileNames: 'index.cjs',
-				// chunkFileNames: '[name]-[hash].cjs',
+				entryFileNames: '[name].cjs',
+				chunkFileNames: '[name]-[hash].cjs',
 				sourcemap: true,
 			},
 		],
-		external: ['duckdb', 'util'],
+		external: ['duckdb', '@duckdb/node-api', 'util'],
 		plugins: [
 			typescript({
 				tsconfig: 'tsconfig.build.json',

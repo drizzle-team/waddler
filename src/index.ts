@@ -4,7 +4,7 @@ import { RecyclingPool } from './recycling-pool.ts';
 import type { Identifier, Raw, SQLParamType, Values } from './sql-template.ts';
 import { DefaultSQLTemplate, SQLDefault, SQLIndetifier, SQLRaw, SQLValues } from './sql-template.ts';
 
-interface SQL {
+export interface SQL {
 	<T = duckdb.RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): DefaultSQLTemplate<T>;
 	identifier(value: Identifier): SQLIndetifier;
 	values(value: Values): SQLValues;
@@ -55,7 +55,7 @@ const createFactory = (
 				threads: threads,
 			}, (err) => {
 				if (err) {
-					// console.error("that error:", err);
+					console.error(err);
 				}
 			});
 

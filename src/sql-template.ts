@@ -1,11 +1,11 @@
 import duckdb from 'duckdb';
 import type { DuckDBConnectionObj } from './neo.ts';
 import type { RecyclingPool } from './recycling-pool.ts';
-import type { ParamType } from './types.ts';
-import { methodPromisify } from './utils.ts';
+import type { JSONArray, JSONObject, ParamType } from './types.ts';
+import { methodPromisify, stringifyArray } from './utils.ts';
 
-const dbAllAsync = methodPromisify<duckdb.Database, duckdb.TableData>(
-	duckdb.Database.prototype.all,
+const statementAllAsync = methodPromisify<duckdb.Statement, duckdb.TableData>(
+	duckdb.Statement.prototype.all,
 );
 
 export type SQLParamType =
@@ -15,6 +15,8 @@ export type SQLParamType =
 	| Date
 	| boolean
 	| null
+	| JSONArray
+	| JSONObject
 	| SQLIndetifier
 	| SQLValues
 	| SQLRaw
@@ -33,57 +35,43 @@ export abstract class SQLTemplate<T> {
 
 		const filteredParams: ParamType[] = [];
 		let query = '',
-			idxShift = 0;
+			idxShift = 0,
+			param: any;
 		for (const [idx, stringI] of this.strings.entries()) {
 			if (idx === this.strings.length - 1) {
 				query += stringI;
 				continue;
 			}
 
+			param = this.params[idx];
 			let typedPlaceholder: string;
 			if (
-				this.params[idx] instanceof SQLIndetifier
-				|| this.params[idx] instanceof SQLValues
-				|| this.params[idx] instanceof SQLRaw
-				|| this.params[idx] instanceof SQLDefault
+				param instanceof SQLIndetifier
+				|| param instanceof SQLValues
+				|| param instanceof SQLRaw
+				|| param instanceof SQLDefault
 			) {
-				typedPlaceholder = this.params[idx].generateSQL();
+				typedPlaceholder = param.generateSQL();
 				idxShift += 1;
 				query += stringI + typedPlaceholder;
 				continue;
 			}
 
-			// need to use toString cause node duckdb driver can't handle node js BigInt type as parameter.
-			if (typeof this.params[idx] === 'bigint') {
-				typedPlaceholder = `${this.params[idx]}`;
-				idxShift += 1;
-				query += stringI + typedPlaceholder;
-				continue;
-			}
-
-			if (
-				typeof this.params[idx] === 'object'
-				&& !(this.params[idx] instanceof Date)
-				&& this.params[idx] !== null
-			) {
-				throw new Error("you can't specify array or object as parameter");
-			}
-
-			if (this.params[idx] === undefined) {
+			if (param === undefined) {
 				throw new Error("you can't specify undefined as parameter");
 			}
 
-			if (typeof this.params[idx] === 'symbol') {
+			if (typeof param === 'symbol') {
 				throw new Error("you can't specify symbol as parameter");
 			}
 
-			if (typeof this.params[idx] === 'function') {
+			if (typeof param === 'function') {
 				throw new Error("you can't specify function as parameter");
 			}
 
 			typedPlaceholder = `$${idx + 1 - idxShift}`;
 			query += stringI + typedPlaceholder;
-			filteredParams.push(this.params[idx]);
+			filteredParams.push(param);
 		}
 
 		return {
@@ -136,6 +124,98 @@ export abstract class SQLTemplate<T> {
 	}
 }
 
+const prepareParams = (params: any[]) => {
+	for (const [idx, param] of params.entries()) {
+		if (typeof param === 'bigint') {
+			// need to use toString because node duckdb driver can't handle node js BigInt type as parameter.
+			params[idx] = `${param}`;
+			continue;
+		}
+
+		if (typeof param === 'object' && !(param instanceof Date)) {
+			if (Array.isArray(param)) {
+				params[idx] = stringifyArray(param);
+				continue;
+			}
+
+			params[idx] = JSON.stringify(param);
+			continue;
+		}
+	}
+};
+
+const transformResult = (
+	result: duckdb.TableData,
+	columnInfo: duckdb.ColumnInfo[],
+) => {
+	const columnInfoObj: { [key: string]: duckdb.ColumnInfo } = {};
+	for (const colInfoI of columnInfo) {
+		columnInfoObj[colInfoI.name] = colInfoI;
+	}
+
+	const data: {
+		[columnName: string]: any;
+	}[] = [];
+
+	for (const row of result) {
+		for (const colName of Object.keys(row)) {
+			const columnType = columnInfoObj[colName]?.type;
+			const value = row[colName];
+
+			const transformedValue = transformResultValue(value, columnType);
+			row[colName] = transformedValue;
+
+			data.push(row);
+		}
+	}
+
+	return data;
+};
+
+const transformResultValue = (value: any, columnType: duckdb.TypeInfo | undefined) => {
+	if (value === null) return value;
+
+	if (typeof value === 'string' && columnType?.alias === 'JSON') {
+		return JSON.parse(value);
+	}
+
+	if (columnType?.id === 'ARRAY') {
+		if (
+			columnType?.sql_type.includes('JSON')
+			|| columnType?.sql_type.includes('INTEGER')
+			|| columnType?.sql_type.includes('SMALLINT')
+			|| columnType?.sql_type.includes('TINYINT')
+			|| columnType?.sql_type.includes('DOUBLE')
+			|| columnType?.sql_type.includes('FLOAT')
+			|| columnType?.sql_type.includes('DECIMAL')
+			|| columnType?.sql_type.includes('BOOLEAN')
+		) {
+			return JSON.parse(value);
+		}
+
+		return value;
+	}
+
+	if (columnType?.id === 'LIST') {
+		return transformNDList(value, columnType);
+	}
+
+	return value;
+};
+
+const transformNDList = (list: any[] | any, listType: duckdb.ListTypeInfo | duckdb.TypeInfo): any[] => {
+	if (!Array.isArray(list)) {
+		return transformResultValue(list, listType);
+	}
+
+	const nDList = [];
+	for (const el of list) {
+		nDList.push(transformNDList(el, (listType as duckdb.ListTypeInfo).child));
+	}
+
+	return nDList;
+};
+
 export class DefaultSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
 		protected readonly strings: readonly string[],
@@ -153,11 +233,17 @@ export class DefaultSQLTemplate<T> extends SQLTemplate<T> {
 		// This could be a fetch or another async operation
 		// gets connection from pool, runs query, release connection
 		const { query, params } = this.toSQL();
+
+		prepareParams(params);
 		const db = await this.pool.acquire();
 
-		const result = (await dbAllAsync(db, query, ...params)) as T[];
+		const statement = db.prepare(query);
+
+		const duckdbResult = await statementAllAsync(statement, ...params);
 
 		await this.pool.release(db);
+		const columnInfo = statement.columns();
+		const result = transformResult(duckdbResult, columnInfo) as T[];
 
 		return result;
 	}
@@ -166,9 +252,12 @@ export class DefaultSQLTemplate<T> extends SQLTemplate<T> {
 		let row: T;
 		const { query, params } = this.toSQL();
 
+		prepareParams(params);
+
 		const db = await this.pool.acquire();
 
 		const stream = db.stream(query, ...params);
+
 		const asyncIterator = stream[Symbol.asyncIterator]();
 
 		let iterResult = await asyncIterator.next();

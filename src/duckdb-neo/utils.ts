@@ -9,7 +9,8 @@ import {
 	DuckDBTimeValue,
 	DuckDBUnionValue,
 } from '@duckdb/node-api';
-import type { UnsafeParamType } from '~/types';
+import type { UnsafeParamType } from '../types.ts';
+import { stringifyArray } from '../utils.ts';
 
 // Insert params
 const MIN_INT32 = -2147483648;
@@ -72,46 +73,6 @@ export const bindParams = (prepared: DuckDBPreparedStatement, params: UnsafePara
 	}
 };
 
-export const stringifyArray = (array: any[] | any): string => {
-	if (!Array.isArray(array)) {
-		return transformValueForArray(array);
-	}
-
-	let returnStr = '[';
-	for (const [idx, el] of array.entries()) {
-		returnStr += `${stringifyArray(el)}`;
-
-		if (idx === array.length - 1) continue;
-		returnStr += ',';
-	}
-
-	returnStr += ']';
-
-	return returnStr;
-};
-
-export const transformValueForArray = (value: any) => {
-	if (
-		value === null
-		|| typeof value === 'number'
-		|| typeof value === 'boolean'
-		|| typeof value === 'bigint'
-		|| typeof value === 'string' // TODO: revise (not gonna work if string contain coma)
-	) return value;
-
-	if (value instanceof Date) {
-		return value.toISOString();
-	}
-
-	if (typeof value === 'object') {
-		return JSON.stringify(value);
-	}
-
-	if (value === undefined) {
-		throw new Error("you can't specify undefined as arrat value.");
-	}
-};
-
 // select
 const transformIsNeeded = (value: any, columnType?: DuckDBType) => {
 	const valueTypes = new Set(['string', 'boolean', 'number', 'bigint']);
@@ -160,7 +121,7 @@ export const transformValue = (value: any, columnType?: DuckDBType | undefined) 
 	if (
 		value instanceof DuckDBListValue || value instanceof DuckDBArrayValue
 	) {
-		const transformedArray = generateNDList(value, columnType as DuckDBListType | DuckDBArrayType | undefined);
+		const transformedArray = transformNDList(value, columnType as DuckDBListType | DuckDBArrayType | undefined);
 		return transformedArray;
 	}
 
@@ -198,7 +159,7 @@ export const transformValue = (value: any, columnType?: DuckDBType | undefined) 
 	return value;
 };
 
-export const generateNDList = (
+export const transformNDList = (
 	listValue: DuckDBListValue | DuckDBArrayValue | any,
 	columnType?: DuckDBListType | DuckDBArrayType | any,
 ): any[] => {
@@ -208,7 +169,7 @@ export const generateNDList = (
 
 	const nDList = [];
 	for (const item of listValue.items) {
-		nDList.push(generateNDList(item, columnType?.valueType as DuckDBListType | DuckDBArrayType | undefined));
+		nDList.push(transformNDList(item, columnType?.valueType as DuckDBListType | DuckDBArrayType | undefined));
 	}
 
 	return nDList;

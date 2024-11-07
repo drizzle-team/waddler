@@ -120,7 +120,6 @@ test('array type test', async () => {
         arrayDouble double[3],
         arrayBoolean boolean[3],
         arrayBigint bigint[3],
-		arrayVarchar varchar[3],
 		arrayDate date[3],
 		arrayTime time[3],
 		arrayTimestamp timestamp[3],
@@ -132,7 +131,7 @@ test('array type test', async () => {
 		new Date('2024-10-30T14:25:29.425Z'),
 		new Date('2024-10-29T14:25:29.425Z'),
 	];
-	await sql.unsafe(`insert into array_table values ($1, $2, $3, $4, $5, $6, $7, $8, $9);`, [
+	await sql.unsafe(`insert into array_table values ($1, $2, $3, $4, $5, $6, $7, $8);`, [
 		[1, 2, 3],
 		[1.5, 2.6, 3.9],
 		[true, false, true],
@@ -141,7 +140,6 @@ test('array type test', async () => {
 			BigInt('9007199254740992') + BigInt(3),
 			BigInt('9007199254740992') + BigInt(5),
 		],
-		['hello', 'world', '!'],
 		dates,
 		dates,
 		dates,
@@ -161,7 +159,6 @@ test('array type test', async () => {
 		arrayDouble: [1.5, 2.6, 3.9],
 		arrayBoolean: [true, false, true],
 		arrayBigint: [BigInt('9007199254740993'), BigInt('9007199254740995'), BigInt('9007199254740997')],
-		arrayVarchar: ['hello', 'world', '!'],
 		arrayDate: datesWithoutTime,
 		arrayTime: ['14:25:29.425', '14:25:29.425', '14:25:29.425'],
 		arrayTimestamp: [
@@ -184,7 +181,6 @@ test('nested 2d array type test', async () => {
         arrayDouble double[3][2],
         arrayBoolean boolean[3][2],
         arrayBigint bigint[3][2],
-		arrayVarchar varchar[3][2],
 		arrayDate date[3][2],
 		arrayTime time[3][2],
 		arrayTimestamp timestamp[3][2]
@@ -195,7 +191,7 @@ test('nested 2d array type test', async () => {
 		new Date('2024-10-30T14:25:29.425Z'),
 		new Date('2024-10-29T14:25:29.425Z'),
 	];
-	await sql.unsafe(`insert into nested_array_table values ($1, $2, $3, $4, $5, $6, $7, $8);`, [
+	await sql.unsafe(`insert into nested_array_table values ($1, $2, $3, $4, $5, $6, $7);`, [
 		[[1, 2, 3], [1, 2, 3]],
 		[[1.5, 2.6, 3.9], [1.5, 2.6, 3.9]],
 		[[true, false, true], [true, false, true]],
@@ -211,7 +207,6 @@ test('nested 2d array type test', async () => {
 				BigInt('9007199254740992') + BigInt(5),
 			],
 		],
-		[['hello', 'world', '!'], ['hello', 'world', '!']],
 		[dates, dates],
 		[dates, dates],
 		[dates, dates],
@@ -238,7 +233,6 @@ test('nested 2d array type test', async () => {
 				BigInt('9007199254740992') + BigInt(5),
 			],
 		],
-		arrayVarchar: [['hello', 'world', '!'], ['hello', 'world', '!']],
 		arrayDate: [datesWithoutTime, datesWithoutTime],
 		arrayTime: [['14:25:29.425', '14:25:29.425', '14:25:29.425'], ['14:25:29.425', '14:25:29.425', '14:25:29.425']],
 		arrayTimestamp: [
@@ -264,7 +258,6 @@ test('nested 3d array type test', async () => {
         arrayDouble double[3][2][2],
         arrayBoolean boolean[3][2][2],
         arrayBigint bigint[3][2][2],
-		arrayVarchar varchar[3][2][2],
 		arrayDate date[3][2][2],
 		arrayTime time[3][2][2],
 		arrayTimestamp timestamp[3][2][2]
@@ -275,7 +268,7 @@ test('nested 3d array type test', async () => {
 		new Date('2024-10-30T14:25:29.425Z'),
 		new Date('2024-10-29T14:25:29.425Z'),
 	];
-	await sql.unsafe(`insert into nested_3d_array_table values ($1, $2, $3, $4, $5, $6, $7, $8);`, [
+	await sql.unsafe(`insert into nested_3d_array_table values ($1, $2, $3, $4, $5, $6, $7);`, [
 		[[[1, 2, 3], [1, 2, 3]], [[1, 2, 3], [1, 2, 3]]],
 		[[[1.5, 2.6, 3.9], [1.5, 2.6, 3.9]], [[1.5, 2.6, 3.9], [1.5, 2.6, 3.9]]],
 		[[[true, false, true], [true, false, true]], [[true, false, true], [true, false, true]]],
@@ -305,16 +298,6 @@ test('nested 3d array type test', async () => {
 				],
 			],
 		],
-		[
-			[
-				['hello', 'world', '!'],
-				['hello', 'world', '!'],
-			],
-			[
-				['hello', 'world', '!'],
-				['hello', 'world', '!'],
-			],
-		],
 		[[dates, dates], [dates, dates]],
 		[[dates, dates], [dates, dates]],
 		[[dates, dates], [dates, dates]],
@@ -337,16 +320,6 @@ test('nested 3d array type test', async () => {
 			[
 				[BigInt('9007199254740993'), BigInt('9007199254740995'), BigInt('9007199254740997')],
 				[BigInt('9007199254740993'), BigInt('9007199254740995'), BigInt('9007199254740997')],
-			],
-		],
-		arrayVarchar: [
-			[
-				['hello', 'world', '!'],
-				['hello', 'world', '!'],
-			],
-			[
-				['hello', 'world', '!'],
-				['hello', 'world', '!'],
 			],
 		],
 		arrayDate: [[datesWithoutTime, datesWithoutTime], [datesWithoutTime, datesWithoutTime]],
@@ -397,7 +370,6 @@ test('list type test', async () => {
         listDouble double[],
         listBoolean boolean[],
         listBigint bigint[],
-		listVarchar varchar[],
 		listDate date[],
 		listTime time[],
 		listTimestamp timestamp[],
@@ -409,7 +381,7 @@ test('list type test', async () => {
 		new Date('2024-10-30T14:25:29.425Z'),
 		new Date('2024-10-29T14:25:29.425Z'),
 	];
-	await sql.unsafe(`insert into list_table values ($1, $2, $3, $4, $5, $6, $7, $8, $9);`, [
+	await sql.unsafe(`insert into list_table values ($1, $2, $3, $4, $5, $6, $7, $8);`, [
 		[1, 2, 3, 1234, 34],
 		[1.5, 2.6, 3.9, 100.345],
 		[true, false],
@@ -418,7 +390,6 @@ test('list type test', async () => {
 			BigInt('9007199254740992') + BigInt(3),
 			BigInt('9007199254740992') + BigInt(5),
 		],
-		['hello', 'world', '!'],
 		dates,
 		dates,
 		dates,
@@ -439,7 +410,6 @@ test('list type test', async () => {
 		listDouble: [1.5, 2.6, 3.9, 100.345],
 		listBoolean: [true, false],
 		listBigint: [BigInt('9007199254740993'), BigInt('9007199254740995'), BigInt('9007199254740997')],
-		listVarchar: ['hello', 'world', '!'],
 		listDate: datesWithoutTime,
 		listTime: ['14:25:29.425', '14:25:29.425', '14:25:29.425'],
 		listTimestamp: [
@@ -459,14 +429,13 @@ test('list type test', async () => {
 
 test('nested 2d list type test', async () => {
 	await sql.unsafe(`create table nested_list_table (
-        listInt integer[3][2],
-        listDouble double[3][2],
-        listBoolean boolean[3][2],
-        listBigint bigint[3][2],
-		listVarchar varchar[3][2],
-		listDate date[3][2],
-		listTime time[3][2],
-		listTimestamp timestamp[3][2]
+        listInt integer[][],
+        listDouble double[][],
+        listBoolean boolean[][],
+        listBigint bigint[][],
+		listDate date[][],
+		listTime time[][],
+		listTimestamp timestamp[][]
     );`);
 
 	const dates = [
@@ -474,7 +443,7 @@ test('nested 2d list type test', async () => {
 		new Date('2024-10-30T14:25:29.425Z'),
 		new Date('2024-10-29T14:25:29.425Z'),
 	];
-	await sql.unsafe(`insert into nested_list_table values ($1, $2, $3, $4, $5, $6, $7, $8);`, [
+	await sql.unsafe(`insert into nested_list_table values ($1, $2, $3, $4, $5, $6, $7);`, [
 		[[1, 2, 3], [1, 2, 3]],
 		[[1.5, 2.6, 3.9], [1.5, 2.6, 3.9]],
 		[[true, false, true], [true, false, true]],
@@ -490,7 +459,6 @@ test('nested 2d list type test', async () => {
 				BigInt('9007199254740992') + BigInt(5),
 			],
 		],
-		[['hello', 'world', '!'], ['hello', 'world', '!']],
 		[dates, dates],
 		[dates, dates],
 		[dates, dates],
@@ -509,7 +477,6 @@ test('nested 2d list type test', async () => {
 			[BigInt('9007199254740993'), BigInt('9007199254740995'), BigInt('9007199254740997')],
 			[BigInt('9007199254740993'), BigInt('9007199254740995'), BigInt('9007199254740997')],
 		],
-		listVarchar: [['hello', 'world', '!'], ['hello', 'world', '!']],
 		listDate: [datesWithoutTime, datesWithoutTime],
 		listTime: [['14:25:29.425', '14:25:29.425', '14:25:29.425'], ['14:25:29.425', '14:25:29.425', '14:25:29.425']],
 		listTimestamp: [
@@ -526,5 +493,275 @@ test('nested 2d list type test', async () => {
 		],
 	};
 
+	expect(res[0]).toStrictEqual(expectedRes);
+});
+
+test('nested 3d list type test', async () => {
+	await sql.unsafe(`create table nested_3d_list_table (
+        listInt integer[][][],
+        listDouble double[][][],
+        listBoolean boolean[][][],
+        listBigint bigint[][][],
+		listDate date[][][],
+		listTime time[][][],
+		listTimestamp timestamp[3][2][2]
+    );`);
+
+	const dates = [
+		new Date('2024-10-31T14:25:29.425Z'),
+		new Date('2024-10-30T14:25:29.425Z'),
+		new Date('2024-10-29T14:25:29.425Z'),
+	];
+	await sql.unsafe(`insert into nested_3d_list_table values ($1, $2, $3, $4, $5, $6, $7);`, [
+		[[[1, 2, 3], [1, 2, 3]], [[1, 2, 3], [1, 2, 3]]],
+		[[[1.5, 2.6, 3.9], [1.5, 2.6, 3.9]], [[1.5, 2.6, 3.9], [1.5, 2.6, 3.9]]],
+		[[[true, false, true], [true, false, true]], [[true, false, true], [true, false, true]]],
+		[
+			[
+				[
+					BigInt('9007199254740992') + BigInt(1),
+					BigInt('9007199254740992') + BigInt(3),
+					BigInt('9007199254740992') + BigInt(5),
+				],
+				[
+					BigInt('9007199254740992') + BigInt(1),
+					BigInt('9007199254740992') + BigInt(3),
+					BigInt('9007199254740992') + BigInt(5),
+				],
+			],
+			[
+				[
+					BigInt('9007199254740992') + BigInt(1),
+					BigInt('9007199254740992') + BigInt(3),
+					BigInt('9007199254740992') + BigInt(5),
+				],
+				[
+					BigInt('9007199254740992') + BigInt(1),
+					BigInt('9007199254740992') + BigInt(3),
+					BigInt('9007199254740992') + BigInt(5),
+				],
+			],
+		],
+		[[dates, dates], [dates, dates]],
+		[[dates, dates], [dates, dates]],
+		[[dates, dates], [dates, dates]],
+	]);
+
+	const res = await sql.unsafe('select * from nested_3d_list_table;');
+
+	const datesWithoutTime = [...dates];
+	for (const date of datesWithoutTime) date.setUTCHours(0, 0, 0, 0);
+
+	const expectedRes = {
+		listInt: [[[1, 2, 3], [1, 2, 3]], [[1, 2, 3], [1, 2, 3]]],
+		listDouble: [[[1.5, 2.6, 3.9], [1.5, 2.6, 3.9]], [[1.5, 2.6, 3.9], [1.5, 2.6, 3.9]]],
+		listBoolean: [[[true, false, true], [true, false, true]], [[true, false, true], [true, false, true]]],
+		listBigint: [
+			[
+				[BigInt('9007199254740993'), BigInt('9007199254740995'), BigInt('9007199254740997')],
+				[BigInt('9007199254740993'), BigInt('9007199254740995'), BigInt('9007199254740997')],
+			],
+			[
+				[BigInt('9007199254740993'), BigInt('9007199254740995'), BigInt('9007199254740997')],
+				[BigInt('9007199254740993'), BigInt('9007199254740995'), BigInt('9007199254740997')],
+			],
+		],
+		listDate: [[datesWithoutTime, datesWithoutTime], [datesWithoutTime, datesWithoutTime]],
+		listTime: [
+			[
+				['14:25:29.425', '14:25:29.425', '14:25:29.425'],
+				['14:25:29.425', '14:25:29.425', '14:25:29.425'],
+			],
+			[
+				['14:25:29.425', '14:25:29.425', '14:25:29.425'],
+				['14:25:29.425', '14:25:29.425', '14:25:29.425'],
+			],
+		],
+		listTimestamp: [
+			[
+				[
+					new Date('2024-10-31T14:25:29.425Z'),
+					new Date('2024-10-30T14:25:29.425Z'),
+					new Date('2024-10-29T14:25:29.425Z'),
+				],
+				[
+					new Date('2024-10-31T14:25:29.425Z'),
+					new Date('2024-10-30T14:25:29.425Z'),
+					new Date('2024-10-29T14:25:29.425Z'),
+				],
+			],
+			[
+				[
+					new Date('2024-10-31T14:25:29.425Z'),
+					new Date('2024-10-30T14:25:29.425Z'),
+					new Date('2024-10-29T14:25:29.425Z'),
+				],
+				[
+					new Date('2024-10-31T14:25:29.425Z'),
+					new Date('2024-10-30T14:25:29.425Z'),
+					new Date('2024-10-29T14:25:29.425Z'),
+				],
+			],
+		],
+	};
+
+	expect(res[0]).toStrictEqual(expectedRes);
+});
+
+// sql template
+test('sql template types test', async () => {
+	await sql`
+		create table sql_template_table (
+			smallint_ smallint,
+		    integer_ integer,
+			bigint_ bigint,
+		    double_ double,
+		    varchar_ varchar,
+			boolean_ boolean,
+			time_ time,
+			date_ date,
+			timestamp_ timestamp,
+			json_ json,
+		    arrayInt integer[3],
+		    listInt integer[],
+			arrayBigint bigint[1],
+			listBigint bigint[],
+			arrayBoolean boolean[3],
+			listBoolean boolean[],
+			arrayDouble double[3],
+			listDouble double[],
+			arrayJson json[1],
+			listJson json[],
+			arrayVarchar varchar[3],
+			listVarchar varchar[],
+			arrayTime time[3],
+			listTime time[],
+			arrayDate date[3],
+			listDate date[],
+			arrayTimestamp timestamp[3],
+			listTimestamp timestamp[]
+			);
+	`;
+
+	const date = new Date('2024-10-31T14:25:29.425Z');
+	const dates = [
+		new Date('2024-10-31T14:25:29.425Z'),
+		new Date('2024-10-30T14:25:29.425Z'),
+		new Date('2024-10-29T14:25:29.425Z'),
+	];
+
+	await sql`
+		insert into sql_template_table values (
+			${1}, ${10}, ${BigInt('9007199254740992') + BigInt(1)}, 
+			${20.4}, ${'qwerty'}, ${true}, ${date}, ${date}, ${date}, 
+			${{
+		name: 'alex',
+		age: 26,
+		bookIds: [1, 2, 3],
+		vacationRate: 2.5,
+		aliases: ['sasha', 'sanya'],
+		isMarried: true,
+	}}, 
+			${[1, 2, 3]}, ${[1, 2, 3, 4, 5]},
+			${[BigInt('9007199254740992') + BigInt(1)]},
+			${[BigInt('9007199254740992') + BigInt(1), BigInt('9007199254740992') + BigInt(3)]},
+			${[true, false, true]},
+			${[true, false]},
+			${[3.4, 52.6, 3.5]},
+			${[3.4, 52.6, 3.5]},
+			${[{
+		name: 'alex',
+		age: 26,
+		bookIds: [1, 2, 3],
+		vacationRate: 2.5,
+		aliases: ['sasha', 'sanya'],
+		isMarried: true,
+	}]},
+			${[{
+		name: 'alex',
+		age: 26,
+		bookIds: [1, 2, 3],
+		vacationRate: 2.5,
+		aliases: ['sasha', 'sanya'],
+		isMarried: true,
+	}]},
+			['hel,lo', 'world', '!'],
+			['hel,lo', 'world!'],
+			${dates},
+			${dates},
+			${dates},
+			${dates},
+			${dates},
+			${dates}
+			);
+	`;
+
+	const res = await sql`select * from sql_template_table;`;
+
+	const dateWithoutTime = new Date(date);
+	dateWithoutTime.setUTCHours(0, 0, 0, 0);
+
+	const datesWithoutTime = [...dates];
+	for (const date of datesWithoutTime) date.setUTCHours(0, 0, 0, 0);
+
+	const expectedRes = {
+		smallint_: 1,
+		integer_: 10,
+		bigint_: BigInt('9007199254740993'),
+		double_: 20.4,
+		varchar_: 'qwerty',
+		boolean_: true,
+		time_: '14:25:29.425',
+		date_: dateWithoutTime,
+		timestamp_: date,
+		json_: {
+			name: 'alex',
+			age: 26,
+			bookIds: [1, 2, 3],
+			vacationRate: 2.5,
+			aliases: ['sasha', 'sanya'],
+			isMarried: true,
+		},
+		arrayInt: [1, 2, 3],
+		listInt: [1, 2, 3, 4, 5],
+		arrayBigint: [BigInt('9007199254740992') + BigInt(1)],
+		listBigint: [BigInt('9007199254740992') + BigInt(1), BigInt('9007199254740992') + BigInt(3)],
+		arrayBoolean: [true, false, true],
+		listBoolean: [true, false],
+		arrayDouble: [3.4, 52.6, 3.5],
+		listDouble: [3.4, 52.6, 3.5],
+		arrayJson: [{
+			name: 'alex',
+			age: 26,
+			bookIds: [1, 2, 3],
+			vacationRate: 2.5,
+			aliases: ['sasha', 'sanya'],
+			isMarried: true,
+		}],
+		listJson: [{
+			name: 'alex',
+			age: 26,
+			bookIds: [1, 2, 3],
+			vacationRate: 2.5,
+			aliases: ['sasha', 'sanya'],
+			isMarried: true,
+		}],
+		arrayVarchar: ['hel,lo', 'world', '!'],
+		listVarchar: ['hel,lo', 'world!'],
+		arrayTime: ['14:25:29.425', '14:25:29.425', '14:25:29.425'],
+		arrayDate: datesWithoutTime,
+		arrayTimestamp: [
+			new Date('2024-10-31T14:25:29.425Z'),
+			new Date('2024-10-30T14:25:29.425Z'),
+			new Date('2024-10-29T14:25:29.425Z'),
+		],
+		listTime: ['14:25:29.425', '14:25:29.425', '14:25:29.425'],
+		listDate: datesWithoutTime,
+		listTimestamp: [
+			new Date('2024-10-31T14:25:29.425Z'),
+			new Date('2024-10-30T14:25:29.425Z'),
+			new Date('2024-10-29T14:25:29.425Z'),
+		],
+	};
 	expect(res[0]).toStrictEqual(expectedRes);
 });

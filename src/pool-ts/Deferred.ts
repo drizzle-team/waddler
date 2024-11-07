@@ -14,8 +14,6 @@ export class Deferred<T> {
 
 	constructor(promiseConstructor: PromiseConstructor) {
 		this._state = Deferred.PENDING;
-		// this._resolve = undefined;
-		// this._reject = undefined;
 
 		this._promise = new promiseConstructor((resolve, reject) => {
 			this._resolve = resolve;
