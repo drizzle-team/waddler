@@ -5,7 +5,7 @@ import {
 	transformResultToObjects,
 } from './duckdb-neo/result-transformers.ts';
 import { bindParams } from './duckdb-neo/utils.ts';
-import type { DuckDBConnectionObj } from './neo.ts';
+import type { DuckDBConnectionObj } from './types.ts';
 import type { RecyclingPool } from './recycling-pool.ts';
 import type { SQLParamType } from './sql-template.ts';
 import { SQLTemplate } from './sql-template.ts';

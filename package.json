@@ -38,8 +38,6 @@
 	"devDependencies": {
 		"@arethetypeswrong/cli": "^0.16.4",
 		"@duckdb/node-api": "1.1.2-alpha.4",
-		"@rollup/plugin-terser": "^0.4.4",
-		"@rollup/plugin-typescript": "^12.1.1",
 		"@types/node": "^22.7.6",
 		"@typescript-eslint/eslint-plugin": "^8.10.0",
 		"concurrently": "^8.2.1",
@@ -50,7 +48,6 @@
 		"eslint-plugin-no-instanceof": "^1.0.1",
 		"eslint-plugin-unicorn": "^56.0.0",
 		"eslint-plugin-unused-imports": "^4.1.4",
-		"resolve-tspaths": "^0.8.22",
 		"tsup": "^8.3.5",
 		"tsx": "^4.19.1",
 		"typescript": "^5.5.4",
@@ -58,8 +55,8 @@
 		"zx": "^8.1.9"
 	},
 	"peerDependencies": {
-		"duckdb": "^1.1.1",
-		"@duckdb/node-api": "^1.1.2-alpha.4"
+		"@duckdb/node-api": "^1.1.2-alpha.4",
+		"duckdb": "^1.1.1"
 	},
 	"peerDependenciesMeta": {
 		"duckdb": {

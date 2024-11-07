@@ -1,7 +1,6 @@
 import duckdb from 'duckdb';
-import type { DuckDBConnectionObj } from './neo.ts';
 import type { RecyclingPool } from './recycling-pool.ts';
-import type { JSONArray, JSONObject, ParamType } from './types.ts';
+import type { JSONArray, JSONObject, ParamType, DuckDBConnectionObj } from './types.ts';
 import { methodPromisify, stringifyArray } from './utils.ts';
 
 const statementAllAsync = methodPromisify<duckdb.Statement, duckdb.TableData>(

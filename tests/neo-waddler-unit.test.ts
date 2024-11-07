@@ -1,8 +1,8 @@
 import { beforeAll, expect, test } from 'vitest';
 import { waddler } from '../src/neo.ts';
-import type { SQL } from '../src/neo.ts';
 
-let sql: SQL;
+
+let sql: ReturnType<typeof waddler>;
 beforeAll(async () => {
 	sql = waddler({ url: ':memory:', max: 10, accessMode: 'read_write' });
 });

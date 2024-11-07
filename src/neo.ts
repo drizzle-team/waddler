@@ -1,4 +1,3 @@
-import type { DuckDBConnection } from '@duckdb/node-api';
 import { DuckDBInstance } from '@duckdb/node-api';
 import { transformResultToArrays, transformResultToObjects } from './duckdb-neo/result-transformers.ts';
 import { bindParams } from './duckdb-neo/utils.ts';
@@ -7,13 +6,13 @@ import { RecyclingPool } from './recycling-pool.ts';
 import { NeoSQLTemplate } from './sql-template-neo.ts';
 import type { Identifier, Raw, SQLParamType, Values } from './sql-template.ts';
 import { SQLDefault, SQLIndetifier, SQLRaw, SQLValues } from './sql-template.ts';
-import type { UnsafeParamType } from './types.ts';
+import type { DuckDBConnectionObj, UnsafeParamType } from './types.ts';
 
 type RowData = {
 	[columnName: string]: any;
 };
 
-export interface SQL {
+interface SQL {
 	<T = RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): NeoSQLTemplate<T>;
 	identifier(value: Identifier): SQLIndetifier;
 	values(value: Values): SQLValues;
@@ -80,11 +79,6 @@ const unsafeFunc = async (
 
 	return result;
 };
-
-export interface DuckDBConnectionObj {
-	instance: DuckDBInstance;
-	connection: DuckDBConnection;
-}
 
 const createFactory = (
 	{

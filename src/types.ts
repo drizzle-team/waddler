@@ -1,3 +1,5 @@
+import type { DuckDBConnection, DuckDBInstance } from "@duckdb/node-api";
+
 export type ParamType =
 	| string
 	| number
@@ -22,3 +24,8 @@ type ValueForObject = string | number | bigint | boolean | null | Date | JSONObj
 export type JSONArray = Array<ValueForArray>;
 
 export type JSONObject = { [key: string]: ValueForObject };
+
+export interface DuckDBConnectionObj {
+	instance: DuckDBInstance;
+	connection: DuckDBConnection;
+}
