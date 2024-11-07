@@ -10,33 +10,29 @@
 		"start:db": "npx tsx ./src/db-test.ts ",
 		"test": "vitest --config ./vitest.config.ts",
 		"lint": "concurrently -n eslint,dprint \"eslint --ext ts .\" \"dprint check --list-different\"",
-		"build": "tsx build.ts",
+		"build": "pnpm tsx scripts/build.ts",
 		"pack": "(cd dist && npm pack --pack-destination ..) && rm -f package.tgz && mv *.tgz package.tgz"
 	},
 	"exports": {
 		".": {
 			"import": {
-				"types": "./index.d.mts",
-				"default": "./index.mjs"
+				"types": "./index.d.ts",
+				"default": "./index.js"
 			},
 			"require": {
-				"types": "./index.d.cjs",
+				"types": "./index.d.cts",
 				"default": "./index.cjs"
-			},
-			"types": "./index.d.ts",
-			"default": "./index.mjs"
+			}
 		},
 		"./neo": {
 			"import": {
-				"types": "./neo.d.mts",
-				"default": "./neo.mjs"
+				"types": "./neo.d.ts",
+				"default": "./neo.js"
 			},
 			"require": {
-				"types": "./neo.d.cjs",
+				"types": "./neo.d.cts",
 				"default": "./neo.cjs"
-			},
-			"types": "./neo.d.ts",
-			"default": "./neo.mjs"
+			}
 		}
 	},
 	"devDependencies": {
@@ -47,7 +43,6 @@
 		"@types/node": "^22.7.6",
 		"@typescript-eslint/eslint-plugin": "^8.10.0",
 		"concurrently": "^8.2.1",
-		"cpy": "^11.1.0",
 		"dprint": "^0.46.2",
 		"duckdb": "^1.1.1",
 		"eslint": "^8.50.0",
@@ -56,7 +51,7 @@
 		"eslint-plugin-unicorn": "^56.0.0",
 		"eslint-plugin-unused-imports": "^4.1.4",
 		"resolve-tspaths": "^0.8.22",
-		"rollup": "^4.24.0",
+		"tsup": "^8.3.5",
 		"tsx": "^4.19.1",
 		"typescript": "^5.5.4",
 		"vitest": "^2.1.2",
