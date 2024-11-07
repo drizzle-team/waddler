@@ -60,5 +60,13 @@
 	"peerDependencies": {
 		"duckdb": "^1.1.1",
 		"@duckdb/node-api": "^1.1.2-alpha.4"
+	},
+	"peerDependenciesMeta": {
+		"duckdb": {
+			"optional": true
+		},
+		"@duckdb/node-api": {
+			"optional": true
+		}
 	}
 }
