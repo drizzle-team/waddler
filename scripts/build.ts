@@ -10,7 +10,7 @@ await build({
 	sourcemap: true,
 	dts: true,
 	format: ['cjs', 'esm'],
-	bundle: false,
+	bundle: true,
 	outExtension(ctx) {
 		if (ctx.format === 'cjs') {
 			return {
@@ -31,7 +31,7 @@ await build({
 	sourcemap: true,
 	dts: true,
 	format: ['cjs', 'esm'],
-	bundle: false,
+	bundle: true,
 	outExtension(ctx) {
 		if (ctx.format === 'cjs') {
 			return {
