@@ -552,10 +552,7 @@ test('sql.append test.', async () => {
 	const query = sql<undefined>`select * from users where id = ${1}`;
 
 	query.append(sql`id = ${3}`);
-	// TODO: revise this later
-	// eslint-disable-next-line unicorn/prefer-spread
 	query.append(sql` or id = ${3}`);
-	// eslint-disable-next-line unicorn/prefer-spread
 	query.append(sql` or id = ${4};`);
 
 	const res = query.toSQL();
