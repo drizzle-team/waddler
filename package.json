@@ -1,6 +1,6 @@
 {
 	"name": "waddler",
-	"version": "0.0.3",
+	"version": "0.0.5",
 	"main": "index.js",
 	"type": "module",
 	"repository": "https://github.com/drizzle-team/waddler",
