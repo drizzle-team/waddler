@@ -547,15 +547,16 @@ test('sql template types test', async () => {
 	expect(res[0]).toStrictEqual(expectedRes);
 });
 
-// sql.concat
-test('sql.concat test.', async () => {
-	const query = sql`select * from users where id = ${1}`;
+// sql.append
+test('sql.append test.', async () => {
+	const query = sql<undefined>`select * from users where id = ${1}`;
 
+	query.append(sql`id = ${3}`);
 	// TODO: revise this later
 	// eslint-disable-next-line unicorn/prefer-spread
-	query.concat(sql` or id = ${3}`);
+	query.append(sql` or id = ${3}`);
 	// eslint-disable-next-line unicorn/prefer-spread
-	query.concat(sql` or id = ${4};`);
+	query.append(sql` or id = ${4};`);
 
 	const res = query.toSQL();
 	expect(res).toStrictEqual({

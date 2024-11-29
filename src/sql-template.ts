@@ -26,7 +26,7 @@ export abstract class SQLTemplate<T> {
 	protected abstract params: SQLParamType[];
 	protected abstract readonly pool: RecyclingPool<duckdb.Database> | RecyclingPool<DuckDBConnectionObj>;
 
-	concat(value: SQLTemplate<any>) {
+	append(value: SQLTemplate<any>) {
 		this.strings = [
 			...this.strings.slice(0, -1),
 			`${this.strings.at(-1)}${value.strings.at(0)}`,
