@@ -1,6 +1,6 @@
 import duckdb from 'duckdb';
 import type { RecyclingPool } from './recycling-pool.ts';
-import type { JSONArray, JSONObject, ParamType, DuckDBConnectionObj } from './types.ts';
+import type { DuckDBConnectionObj, JSONArray, JSONObject, ParamType } from './types.ts';
 import { methodPromisify, stringifyArray } from './utils.ts';
 
 const statementAllAsync = methodPromisify<duckdb.Statement, duckdb.TableData>(
@@ -22,9 +22,18 @@ export type SQLParamType =
 	| SQLDefault;
 
 export abstract class SQLTemplate<T> {
-	protected abstract readonly strings: readonly string[];
-	protected abstract readonly params: SQLParamType[];
+	protected abstract strings: readonly string[];
+	protected abstract params: SQLParamType[];
 	protected abstract readonly pool: RecyclingPool<duckdb.Database> | RecyclingPool<DuckDBConnectionObj>;
+
+	concat(value: SQLTemplate<any>) {
+		this.strings = [
+			...this.strings.slice(0, -1),
+			`${this.strings.at(-1)}${value.strings.at(0)}`,
+			...value.strings.slice(1),
+		];
+		this.params = [...this.params, ...value.params];
+	}
 
 	// Method to extract raw SQL
 	toSQL() {
@@ -217,8 +226,8 @@ const transformNDList = (list: any[] | any, listType: duckdb.ListTypeInfo | duck
 
 export class DefaultSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
-		protected readonly strings: readonly string[],
-		protected readonly params: SQLParamType[],
+		protected strings: readonly string[],
+		protected params: SQLParamType[],
 		protected readonly pool: RecyclingPool<duckdb.Database>,
 	) {
 		super();

@@ -5,15 +5,15 @@ import {
 	transformResultToObjects,
 } from './duckdb-neo/result-transformers.ts';
 import { bindParams } from './duckdb-neo/utils.ts';
-import type { DuckDBConnectionObj } from './types.ts';
 import type { RecyclingPool } from './recycling-pool.ts';
 import type { SQLParamType } from './sql-template.ts';
 import { SQLTemplate } from './sql-template.ts';
+import type { DuckDBConnectionObj } from './types.ts';
 
 export class NeoSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
-		protected readonly strings: readonly string[],
-		protected readonly params: SQLParamType[],
+		protected strings: readonly string[],
+		protected params: SQLParamType[],
 		protected readonly pool: RecyclingPool<DuckDBConnectionObj>,
 	) {
 		super();

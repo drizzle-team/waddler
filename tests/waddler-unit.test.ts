@@ -1,7 +1,6 @@
 import { beforeAll, expect, test } from 'vitest';
 import { waddler } from '../src/index.ts';
 
-
 let sql: ReturnType<typeof waddler>;
 beforeAll(async () => {
 	sql = waddler({ url: ':memory:', max: 10, accessMode: 'read_write' });
@@ -546,4 +545,21 @@ test('sql template types test', async () => {
 		],
 	};
 	expect(res[0]).toStrictEqual(expectedRes);
+});
+
+// sql.concat
+test('sql.concat test.', async () => {
+	const query = sql`select * from users where id = ${1}`;
+
+	// TODO: revise this later
+	// eslint-disable-next-line unicorn/prefer-spread
+	query.concat(sql` or id = ${3}`);
+	// eslint-disable-next-line unicorn/prefer-spread
+	query.concat(sql` or id = ${4};`);
+
+	const res = query.toSQL();
+	expect(res).toStrictEqual({
+		query: 'select * from users where id = $1 or id = $2 or id = $3;',
+		params: [1, 3, 4],
+	});
 });
