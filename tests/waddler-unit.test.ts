@@ -551,7 +551,6 @@ test('sql template types test', async () => {
 test('sql.append test.', async () => {
 	const query = sql<undefined>`select * from users where id = ${1}`;
 
-	query.append(sql`id = ${3}`);
 	query.append(sql` or id = ${3}`);
 	query.append(sql` or id = ${4};`);
 
