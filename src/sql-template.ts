@@ -16,7 +16,7 @@ export type SQLParamType =
 	| null
 	| JSONArray
 	| JSONObject
-	| SQLIndetifier
+	| SQLIdentifier
 	| SQLValues
 	| SQLRaw
 	| SQLDefault;
@@ -54,7 +54,7 @@ export abstract class SQLTemplate<T> {
 			param = this.params[idx];
 			let typedPlaceholder: string;
 			if (
-				param instanceof SQLIndetifier
+				param instanceof SQLIdentifier
 				|| param instanceof SQLValues
 				|| param instanceof SQLRaw
 				|| param instanceof SQLDefault
@@ -291,7 +291,7 @@ export type Identifier =
 		as?: string;
 	}[];
 
-export class SQLIndetifier {
+export class SQLIdentifier {
 	constructor(private readonly value: Identifier) {}
 
 	// TODO: @AlexBlokh do error's text
@@ -353,7 +353,7 @@ export class SQLIndetifier {
 		column?: string;
 		as?: string;
 	}) {
-		SQLIndetifier.checkObject(object);
+		SQLIdentifier.checkObject(object);
 
 		const schema = object.schema === undefined ? '' : `"${object.schema}".`;
 		const table = object.table === undefined ? '' : `"${object.table}"`;
@@ -386,7 +386,7 @@ export class SQLIndetifier {
 			) {
 				return `${
 					this.value
-						.map((element) => SQLIndetifier.objectToSQL(element))
+						.map((element) => SQLIdentifier.objectToSQL(element))
 						.join(', ')
 				}`;
 			}
@@ -411,7 +411,7 @@ export class SQLIndetifier {
 
 		if (typeof this.value === 'object' && this.value !== null) {
 			// typeof this.value === "object"
-			return SQLIndetifier.objectToSQL(this.value);
+			return SQLIdentifier.objectToSQL(this.value);
 		}
 
 		if (this.value === null) {

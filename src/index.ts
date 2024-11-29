@@ -2,11 +2,11 @@ import duckdb from 'duckdb';
 import type { Factory } from './pool-ts/types.ts';
 import { RecyclingPool } from './recycling-pool.ts';
 import type { Identifier, Raw, SQLParamType, Values } from './sql-template.ts';
-import { DefaultSQLTemplate, SQLDefault, SQLIndetifier, SQLRaw, SQLValues } from './sql-template.ts';
+import { DefaultSQLTemplate, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from './sql-template.ts';
 
-interface SQL {
+export interface SQL {
 	<T = duckdb.RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): DefaultSQLTemplate<T>;
-	identifier(value: Identifier): SQLIndetifier;
+	identifier(value: Identifier): SQLIdentifier;
 	values(value: Values): SQLValues;
 	raw(value: Raw): SQLRaw;
 	default: SQLDefault;
@@ -20,7 +20,7 @@ const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>): SQL => {
 
 	Object.assign(fn, {
 		identifier: (value: Identifier) => {
-			return new SQLIndetifier(value);
+			return new SQLIdentifier(value);
 		},
 		values: (value: Values) => {
 			return new SQLValues(value);

@@ -5,16 +5,16 @@ import type { Factory } from './pool-ts/types.ts';
 import { RecyclingPool } from './recycling-pool.ts';
 import { NeoSQLTemplate } from './sql-template-neo.ts';
 import type { Identifier, Raw, SQLParamType, Values } from './sql-template.ts';
-import { SQLDefault, SQLIndetifier, SQLRaw, SQLValues } from './sql-template.ts';
+import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from './sql-template.ts';
 import type { DuckDBConnectionObj, UnsafeParamType } from './types.ts';
 
 type RowData = {
 	[columnName: string]: any;
 };
 
-interface SQL {
+export interface SQL {
 	<T = RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): NeoSQLTemplate<T>;
-	identifier(value: Identifier): SQLIndetifier;
+	identifier(value: Identifier): SQLIdentifier;
 	values(value: Values): SQLValues;
 	raw(value: Raw): SQLRaw;
 	unsafe(query: string, params?: UnsafeParamType[], options?: { rowMode: 'array' | 'default' }): Promise<
@@ -33,7 +33,7 @@ const createSqlTemplate = (pool: RecyclingPool<DuckDBConnectionObj>): SQL => {
 
 	Object.assign(fn, {
 		identifier: (value: Identifier) => {
-			return new SQLIndetifier(value);
+			return new SQLIdentifier(value);
 		},
 		values: (value: Values) => {
 			return new SQLValues(value);
