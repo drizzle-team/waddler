@@ -27,14 +27,20 @@ export class NeoSQLTemplate<T> extends SQLTemplate<T> {
 		// This could be a fetch or another async operation
 		// gets connection from pool, runs query, release connection
 		const { query, params } = this.toSQL();
+		let result;
 
 		const connObj = await this.pool.acquire();
 
-		const prepared = await connObj.connection.prepare(query);
-		bindParams(prepared, params);
+		try {
+			const prepared = await connObj.connection.prepare(query);
+			bindParams(prepared, params);
 
-		const duckDbResult = await prepared.run();
-		const result = await transformResultToObjects(duckDbResult) as T[];
+			const duckDbResult = await prepared.run().finally();
+			result = await transformResultToObjects(duckDbResult) as T[];
+		} catch (error) {
+			await this.pool.release(connObj);
+			throw error;
+		}
 
 		await this.pool.release(connObj);
 

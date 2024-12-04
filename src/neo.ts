@@ -12,6 +12,7 @@ type RowData = {
 	[columnName: string]: any;
 };
 
+export { SQLTemplate } from './sql-template.ts';
 export interface SQL {
 	<T = RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): NeoSQLTemplate<T>;
 	identifier(value: Identifier): SQLIdentifier;

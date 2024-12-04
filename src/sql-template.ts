@@ -241,17 +241,24 @@ export class DefaultSQLTemplate<T> extends SQLTemplate<T> {
 		// This could be a fetch or another async operation
 		// gets connection from pool, runs query, release connection
 		const { query, params } = this.toSQL();
+		let result;
 
 		prepareParams(params);
 		const db = await this.pool.acquire();
 
-		const statement = db.prepare(query);
+		try {
+			const statement = db.prepare(query);
 
-		const duckdbResult = await statementAllAsync(statement, ...params);
+			const duckdbResult = await statementAllAsync(statement, ...params);
+
+			const columnInfo = statement.columns();
+			result = transformResult(duckdbResult, columnInfo) as T[];
+		} catch (error) {
+			await this.pool.release(db);
+			throw error;
+		}
 
 		await this.pool.release(db);
-		const columnInfo = statement.columns();
-		const result = transformResult(duckdbResult, columnInfo) as T[];
 
 		return result;
 	}
