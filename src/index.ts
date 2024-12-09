@@ -1,8 +1,9 @@
 import duckdb from 'duckdb';
 import type { Factory } from './pool-ts/types.ts';
 import { RecyclingPool } from './recycling-pool.ts';
+import { DefaultSQLTemplate } from './sql-template-default.ts';
 import type { Identifier, Raw, SQLParamType, Values } from './sql-template.ts';
-import { DefaultSQLTemplate, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from './sql-template.ts';
+import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from './sql-template.ts';
 
 export { SQLTemplate } from './sql-template.ts';
 export interface SQL {
