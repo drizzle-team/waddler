@@ -277,6 +277,35 @@ test('sql.values test. number, boolean, string, bigint, null, Date, SQLDefault a
 	});
 });
 
+test('sql.values array type test', async () => {
+	const dates = [
+		new Date('2024-10-31T14:25:29.425Z'),
+		new Date('2024-10-30T14:25:29.425Z'),
+		new Date('2024-10-29T14:25:29.425Z'),
+	];
+	const query = sql`insert into array_table values ${
+		sql.values([[
+			[1, 2, 3],
+			[1.5, 2.6, 3.9],
+			[true, false, true],
+			[
+				BigInt('9007199254740992') + BigInt(1),
+				BigInt('9007199254740992') + BigInt(3),
+				BigInt('9007199254740992') + BigInt(5),
+			],
+			dates,
+		]])
+	};`;
+
+	console.log(query.toSQL());
+
+	const expectedQuery = 'insert into array_table values ('
+		+ '[1,2,3], [1.5,2.6,3.9], [true,false,true], [9007199254740993,9007199254740995,9007199254740997], '
+		+ "['2024-10-31T14:25:29.425Z','2024-10-30T14:25:29.425Z','2024-10-29T14:25:29.425Z']);";
+
+	expect(query.toSQL().query).toStrictEqual(expectedQuery);
+});
+
 // errors
 test('sql.values test. undefined | string | number | object |bigint | boolean | symbol | function | null as parameter. error', () => {
 	const paramList = [undefined, 'hello world', 1, {}, BigInt(10), true, Symbol('fooo'), () => {}];
@@ -437,7 +466,7 @@ test('sql template types test', async () => {
 		new Date('2024-10-30T14:25:29.425Z'),
 		new Date('2024-10-29T14:25:29.425Z'),
 	];
-	await sql`
+	const query = sql`
 		insert into sql_template_table values (
 			${1}, ${10}, ${BigInt('9007199254740992') + BigInt(1)}, 
 			${20.4}, ${'qwerty'}, ${true}, ${date}, ${date}, ${date}, 
@@ -481,6 +510,9 @@ test('sql template types test', async () => {
 			${dates}
 			);
 	`;
+
+	console.log(query.toSQL().params);
+	await query;
 
 	const res = await sql`select * from sql_template_table;`;
 
