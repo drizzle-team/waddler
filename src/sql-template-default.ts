@@ -48,9 +48,8 @@ const transformResult = (
 
 			const transformedValue = transformResultValue(value, columnType);
 			row[colName] = transformedValue;
-
-			data.push(row);
 		}
+		data.push(row);
 	}
 
 	return data;

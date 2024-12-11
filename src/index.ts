@@ -51,6 +51,7 @@ const createFactory = (
 ) => {
 	const factory: Factory<duckdb.Database> = {
 		create: async function() {
+			// TODO: make duckdb.Database awaited
 			const db = new duckdb.Database(url, {
 				access_mode: accessMode,
 				max_memory: maxMemory,
