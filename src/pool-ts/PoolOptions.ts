@@ -63,10 +63,10 @@ export class PoolOptions {
 			: Number.parseInt(opts.maxWaitingClients.toString(), 10);
 
 		this.max = Number.parseInt(opts.max?.toString() || '1', 10);
-		this.min = Number.parseInt(opts.min?.toString() || '0', 10);
+		this.min = Number.parseInt(opts.min?.toString() || '1', 10);
 
 		this.max = Math.max(Number.isNaN(this.max) ? 1 : this.max, 1);
-		this.min = Math.min(Number.isNaN(this.min) ? 0 : this.min, this.max);
+		this.min = Math.min(Number.isNaN(this.min) ? 1 : this.min, this.max);
 
 		this.evictionRunIntervalMillis = opts.evictionRunIntervalMillis || poolDefaults.evictionRunIntervalMillis;
 		this.numTestsPerEvictionRun = opts.numTestsPerEvictionRun || poolDefaults.numTestsPerEvictionRun;

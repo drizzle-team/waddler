@@ -78,7 +78,7 @@ export function waddler(
 	{
 		dbUrl,
 		url,
-		min = 0,
+		min = 1,
 		max = 1,
 		accessMode = 'read_write',
 		maxMemory = '512MB',

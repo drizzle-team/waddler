@@ -29,6 +29,8 @@ export class PoolDefaults {
 
 		this.autostart = true;
 
+		// setting this.evictionRunIntervalMillis to 0 means this._scheduleEvictorRun will not be executed.
+		// Therefore, this.softIdleTimeoutMillis and this.idleTimeoutMillis will not have any effect.
 		this.evictionRunIntervalMillis = 0;
 		this.numTestsPerEvictionRun = 3;
 		this.softIdleTimeoutMillis = -1;

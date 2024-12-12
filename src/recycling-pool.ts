@@ -27,10 +27,10 @@ export class RecyclingPool<T> extends Pool<T> {
 		const createdAt = loan === undefined ? 0 : loan.pooledResource.creationTime;
 
 		// If the connection has been in use for longer than the recycleTimeoutMillis, then destroy it instead of releasing it back into the pool.
-		// If that deletion brings the pool size below the min, a new connection will automatically be created within the destroy method.
+		// If that deletion brings the pool size below the min, the connection will be released (not destroyed)
 		if (
 			new Date(createdAt + this.recycleTimeout! - (Math.random() * this.recycleJitter!))
-				<= new Date()
+				<= new Date() && this._count - 1 >= this.min
 		) {
 			return this.destroy(resource);
 		}

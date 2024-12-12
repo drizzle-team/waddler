@@ -361,7 +361,7 @@ export class Pool<T> {
 		);
 	}
 
-	isBorrowedResource(resource: any): boolean {
+	isBorrowedResource(resource: T): boolean {
 		return this._resourceLoans.has(resource);
 	}
 
@@ -375,7 +375,6 @@ export class Pool<T> {
 		}
 
 		this._resourceLoans.delete(resource);
-		// TODO: revise. was like that: "loan.resolve(resource);" I'm trying to fix it, maybe I'm wrong
 		loan.resolve(resource);
 		const pooledResource = loan.pooledResource;
 
@@ -396,12 +395,15 @@ export class Pool<T> {
 		}
 
 		this._resourceLoans.delete(resource);
-		// TODO: revise. was like that: "loan.resolve(resource);" I'm trying to fix it, maybe I'm wrong
 		loan.resolve(resource);
 		const pooledResource = loan.pooledResource;
 
 		pooledResource.deallocate();
-		this._destroy(pooledResource);
+		if (this._count - 1 >= this.min) {
+			this._destroy(pooledResource);
+		} else {
+			this._addPooledResourceToAvailableObjects(pooledResource);
+		}
 
 		this._dispense();
 		return this.promiseConstructor.resolve();
