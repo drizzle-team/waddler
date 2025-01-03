@@ -324,7 +324,7 @@ export class SQLValues {
 		}
 
 		if (typeof value === 'string') {
-			return `'${value}'`;
+			return `'${value.replaceAll("'", "''")}'`;
 		}
 
 		if (Array.isArray(value)) {
