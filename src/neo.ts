@@ -125,6 +125,7 @@ export function waddler(
 		accessMode = 'read_write',
 		maxMemory = '512MB',
 		threads = '4',
+		onError,
 	}: {
 		/** @deprecated */
 		dbUrl?: string;
@@ -134,6 +135,7 @@ export function waddler(
 		accessMode?: 'read_only' | 'read_write';
 		maxMemory?: string;
 		threads?: string;
+		onError?: ((error: any) => void) | ((error: any) => Promise<void>);
 	},
 ) {
 	url = url === undefined && dbUrl !== undefined ? dbUrl : url;
@@ -147,6 +149,7 @@ export function waddler(
 	const options = {
 		max, // maximum size of the pool
 		min, // minimum size of the pool
+		onError,
 	};
 
 	const pool = new RecyclingPool<DuckDBConnectionObj>(factory, options);

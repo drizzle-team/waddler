@@ -1,6 +1,7 @@
 import { PoolDefaults } from './PoolDefaults.ts';
 
 interface PoolOptionsConfig {
+	onError?: ((error: any) => void) | ((error: any) => Promise<void>);
 	max?: number;
 	min?: number;
 	maxWaitingClients?: number;
@@ -19,6 +20,7 @@ interface PoolOptionsConfig {
 }
 
 export class PoolOptions {
+	onError: ((error: any) => void) | ((error: any) => Promise<void>);
 	max: number;
 	min: number;
 	maxWaitingClients: number | undefined;
@@ -37,6 +39,8 @@ export class PoolOptions {
 
 	constructor(opts: PoolOptionsConfig = {}) {
 		const poolDefaults = new PoolDefaults();
+
+		this.onError = opts.onError ?? poolDefaults.onError;
 
 		this.fifo = opts.fifo ?? poolDefaults.fifo;
 

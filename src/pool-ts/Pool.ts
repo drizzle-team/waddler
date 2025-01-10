@@ -80,7 +80,7 @@ export class Pool<T> {
 			wrappedDestroyPromise,
 			this._factoryDestroyOperations,
 		).catch((_reason) => {
-			console.log();
+			this._config.onError(_reason);
 			// TODO: handle
 			//   this.emit(FACTORY_DESTROY_ERROR, reason);
 		});
@@ -224,7 +224,7 @@ export class Pool<T> {
 				this._allObjects.add(pooledResource);
 				this._addPooledResourceToAvailableObjects(pooledResource);
 			},
-		);
+		).catch(this._config.onError);
 
 		this._trackOperation(wrappedFactoryPromise, this._factoryCreateOperations)
 			.then(() => {
@@ -303,7 +303,7 @@ export class Pool<T> {
 		this._scheduledEviction = null;
 	}
 
-	start(): void {
+	start() {
 		if (this._draining === true) {
 			return;
 		}

@@ -297,8 +297,6 @@ test('sql.values array type test', async () => {
 		]])
 	};`;
 
-	console.log(query.toSQL());
-
 	const expectedQuery = 'insert into array_table values ('
 		+ '[1,2,3], [1.5,2.6,3.9], [true,false,true], [9007199254740993,9007199254740995,9007199254740997], '
 		+ "['2024-10-31T14:25:29.425Z','2024-10-30T14:25:29.425Z','2024-10-29T14:25:29.425Z']);";
@@ -511,7 +509,6 @@ test('sql template types test', async () => {
 			);
 	`;
 
-	console.log(query.toSQL().params);
 	await query;
 
 	const res = await sql`select * from sql_template_table;`;
