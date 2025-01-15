@@ -4,12 +4,10 @@
  * @class
  */
 export class PoolDefaults {
-	onError: (error: any) => void;
 	fifo: boolean;
 	priorityRange: number;
 	testOnBorrow: boolean;
 	testOnReturn: boolean;
-	autostart: boolean;
 	evictionRunIntervalMillis: number;
 	numTestsPerEvictionRun: number;
 	softIdleTimeoutMillis: number;
@@ -22,17 +20,11 @@ export class PoolDefaults {
 	promiseConstructor: PromiseConstructor;
 
 	constructor() {
-		this.onError = (error: any) => {
-			console.error(error);
-		};
-
 		this.fifo = true;
 		this.priorityRange = 1;
 
 		this.testOnBorrow = false;
 		this.testOnReturn = false;
-
-		this.autostart = true;
 
 		// setting this.evictionRunIntervalMillis to 0 means this._scheduleEvictorRun will not be executed.
 		// Therefore, this.softIdleTimeoutMillis and this.idleTimeoutMillis will not have any effect.

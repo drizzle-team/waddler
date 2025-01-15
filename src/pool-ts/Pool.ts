@@ -13,9 +13,6 @@ import { ResourceRequest } from './ResourceRequest.ts';
 import type { Factory, Options } from './types.ts';
 import { reflector } from './utils.ts';
 
-// const FACTORY_CREATE_ERROR = "factoryCreateError";
-// const FACTORY_DESTROY_ERROR = "factoryDestroyError";
-
 export class Pool<T> {
 	private _config: PoolOptions;
 	private promiseConstructor: typeof Promise;
@@ -30,7 +27,7 @@ export class Pool<T> {
 	private _testOnReturnResources: Set<PooledResource<T>>;
 	private _validationOperations: Set<Promise<any>>;
 	private _allObjects: Set<PooledResource<T>>;
-	private _resourceLoans: Map<T, ResourceLoan<T>>;
+	protected _resourceLoans: Map<T, ResourceLoan<T>>;
 	private _evictionIterator: DequeIterator<PooledResource<T>>;
 	private _evictor: DefaultEvictor<T>;
 	private _scheduledEviction: NodeJS.Timeout | null;
@@ -62,32 +59,17 @@ export class Pool<T> {
 		this._evictionIterator = this._availableObjects.iterator();
 		this._evictor = new Evictor();
 		this._scheduledEviction = null;
-
-		if (this._config.autostart === true) {
-			this.start();
-		}
 	}
 
-	private _destroy(pooledResource: PooledResource<T>) {
+	private async _destroy(pooledResource: PooledResource<T>) {
 		pooledResource.invalidate();
 		this._allObjects.delete(pooledResource);
-		const destroyPromise = this._factory.destroy(pooledResource.obj);
-		const wrappedDestroyPromise = this._config.destroyTimeoutMillis
-			? this.promiseConstructor.resolve(this._applyDestroyTimeout(destroyPromise))
-			: this.promiseConstructor.resolve(destroyPromise);
+		await this._factory.destroy(pooledResource.obj);
 
-		this._trackOperation(
-			wrappedDestroyPromise,
-			this._factoryDestroyOperations,
-		).catch((_reason) => {
-			this._config.onError(_reason);
-			// TODO: handle
-			//   this.emit(FACTORY_DESTROY_ERROR, reason);
-		});
-
-		this._ensureMinimum();
+		await this._ensureMinimum();
 	}
 
+	// not in use for now
 	private _applyDestroyTimeout(promise: Promise<void>) {
 		const timeoutPromise = new this.promiseConstructor((resolve, reject) => {
 			setTimeout(() => {
@@ -97,6 +79,7 @@ export class Pool<T> {
 		return this.promiseConstructor.race([timeoutPromise, promise]);
 	}
 
+	// not in use because this._config.testOnBorrow default equals false
 	private _testOnBorrow(): boolean {
 		if (this._availableObjects.length < 1) {
 			return false;
@@ -106,7 +89,6 @@ export class Pool<T> {
 		pooledResource.test();
 		this._testOnBorrowResources.add(pooledResource);
 
-		// TODO: revise
 		const validationPromise = (this._factory.validate === undefined)
 			? Promise.resolve(true)
 			: this._factory.validate(pooledResource.obj);
@@ -137,11 +119,10 @@ export class Pool<T> {
 		}
 
 		const pooledResource = this._availableObjects.shift()!;
-		this._dispatchPooledResourceToNextWaitingClient(pooledResource);
-		return false;
+		return this._dispatchPooledResourceToNextWaitingClient(pooledResource);
 	}
 
-	private _dispense(): void {
+	private async _dispense() {
 		const numWaitingClients = this._waitingClientsQueue.length;
 
 		if (numWaitingClients < 1) {
@@ -154,10 +135,14 @@ export class Pool<T> {
 			this.spareResourceCapacity,
 			resourceShortfall,
 		);
-		for (let i = 0; actualNumberOfResourcesToCreate > i; i++) {
-			this._createResource();
-		}
 
+		const resourceCreationPromiseList = [];
+		for (let i = 0; actualNumberOfResourcesToCreate > i; i++) {
+			resourceCreationPromiseList.push(this._createResource());
+		}
+		await Promise.all(resourceCreationPromiseList);
+
+		// this._config.testOnBorrow default equals false
 		if (this._config.testOnBorrow) {
 			const desiredNumberOfResourcesToMoveIntoTest = numWaitingClients - this._testOnBorrowResources.size;
 			const actualNumberOfResourcesToMoveIntoTest = Math.min(
@@ -183,6 +168,7 @@ export class Pool<T> {
 	private _dispatchPooledResourceToNextWaitingClient(
 		pooledResource: PooledResource<T>,
 	): boolean {
+		// TODO: i might need to iterate over the waitingClientsQueue using while loop skipping the non-pending clients
 		const clientResourceRequest = this._waitingClientsQueue.dequeue();
 		if (
 			clientResourceRequest === null
@@ -194,10 +180,12 @@ export class Pool<T> {
 		const loan = new ResourceLoan<T>(pooledResource, this.promiseConstructor);
 		this._resourceLoans.set(pooledResource.obj, loan);
 		pooledResource.allocate();
+
 		clientResourceRequest.resolve(pooledResource.obj);
 		return true;
 	}
 
+	// not in use for now
 	private _trackOperation(
 		operation: Promise<any>,
 		set: Set<Promise<any>>,
@@ -216,39 +204,41 @@ export class Pool<T> {
 		);
 	}
 
-	private _createResource(): void {
+	private async _createResource() {
 		const factoryPromise = this._factory.create();
-		const wrappedFactoryPromise = this.promiseConstructor.resolve(factoryPromise).then(
-			(resource) => {
-				const pooledResource = new PooledResource(resource);
-				this._allObjects.add(pooledResource);
-				this._addPooledResourceToAvailableObjects(pooledResource);
-			},
-		).catch(this._config.onError);
+		try {
+			this._factoryCreateOperations.add(factoryPromise);
 
-		this._trackOperation(wrappedFactoryPromise, this._factoryCreateOperations)
-			.then(() => {
-				this._dispense();
-				return null;
-			})
-			.catch((_reason) => {
-				// TODO: handle
-				// this.emit(FACTORY_CREATE_ERROR, reason);
-				this._dispense();
-				throw _reason;
-			});
+			const resource: T = await factoryPromise;
+			const pooledResource = new PooledResource(resource);
+			this._allObjects.add(pooledResource);
+			this._addPooledResourceToAvailableObjects(pooledResource);
+
+			this._factoryCreateOperations.delete(factoryPromise);
+			await this._dispense();
+		} catch (error) {
+			await this._dispense();
+			this._factoryCreateOperations.delete(factoryPromise);
+
+			throw error;
+		}
 	}
 
-	private _ensureMinimum(): void {
+	private async _ensureMinimum() {
 		if (this._draining === true) {
 			return;
 		}
+
+		const resourceCreationPromiseList = [];
 		const minShortfall = this._config.min - this._count;
 		for (let i = 0; i < minShortfall; i++) {
-			this._createResource();
+			resourceCreationPromiseList.push(this._createResource());
 		}
+
+		await Promise.all(resourceCreationPromiseList);
 	}
 
+	// not in use for now
 	private _evict(): void {
 		const testsToRun = Math.min(
 			this._config.numTestsPerEvictionRun,
@@ -287,7 +277,9 @@ export class Pool<T> {
 		}
 	}
 
+	// not in use because this._config.evictionRunIntervalMillis default equals 0
 	private _scheduleEvictorRun(): void {
+		// this._config.evictionRunIntervalMillis default equals 0
 		if (this._config.evictionRunIntervalMillis > 0) {
 			this._scheduledEviction = setTimeout(() => {
 				this._evict();
@@ -296,6 +288,7 @@ export class Pool<T> {
 		}
 	}
 
+	// not in use for now
 	private _descheduleEvictorRun(): void {
 		if (this._scheduledEviction) {
 			clearTimeout(this._scheduledEviction);
@@ -303,27 +296,26 @@ export class Pool<T> {
 		this._scheduledEviction = null;
 	}
 
-	start() {
-		if (this._draining === true) {
-			return;
-		}
-		if (this._started === true) {
-			return;
-		}
+	protected async start() {
+		if (this._draining === true || this._started === true) return;
+
 		this._started = true;
-		this._scheduleEvictorRun();
-		this._ensureMinimum();
+		try {
+			this._scheduleEvictorRun();
+			await this._ensureMinimum();
+		} catch (error) {
+			this._started = false;
+			throw error;
+		}
 	}
 
-	acquire(priority?: number) {
-		if (this._started === false && this._config.autostart === false) {
-			this.start();
+	async acquire(priority?: number) {
+		if (this._started === false) {
+			await this.start();
 		}
 
 		if (this._draining) {
-			return this.promiseConstructor.reject(
-				new Error('pool is draining and cannot accept work'),
-			);
+			throw new Error('pool is draining and cannot accept work');
 		}
 
 		if (
@@ -332,9 +324,7 @@ export class Pool<T> {
 			&& this._config.maxWaitingClients !== undefined
 			&& this._waitingClientsQueue.length >= this._config.maxWaitingClients
 		) {
-			return this.promiseConstructor.reject(
-				new Error('max waitingClients count exceeded'),
-			);
+			throw new Error('max waitingClients count exceeded');
 		}
 
 		const resourceRequest = new ResourceRequest<T>(
@@ -342,11 +332,19 @@ export class Pool<T> {
 			this.promiseConstructor,
 		);
 		this._waitingClientsQueue.enqueue(resourceRequest, priority);
-		this._dispense();
+		try {
+			await this._dispense();
+		} catch (error) {
+			if (resourceRequest.state === Deferred.PENDING) {
+				resourceRequest.reject(error);
+			}
+			throw error;
+		}
 
 		return resourceRequest.promise;
 	}
 
+	// not in use for now
 	async use<T>(fn: (resource: any) => Promise<T>, priority?: number): Promise<T> {
 		const resource_1 = await this.acquire(priority);
 		return await fn(resource_1).then(
@@ -361,31 +359,32 @@ export class Pool<T> {
 		);
 	}
 
+	// not in use for now
 	isBorrowedResource(resource: T): boolean {
 		return this._resourceLoans.has(resource);
 	}
 
-	release(resource: T): Promise<void> {
+	async release(resource: T): Promise<void> {
 		const loan = this._resourceLoans.get(resource);
 
 		if (loan === undefined) {
-			return this.promiseConstructor.reject(
-				new Error('Resource not currently part of this pool'),
-			);
+			throw new Error('Resource not currently part of this pool');
 		}
 
 		this._resourceLoans.delete(resource);
+
+		// TODO: revise(not sure if this line is doing anything)
 		loan.resolve(resource);
+
 		const pooledResource = loan.pooledResource;
 
 		pooledResource.deallocate();
 		this._addPooledResourceToAvailableObjects(pooledResource);
 
-		this._dispense();
-		return this.promiseConstructor.resolve();
+		await this._dispense();
 	}
 
-	destroy(resource: T): Promise<void> {
+	async destroy(resource: T): Promise<void> {
 		const loan = this._resourceLoans.get(resource);
 
 		if (loan === undefined) {
@@ -395,18 +394,19 @@ export class Pool<T> {
 		}
 
 		this._resourceLoans.delete(resource);
+
+		// TODO: revise(not sure if this line is doing anything)
 		loan.resolve(resource);
 		const pooledResource = loan.pooledResource;
 
 		pooledResource.deallocate();
 		if (this._count - 1 >= this.min) {
-			this._destroy(pooledResource);
+			await this._destroy(pooledResource);
 		} else {
 			this._addPooledResourceToAvailableObjects(pooledResource);
 		}
 
-		this._dispense();
-		return this.promiseConstructor.resolve();
+		await this._dispense();
 	}
 
 	private _addPooledResourceToAvailableObjects(pooledResource: PooledResource<T>): void {
@@ -418,6 +418,7 @@ export class Pool<T> {
 		}
 	}
 
+	// not in use for now
 	async drain(): Promise<void> {
 		this._draining = true;
 		await this.__allResourceRequestsSettled();
@@ -425,6 +426,7 @@ export class Pool<T> {
 		this._descheduleEvictorRun();
 	}
 
+	// not in use for now
 	private __allResourceRequestsSettled(): Promise<void> {
 		if (this._waitingClientsQueue.length > 0) {
 			return reflector(this._waitingClientsQueue.tail!.promise);
@@ -432,6 +434,7 @@ export class Pool<T> {
 		return this.promiseConstructor.resolve();
 	}
 
+	// not in use due to not using drain method
 	private __allResourcesReturned(): Promise<void[]> {
 		const ps = [...this._resourceLoans.values()]
 			.map((loan) => loan.promise)
@@ -439,19 +442,21 @@ export class Pool<T> {
 		return this.promiseConstructor.all(ps);
 	}
 
+	// not in use for now
 	async clear(): Promise<void> {
 		const reflectedCreatePromises = [...this._factoryCreateOperations]
 			.map((element) => reflector(element));
 
 		await this.promiseConstructor.all(reflectedCreatePromises);
 		for (const resource of this._availableObjects) {
-			this._destroy(resource);
+			await this._destroy(resource);
 		}
 		const reflectedDestroyPromises = [...this._factoryDestroyOperations]
 			.map((element_1) => reflector(element_1));
 		return await reflector(this.promiseConstructor.all(reflectedDestroyPromises));
 	}
 
+	// not in use for now
 	ready(): Promise<void> {
 		return new this.promiseConstructor((resolve) => {
 			const isReady = () => {

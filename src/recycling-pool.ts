@@ -21,8 +21,7 @@ export class RecyclingPool<T> extends Pool<T> {
 		this.recycleJitter = options.recycleJitter ??= 60_000; // 1 min
 	}
 
-	override release(resource: T) {
-		// @ts-ignore
+	override async release(resource: T) {
 		const loan = this._resourceLoans.get(resource);
 		const createdAt = loan === undefined ? 0 : loan.pooledResource.creationTime;
 

@@ -10,3 +10,4 @@ seedFromParquet.ts
 storage
 nodejs_connection_pool_*
 Limitations.md
+waddlerChangelog.md

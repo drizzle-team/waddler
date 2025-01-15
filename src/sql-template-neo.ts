@@ -30,6 +30,7 @@ export class NeoSQLTemplate<T> extends SQLTemplate<T> {
 		let result;
 
 		const connObj = await this.pool.acquire();
+		// console.log('connObj:', connObj);
 
 		try {
 			const prepared = await connObj.connection.prepare(query);

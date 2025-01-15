@@ -19,7 +19,6 @@ export interface Factory<T> {
 }
 
 export interface Options {
-	onError?: ((error: any) => void) | ((error: any) => Promise<void>);
 	max?: number;
 	min?: number;
 	maxWaitingClients?: number;

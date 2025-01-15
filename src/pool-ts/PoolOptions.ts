@@ -1,7 +1,6 @@
 import { PoolDefaults } from './PoolDefaults.ts';
 
 interface PoolOptionsConfig {
-	onError?: ((error: any) => void) | ((error: any) => Promise<void>);
 	max?: number;
 	min?: number;
 	maxWaitingClients?: number;
@@ -11,7 +10,6 @@ interface PoolOptionsConfig {
 	destroyTimeoutMillis?: number | null;
 	priorityRange?: number;
 	fifo?: boolean;
-	autostart?: boolean;
 	evictionRunIntervalMillis?: number;
 	numTestsPerEvictionRun?: number;
 	softIdleTimeoutMillis?: number;
@@ -20,7 +18,6 @@ interface PoolOptionsConfig {
 }
 
 export class PoolOptions {
-	onError: ((error: any) => void) | ((error: any) => Promise<void>);
 	max: number;
 	min: number;
 	maxWaitingClients: number | undefined;
@@ -30,7 +27,6 @@ export class PoolOptions {
 	destroyTimeoutMillis: number | undefined;
 	priorityRange: number;
 	fifo: boolean;
-	autostart: boolean;
 	evictionRunIntervalMillis: number;
 	numTestsPerEvictionRun: number;
 	softIdleTimeoutMillis: number;
@@ -39,8 +35,6 @@ export class PoolOptions {
 
 	constructor(opts: PoolOptionsConfig = {}) {
 		const poolDefaults = new PoolDefaults();
-
-		this.onError = opts.onError ?? poolDefaults.onError;
 
 		this.fifo = opts.fifo ?? poolDefaults.fifo;
 
@@ -51,8 +45,6 @@ export class PoolOptions {
 
 		// TODO: rewrite without casting fields and add assertion check on the fields below
 		this.testOnReturn = opts.testOnReturn ?? poolDefaults.testOnReturn;
-
-		this.autostart = opts.autostart ?? poolDefaults.autostart;
 
 		this.acquireTimeoutMillis = opts.acquireTimeoutMillis === undefined
 			? undefined
