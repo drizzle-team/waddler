@@ -121,6 +121,7 @@ export class DefaultSQLTemplate<T> extends SQLTemplate<T> {
 		prepareParams(params);
 		const db = await this.pool.acquire();
 
+		// wrapping duckdb driver error in new js error to add stack trace to it
 		try {
 			const statement = db.prepare(query);
 
@@ -130,7 +131,8 @@ export class DefaultSQLTemplate<T> extends SQLTemplate<T> {
 			result = transformResult(duckdbResult, columnInfo) as T[];
 		} catch (error) {
 			await this.pool.release(db);
-			throw error;
+			const newError = new Error((error as Error).message);
+			throw newError;
 		}
 
 		await this.pool.release(db);
@@ -146,16 +148,23 @@ export class DefaultSQLTemplate<T> extends SQLTemplate<T> {
 
 		const db = await this.pool.acquire();
 
-		const stream = db.stream(query, ...params);
+		// wrapping duckdb driver error in new js error to add stack trace to it
+		try {
+			const stream = db.stream(query, ...params);
 
-		const asyncIterator = stream[Symbol.asyncIterator]();
+			const asyncIterator = stream[Symbol.asyncIterator]();
 
-		let iterResult = await asyncIterator.next();
-		while (!iterResult.done) {
-			row = iterResult.value as T;
-			yield row;
+			let iterResult = await asyncIterator.next();
+			while (!iterResult.done) {
+				row = iterResult.value as T;
+				yield row;
 
-			iterResult = await asyncIterator.next();
+				iterResult = await asyncIterator.next();
+			}
+		} catch (error) {
+			await this.pool.release(db);
+			const newError = new Error((error as Error).message);
+			throw newError;
 		}
 
 		await this.pool.release(db);

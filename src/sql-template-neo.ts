@@ -32,6 +32,7 @@ export class NeoSQLTemplate<T> extends SQLTemplate<T> {
 		const connObj = await this.pool.acquire();
 		// console.log('connObj:', connObj);
 
+		// wrapping duckdb driver error in new js error to add stack trace to it
 		try {
 			const prepared = await connObj.connection.prepare(query);
 			bindParams(prepared, params);
@@ -40,7 +41,8 @@ export class NeoSQLTemplate<T> extends SQLTemplate<T> {
 			result = await transformResultToObjects(duckDbResult) as T[];
 		} catch (error) {
 			await this.pool.release(connObj);
-			throw error;
+			const newError = new Error((error as Error).message);
+			throw newError;
 		}
 
 		await this.pool.release(connObj);
@@ -53,22 +55,30 @@ export class NeoSQLTemplate<T> extends SQLTemplate<T> {
 
 		const connObj = await this.pool.acquire();
 
-		const prepared = await connObj.connection.prepare(query);
-		bindParams(prepared, params);
+		// wrapping duckdb driver error in new js error to add stack trace to it
+		try {
+			const prepared = await connObj.connection.prepare(query);
+			bindParams(prepared, params);
 
-		const duckDbResult = await prepared.run();
-		for (;;) {
-			const chunk = await duckDbResult.fetchChunk();
-			if (chunk.rowCount === 0) {
-				break;
+			const duckDbResult = await prepared.run();
+
+			for (;;) {
+				const chunk = await duckDbResult.fetchChunk();
+				if (chunk.rowCount === 0) {
+					break;
+				}
+
+				const columnVectors: DuckDBVector<any>[] = getColumnVectors(chunk);
+
+				for (let rowIndex = 0; rowIndex < chunk.rowCount; rowIndex++) {
+					const row = transformResultRowToObject(duckDbResult, columnVectors, rowIndex) as T;
+					yield row;
+				}
 			}
-
-			const columnVectors: DuckDBVector<any>[] = getColumnVectors(chunk);
-
-			for (let rowIndex = 0; rowIndex < chunk.rowCount; rowIndex++) {
-				const row = transformResultRowToObject(duckDbResult, columnVectors, rowIndex) as T;
-				yield row;
-			}
+		} catch (error) {
+			await this.pool.release(connObj);
+			const newError = new Error((error as Error).message);
+			throw newError;
 		}
 
 		await this.pool.release(connObj);

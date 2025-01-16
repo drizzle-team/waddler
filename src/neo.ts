@@ -1,3 +1,4 @@
+import type { DuckDBResult } from '@duckdb/node-api';
 import { DuckDBInstance } from '@duckdb/node-api';
 import { transformResultToArrays, transformResultToObjects } from './duckdb-neo/result-transformers.ts';
 import { bindParams } from './duckdb-neo/utils.ts';
@@ -61,10 +62,20 @@ const unsafeFunc = async (
 	const rowMode = options?.rowMode ?? 'default';
 	const connObj = await pool.acquire();
 
-	const prepared = await connObj.connection.prepare(query);
-	bindParams(prepared, params);
+	let duckDbResult: DuckDBResult;
 
-	const duckDbResult = await prepared.run();
+	// wrapping duckdb driver error in new js error to add stack trace to it
+	try {
+		const prepared = await connObj.connection.prepare(query);
+		bindParams(prepared, params);
+
+		duckDbResult = await prepared.run();
+	} catch (error) {
+		await pool.release(connObj);
+		const newError = new Error((error as Error).message);
+		throw newError;
+	}
+
 	if (rowMode === 'default') {
 		const result = await transformResultToObjects(duckDbResult);
 
@@ -96,17 +107,23 @@ const createFactory = (
 ) => {
 	const factory: Factory<DuckDBConnectionObj> = {
 		create: async function() {
-			const instance = await DuckDBInstance.create(url, {
-				access_mode: accessMode,
-				max_memory: maxMemory,
-				threads: threads,
-			});
-			const conn = await instance.connect();
+			// wrapping duckdb driver error in new js error to add stack trace to it
+			try {
+				const instance = await DuckDBInstance.create(url, {
+					access_mode: accessMode,
+					max_memory: maxMemory,
+					threads: threads,
+				});
+				const conn = await instance.connect();
 
-			const connObj: DuckDBConnectionObj = { instance, connection: conn };
-			// Run any connection initialization commands here
+				const connObj: DuckDBConnectionObj = { instance, connection: conn };
+				// Run any connection initialization commands here
 
-			return connObj;
+				return connObj;
+			} catch (error) {
+				const newError = new Error((error as Error).message);
+				throw newError;
+			}
 		},
 		destroy: async function() {},
 	};

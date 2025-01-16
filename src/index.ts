@@ -36,6 +36,17 @@ const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>): SQL => {
 	return fn as any;
 };
 
+function createDatabase(url: string, options: Record<string, string>): Promise<duckdb.Database> {
+	return new Promise((resolve, reject) => {
+		const db = new duckdb.Database(url, options, (err) => {
+			if (err) {
+				return reject(err);
+			}
+			resolve(db);
+		});
+	});
+}
+
 const createFactory = (
 	{
 		url,
@@ -51,23 +62,30 @@ const createFactory = (
 ) => {
 	const factory: Factory<duckdb.Database> = {
 		create: async function() {
-			// TODO: make duckdb.Database awaited
-			const db = new duckdb.Database(url, {
-				access_mode: accessMode,
-				max_memory: maxMemory,
-				threads: threads,
-			}, (err) => {
-				if (err) {
-					console.error(err);
-				}
-			});
+			// wrapping duckdb driver error in new js error to add stack trace to it
+			try {
+				const db = await createDatabase(url, {
+					access_mode: accessMode,
+					max_memory: maxMemory,
+					threads: threads,
+				});
 
-			// Run any connection initialization commands here
+				// Run any connection initialization commands here
 
-			return db;
+				return db;
+			} catch (error) {
+				const newError = new Error((error as Error).message);
+				throw newError;
+			}
 		},
 		destroy: async function(db: duckdb.Database) {
-			return db.close();
+			// wrapping duckdb driver error in js error to add stack trace to it
+			try {
+				return db.close();
+			} catch (error) {
+				const newError = new Error((error as Error).message);
+				throw newError;
+			}
 		},
 	};
 
