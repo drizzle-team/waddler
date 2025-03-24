@@ -1,8 +1,7 @@
 node_modules
 .env
 db
-src/test.ts
-src/db-test.ts
+dev
 dist
 package.tgz
 .DS_Store

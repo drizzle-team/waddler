@@ -61,12 +61,12 @@ export class Pool<T> {
 		this._scheduledEviction = null;
 	}
 
-	private async _destroy(pooledResource: PooledResource<T>) {
+	private async _destroy(pooledResource: PooledResource<T>, ensureMinimum: boolean = true) {
 		pooledResource.invalidate();
 		this._allObjects.delete(pooledResource);
 		await this._factory.destroy(pooledResource.obj);
 
-		await this._ensureMinimum();
+		if (ensureMinimum === true) await this._ensureMinimum();
 	}
 
 	// not in use for now
@@ -296,7 +296,7 @@ export class Pool<T> {
 		this._scheduledEviction = null;
 	}
 
-	protected async start() {
+	async start() {
 		if (this._draining === true || this._started === true) return;
 
 		this._started = true;
@@ -388,9 +388,7 @@ export class Pool<T> {
 		const loan = this._resourceLoans.get(resource);
 
 		if (loan === undefined) {
-			return this.promiseConstructor.reject(
-				new Error('Resource not currently part of this pool'),
-			);
+			throw new Error('Resource not currently part of this pool');
 		}
 
 		this._resourceLoans.delete(resource);
@@ -424,6 +422,8 @@ export class Pool<T> {
 		await this.__allResourceRequestsSettled();
 		await this.__allResourcesReturned();
 		this._descheduleEvictorRun();
+		// TODO: revise
+		this._draining = false;
 	}
 
 	// not in use for now
@@ -431,7 +431,7 @@ export class Pool<T> {
 		if (this._waitingClientsQueue.length > 0) {
 			return reflector(this._waitingClientsQueue.tail!.promise);
 		}
-		return this.promiseConstructor.resolve();
+		return Promise.resolve();
 	}
 
 	// not in use due to not using drain method
@@ -439,26 +439,32 @@ export class Pool<T> {
 		const ps = [...this._resourceLoans.values()]
 			.map((loan) => loan.promise)
 			.map((element) => reflector(element));
-		return this.promiseConstructor.all(ps);
+		return Promise.all(ps);
 	}
 
 	// not in use for now
-	async clear(): Promise<void> {
+	async clear(ensureMinimum: boolean = true): Promise<void> {
 		const reflectedCreatePromises = [...this._factoryCreateOperations]
 			.map((element) => reflector(element));
 
-		await this.promiseConstructor.all(reflectedCreatePromises);
+		await Promise.all(reflectedCreatePromises);
 		for (const resource of this._availableObjects) {
-			await this._destroy(resource);
+			await this._destroy(resource, ensureMinimum);
 		}
 		const reflectedDestroyPromises = [...this._factoryDestroyOperations]
 			.map((element_1) => reflector(element_1));
-		return await reflector(this.promiseConstructor.all(reflectedDestroyPromises));
+		return await reflector(Promise.all(reflectedDestroyPromises));
+	}
+
+	async end(): Promise<void> {
+		await this.drain();
+		await this.clear(false);
+		this._started = false;
 	}
 
 	// not in use for now
 	ready(): Promise<void> {
-		return new this.promiseConstructor((resolve) => {
+		return new Promise((resolve) => {
 			const isReady = () => {
 				if (this.available >= this.min) {
 					resolve();

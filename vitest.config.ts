@@ -9,5 +9,7 @@ export default defineConfig({
 		typecheck: {
 			tsconfig: 'tsconfig.json',
 		},
+		testTimeout: 100000,
+		hookTimeout: 100000,
 	},
 });

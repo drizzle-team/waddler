@@ -1,36 +1,39 @@
 import duckdb from 'duckdb';
-import type { Factory } from './pool-ts/types.ts';
-import { RecyclingPool } from './recycling-pool.ts';
-import { DefaultSQLTemplate } from './sql-template-default.ts';
-import type { Identifier, Raw, SQLParamType, Values } from './sql-template.ts';
-import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from './sql-template.ts';
+import type { Factory } from '../pool-ts/types.ts';
+import { RecyclingPool } from '../recycling-pool.ts';
+import type { Raw } from '../sql-template-params.ts';
+import { SQLRaw } from '../sql-template-params.ts';
+import type { DuckdbIdentifier, DuckdbValues } from './sql-template-params.ts';
+import { DuckdbSQLDefault, DuckdbSQLIdentifier, DuckdbSQLValues } from './sql-template-params.ts';
+import { DefaultSQLTemplate } from './sql-template.ts';
+import type { DuckdbSQLParamType } from './types.ts';
 
-export { SQLTemplate } from './sql-template.ts';
+export { SQLTemplate } from '../sql-template.ts';
 export interface SQL {
-	<T = duckdb.RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): DefaultSQLTemplate<T>;
-	identifier(value: Identifier): SQLIdentifier;
-	values(value: Values): SQLValues;
+	<T = duckdb.RowData>(strings: TemplateStringsArray, ...params: DuckdbSQLParamType[]): DefaultSQLTemplate<T>;
+	identifier(value: DuckdbIdentifier): DuckdbSQLIdentifier;
+	values(value: DuckdbValues): DuckdbSQLValues;
 	raw(value: Raw): SQLRaw;
-	default: SQLDefault;
+	default: DuckdbSQLDefault;
 }
 
 const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>): SQL => {
 	// [strings, params]: Parameters<SQL>
-	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): DefaultSQLTemplate<T> => {
+	const fn = <T>(strings: TemplateStringsArray, ...params: DuckdbSQLParamType[]): DefaultSQLTemplate<T> => {
 		return new DefaultSQLTemplate<T>(strings, params, pool);
 	};
 
 	Object.assign(fn, {
-		identifier: (value: Identifier) => {
-			return new SQLIdentifier(value);
+		identifier: (value: DuckdbIdentifier) => {
+			return new DuckdbSQLIdentifier(value);
 		},
-		values: (value: Values) => {
-			return new SQLValues(value);
+		values: (value: DuckdbValues) => {
+			return new DuckdbSQLValues(value);
 		},
 		raw: (value: Raw) => {
 			return new SQLRaw(value);
 		},
-		default: new SQLDefault(),
+		default: new DuckdbSQLDefault(),
 	});
 
 	return fn as any;

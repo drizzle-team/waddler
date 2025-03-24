@@ -5,12 +5,13 @@ import { build } from 'tsup';
 fs.removeSync('dist');
 
 await build({
-	entry: ['src/index.ts'],
+	entry: ['src/duckdb/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
 	format: ['cjs', 'esm'],
 	bundle: true,
+	outDir: './dist/duckdb',
 	outExtension(ctx) {
 		if (ctx.format === 'cjs') {
 			return {
@@ -26,12 +27,35 @@ await build({
 });
 
 await build({
-	entry: ['src/neo.ts'],
+	entry: ['src/duckdb-neo/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
 	format: ['cjs', 'esm'],
 	bundle: true,
+	outDir: './dist/duckdb-neo',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
+
+await build({
+	entry: ['src/node-postgres/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist/node-postgres',
 	outExtension(ctx) {
 		if (ctx.format === 'cjs') {
 			return {

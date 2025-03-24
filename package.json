@@ -1,13 +1,12 @@
 {
 	"name": "waddler",
 	"version": "0.0.12",
-	"main": "index.js",
 	"type": "module",
 	"repository": "https://github.com/drizzle-team/waddler",
 	"license": "MIT",
 	"scripts": {
-		"start": "npx tsx ./src/test.ts",
-		"start:db": "npx tsx ./src/db-test.ts ",
+		"start": "npx tsx ./src/dev/test.ts",
+		"start:db": "npx tsx ./src/dev/db-test.ts ",
 		"test": "vitest --config ./vitest.config.ts",
 		"lint": "concurrently -n eslint,dprint \"eslint --ext ts .\" \"dprint check --list-different\"",
 		"build": "pnpm tsx scripts/build.ts",
@@ -16,31 +15,44 @@
 	"exports": {
 		".": {
 			"import": {
-				"types": "./index.d.ts",
-				"default": "./index.js"
+				"types": "./duckdb/index.d.ts",
+				"default": "./duckdb/index.js"
 			},
 			"require": {
-				"types": "./index.d.cts",
-				"default": "./index.cjs"
+				"types": "./duckdb/index.d.cts",
+				"default": "./duckdb/index.cjs"
 			}
 		},
 		"./neo": {
 			"import": {
-				"types": "./neo.d.ts",
-				"default": "./neo.js"
+				"types": "./duckdb-neo/index.d.ts",
+				"default": "./duckdb-neo/index.js"
 			},
 			"require": {
-				"types": "./neo.d.cts",
-				"default": "./neo.cjs"
+				"types": "./duckdb-neo/index.d.cts",
+				"default": "./duckdb-neo/index.cjs"
+			}
+		},
+		"./node-postgres": {
+			"import": {
+				"types": "./node-postgres/index.d.ts",
+				"default": "./node-postgres/index.js"
+			},
+			"require": {
+				"types": "./node-postgres/index.d.cts",
+				"default": "./node-postgres/index.cjs"
 			}
 		}
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "^0.16.4",
 		"@duckdb/node-api": "1.1.2-alpha.4",
+		"@types/dockerode": "^3.3.35",
 		"@types/node": "^22.7.6",
+		"@types/pg": "^8.11.11",
 		"@typescript-eslint/eslint-plugin": "^8.10.0",
 		"concurrently": "^8.2.1",
+		"dockerode": "^4.0.4",
 		"dprint": "^0.46.2",
 		"duckdb": "^1.1.1",
 		"eslint": "^8.50.0",
@@ -48,6 +60,7 @@
 		"eslint-plugin-no-instanceof": "^1.0.1",
 		"eslint-plugin-unicorn": "^56.0.0",
 		"eslint-plugin-unused-imports": "^4.1.4",
+		"get-port": "^7.1.0",
 		"tsup": "^8.3.5",
 		"tsx": "^4.19.1",
 		"typescript": "^5.5.4",
@@ -56,13 +69,21 @@
 	},
 	"peerDependencies": {
 		"@duckdb/node-api": "^1.1.2-alpha.4",
-		"duckdb": "^1.1.1"
+		"duckdb": "^1.1.1",
+		"pg": "^8.14.0",
+		"pg-query-stream": "^4.8.0"
 	},
 	"peerDependenciesMeta": {
 		"duckdb": {
 			"optional": true
 		},
 		"@duckdb/node-api": {
+			"optional": true
+		},
+		"pg": {
+			"optional": true
+		},
+		"pg-query-stream": {
 			"optional": true
 		}
 	}

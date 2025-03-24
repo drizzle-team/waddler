@@ -1,8 +1,9 @@
 import duckdb from 'duckdb';
-import type { RecyclingPool } from './recycling-pool.ts';
-import type { SQLParamType } from './sql-template.ts';
-import { SQLTemplate } from './sql-template.ts';
-import { methodPromisify, stringifyArray } from './utils.ts';
+import type { RecyclingPool } from '../recycling-pool.ts';
+import { SQLTemplate } from '../sql-template.ts';
+import { stringifyArray } from '../utils.ts';
+import type { DuckdbSQLParamType } from './types.ts';
+import { methodPromisify } from './utils.ts';
 
 const statementAllAsync = methodPromisify<duckdb.Statement, duckdb.TableData>(
 	duckdb.Statement.prototype.all,
@@ -102,7 +103,7 @@ const transformNDList = (list: any[] | any, listType: duckdb.ListTypeInfo | duck
 export class DefaultSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
 		protected strings: readonly string[],
-		protected params: SQLParamType[],
+		protected params: DuckdbSQLParamType[],
 		protected readonly pool: RecyclingPool<duckdb.Database>,
 	) {
 		super();

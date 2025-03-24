@@ -9,8 +9,8 @@ import {
 	DuckDBTimeValue,
 	DuckDBUnionValue,
 } from '@duckdb/node-api';
-import type { UnsafeParamType } from '../types.ts';
 import { stringifyArray } from '../utils.ts';
+import type { UnsafeParamType } from './types.ts';
 
 // Insert params
 const MIN_INT32 = -2147483648;

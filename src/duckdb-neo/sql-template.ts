@@ -1,19 +1,14 @@
 import type { DuckDBVector } from '@duckdb/node-api';
-import {
-	getColumnVectors,
-	transformResultRowToObject,
-	transformResultToObjects,
-} from './duckdb-neo/result-transformers.ts';
-import { bindParams } from './duckdb-neo/utils.ts';
-import type { RecyclingPool } from './recycling-pool.ts';
-import type { SQLParamType } from './sql-template.ts';
-import { SQLTemplate } from './sql-template.ts';
-import type { DuckDBConnectionObj } from './types.ts';
+import type { RecyclingPool } from '../recycling-pool.ts';
+import { SQLTemplate } from '../sql-template.ts';
+import { getColumnVectors, transformResultRowToObject, transformResultToObjects } from './result-transformers.ts';
+import type { DuckDBConnectionObj, DuckdbNeoSQLParamType } from './types.ts';
+import { bindParams } from './utils.ts';
 
-export class NeoSQLTemplate<T> extends SQLTemplate<T> {
+export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
 		protected strings: readonly string[],
-		protected params: SQLParamType[],
+		protected params: DuckdbNeoSQLParamType[],
 		protected readonly pool: RecyclingPool<DuckDBConnectionObj>,
 	) {
 		super();

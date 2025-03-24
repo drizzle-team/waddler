@@ -1,0 +1,248 @@
+import { SQLDefault, SQLIdentifier, SQLValues } from '../sql-template-params.ts';
+import type { JSONObject } from '../types.ts';
+
+export type NodePgIdentifier =
+	| string
+	| string[]
+	| { schema?: string; table?: string; column?: string; as?: string }
+	| {
+		schema?: string;
+		table?: string;
+		column?: string;
+		as?: string;
+	}[];
+
+export class NodePgSQLIdentifier extends SQLIdentifier {
+	constructor(private readonly value: NodePgIdentifier) {
+		super();
+	}
+
+	// TODO: @AlexBlokh do error's text
+	static checkObject(object: {
+		schema?: string;
+		table?: string;
+		column?: string;
+		as?: string;
+	}) {
+		if (Object.values(object).includes(undefined!)) {
+			throw new Error(
+				`you can't specify undefined parameters. maybe you want to omit it?`,
+			);
+		}
+
+		if (Object.keys(object).length === 0) {
+			throw new Error(`you need to specify at least one parameter.`);
+		}
+
+		if (
+			object.schema !== undefined
+			&& object.table === undefined
+			&& object.column !== undefined
+		) {
+			throw new Error(
+				`you can't specify only "schema" and "column" properties, you need also specify "table".`,
+			);
+		}
+
+		if (Object.keys(object).length === 1 && object.as !== undefined) {
+			throw new Error(`you can't specify only "as" property.`);
+		}
+
+		if (
+			object.as !== undefined
+			&& object.column === undefined
+			&& object.table === undefined
+		) {
+			throw new Error(
+				`you have to specify "column" or "table" property along with "as".`,
+			);
+		}
+
+		if (
+			!['string', 'undefined'].includes(typeof object.schema)
+			|| !['string', 'undefined'].includes(typeof object.table)
+			|| !['string', 'undefined'].includes(typeof object.column)
+			|| !['string', 'undefined'].includes(typeof object.as)
+		) {
+			throw new Error(
+				"object properties 'schema', 'table', 'column', 'as' should be of string type or omitted.",
+			);
+		}
+	}
+
+	static objectToSQL(object: {
+		schema?: string;
+		table?: string;
+		column?: string;
+		as?: string;
+	}) {
+		NodePgSQLIdentifier.checkObject(object);
+
+		const schema = object.schema === undefined ? '' : `"${object.schema}".`;
+		const table = object.table === undefined ? '' : `"${object.table}"`;
+		const column = object.column === undefined ? '' : `."${object.column}"`;
+		const as = object.as === undefined ? '' : ` as "${object.as}"`;
+
+		return `${schema}${table}${column}${as}`.replace(/^\.|\.$/g, '');
+	}
+
+	generateSQL() {
+		if (typeof this.value === 'string') {
+			return { sql: `"${this.value}"` };
+		}
+
+		if (Array.isArray(this.value)) {
+			if (this.value.length === 0) {
+				throw new Error(
+					`you can't specify empty array as parameter for sql.identifier.`,
+				);
+			}
+
+			if (this.value.every((val) => typeof val === 'string')) {
+				return { sql: `"${this.value.join('", "')}"` };
+			}
+
+			if (
+				this.value.every(
+					(val) => typeof val === 'object' && !Array.isArray(val) && val !== null,
+				)
+			) {
+				return {
+					sql: `${
+						this.value
+							.map((element) => NodePgSQLIdentifier.objectToSQL(element))
+							.join(', ')
+					}`,
+				};
+			}
+
+			let areThereAnyArrays = false;
+			for (const val of this.value) {
+				if (Array.isArray(val)) {
+					areThereAnyArrays = true;
+					break;
+				}
+			}
+			if (areThereAnyArrays) {
+				throw new Error(
+					`you can't specify array of arrays as parameter for sql.identifier.`,
+				);
+			}
+
+			throw new Error(
+				`you can't specify array of (null or undefined or number or bigint or boolean or symbol or function) as parameter for sql.identifier.`,
+			);
+		}
+
+		if (typeof this.value === 'object' && this.value !== null) {
+			// typeof this.value === "object"
+			return { sql: NodePgSQLIdentifier.objectToSQL(this.value) };
+		}
+
+		if (this.value === null) {
+			throw new Error(
+				`you can't specify null as parameter for sql.identifier.`,
+			);
+		}
+
+		throw new Error(
+			`you can't specify ${typeof this.value} as parameter for sql.identifier.`,
+		);
+	}
+}
+
+export class NodePgSQLDefault extends SQLDefault {
+	generateSQL() {
+		return { sql: 'default' };
+	}
+}
+
+export type Value = string | number | bigint | boolean | Date | NodePgSQLDefault | null | JSONObject | Value[];
+export type NodePgValues = Value[][];
+export class NodePgSQLValues extends SQLValues {
+	private params: Value[] = [];
+	constructor(private readonly value: NodePgValues) {
+		super();
+	}
+
+	generateSQL(lastParamIdx: number) {
+		this.params = [];
+		if (!Array.isArray(this.value)) {
+			if (this.value === null) throw new Error(`you can't specify null as parameter for sql.values.`);
+			throw new Error(`you can't specify ${typeof this.value} as parameter for sql.values.`);
+		}
+
+		if (this.value.length === 0) {
+			throw new Error(`you can't specify empty array as parameter for sql.values.`);
+		}
+		const sql = this.value
+			.map((rowValues) => this.rowValuesToSQL(rowValues, lastParamIdx))
+			.join(', ');
+
+		// const params = [...this.params];
+		// this.params = [];
+
+		return {
+			sql,
+			params: this.params,
+		};
+	}
+
+	private rowValuesToSQL(rowValues: Value[], lastParamIdx: number) {
+		if (Array.isArray(rowValues)) {
+			if (rowValues.length === 0) {
+				throw new Error(`array of values can't be empty.`);
+			}
+
+			return `(${rowValues.map((val) => this.valueToSQL(val, lastParamIdx)).join(', ')})`;
+		}
+
+		if (rowValues === null) throw new Error(`you can't specify array of null as parameter for sql.values.`);
+		throw new Error(`you can't specify array of ${typeof rowValues} as parameter for sql.values.`);
+	}
+
+	private valueToSQL(value: Value, lastParamIdx: number): string {
+		if (value instanceof NodePgSQLDefault) {
+			return value.generateSQL().sql;
+		}
+
+		if (
+			typeof value === 'number'
+			|| typeof value === 'bigint'
+			|| typeof value === 'boolean'
+			|| typeof value === 'string'
+			|| value === null
+			|| value instanceof Date
+			|| Array.isArray(value)
+			|| typeof value === 'object'
+		) {
+			this.params.push(value);
+			return `$${lastParamIdx + this.params.length}`;
+		}
+
+		// if (value instanceof Date) {
+		// 	return `'${value.toISOString()}'`;
+		// }
+
+		// if (typeof value === 'string') {
+		// 	return `'${value}'`;
+		// }
+
+		// if (Array.isArray(value)) {
+		// 	return `[${value.map((arrayValue) => NodePgSQLValues.valueToSQL(arrayValue))}]`;
+		// }
+
+		// if (typeof value === 'object') {
+		// 	// object case
+		// 	throw new Error(
+		// 		"value can't be object. you can't specify [ [ {...}, ...], ...] as parameter for sql.values.",
+		// 	);
+		// }
+
+		if (value === undefined) {
+			throw new Error("value can't be undefined, maybe you mean sql.default?");
+		}
+
+		throw new Error(`you can't specify ${typeof value} as value.`);
+	}
+}

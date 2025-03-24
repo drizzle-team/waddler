@@ -1,44 +1,46 @@
 import type { DuckDBResult } from '@duckdb/node-api';
 import { DuckDBInstance } from '@duckdb/node-api';
-import { transformResultToArrays, transformResultToObjects } from './duckdb-neo/result-transformers.ts';
-import { bindParams } from './duckdb-neo/utils.ts';
-import type { Factory } from './pool-ts/types.ts';
-import { RecyclingPool } from './recycling-pool.ts';
-import { NeoSQLTemplate } from './sql-template-neo.ts';
-import type { Identifier, Raw, SQLParamType, Values } from './sql-template.ts';
-import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from './sql-template.ts';
-import type { DuckDBConnectionObj, UnsafeParamType } from './types.ts';
+import type { Factory } from '../pool-ts/types.ts';
+import { RecyclingPool } from '../recycling-pool.ts';
+import type { Raw } from '../sql-template-params.ts';
+import { SQLRaw } from '../sql-template-params.ts';
+import { transformResultToArrays, transformResultToObjects } from './result-transformers.ts';
+import type { DuckdbNeoIdentifier, DuckdbNeoValues } from './sql-template-params.ts';
+import { DuckdbNeoSQLDefault, DuckdbNeoSQLIdentifier, DuckdbNeoSQLValues } from './sql-template-params.ts';
+import { DuckdbNeoSQLTemplate } from './sql-template.ts';
+import type { DuckDBConnectionObj, DuckdbNeoSQLParamType, UnsafeParamType } from './types.ts';
+import { bindParams } from './utils.ts';
 
 type RowData = {
 	[columnName: string]: any;
 };
 
-export { SQLTemplate } from './sql-template.ts';
+export { SQLTemplate } from '../sql-template.ts';
 export interface SQL {
-	<T = RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): NeoSQLTemplate<T>;
-	identifier(value: Identifier): SQLIdentifier;
-	values(value: Values): SQLValues;
+	<T = RowData>(strings: TemplateStringsArray, ...params: DuckdbNeoSQLParamType[]): DuckdbNeoSQLTemplate<T>;
+	identifier(value: DuckdbNeoIdentifier): DuckdbNeoSQLIdentifier;
+	values(value: DuckdbNeoValues): DuckdbNeoSQLValues;
 	raw(value: Raw): SQLRaw;
 	unsafe(query: string, params?: UnsafeParamType[], options?: { rowMode: 'array' | 'default' }): Promise<
 		{
 			[columnName: string]: any;
 		}[] | any[][]
 	>;
-	default: SQLDefault;
+	default: DuckdbNeoSQLDefault;
 }
 
 const createSqlTemplate = (pool: RecyclingPool<DuckDBConnectionObj>): SQL => {
 	// [strings, params]: Parameters<SQL>
-	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): NeoSQLTemplate<T> => {
-		return new NeoSQLTemplate<T>(strings, params, pool);
+	const fn = <T>(strings: TemplateStringsArray, ...params: DuckdbNeoSQLParamType[]): DuckdbNeoSQLTemplate<T> => {
+		return new DuckdbNeoSQLTemplate<T>(strings, params, pool);
 	};
 
 	Object.assign(fn, {
-		identifier: (value: Identifier) => {
-			return new SQLIdentifier(value);
+		identifier: (value: DuckdbNeoIdentifier) => {
+			return new DuckdbNeoSQLIdentifier(value);
 		},
-		values: (value: Values) => {
-			return new SQLValues(value);
+		values: (value: DuckdbNeoValues) => {
+			return new DuckdbNeoSQLValues(value);
 		},
 		raw: (value: Raw) => {
 			return new SQLRaw(value);
@@ -46,7 +48,7 @@ const createSqlTemplate = (pool: RecyclingPool<DuckDBConnectionObj>): SQL => {
 		unsafe: async (query: string, params?: UnsafeParamType[], options?: { rowMode: 'array' | 'default' }) => {
 			return await unsafeFunc(pool, query, params, options);
 		},
-		default: new SQLDefault(),
+		default: new DuckdbNeoSQLDefault(),
 	});
 
 	return fn as any;
