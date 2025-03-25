@@ -77,10 +77,6 @@ export type Value =
 	| Value[];
 export type PgValues = Value[][];
 export class PgSQLValues extends SQLValues<Value> {
-	constructor(value: PgValues, private readonly driver: SQLValuesDriver) {
-		super(value);
-	}
-
 	escapeParam(num: number): string {
 		return `$${num}`;
 	}
@@ -100,8 +96,7 @@ export class PgSQLValues extends SQLValues<Value> {
 			|| Array.isArray(value)
 			|| typeof value === 'object'
 		) {
-			const mappedValue = this.driver.mapToDriver(value);
-			this.params.push(mappedValue);
+			this.params.push(value);
 			return this.escapeParam(lastParamIdx + this.params.length);
 		}
 

@@ -4,7 +4,6 @@ import type { PgIdentifierObject, PgValues } from '../pg-core/dialect.ts';
 import { PgSQLIdentifier, PgSQLValues } from '../pg-core/dialect.ts';
 import type { Identifier, Raw } from '../sql-template-params.ts';
 import { SQLDefault, SQLRaw } from '../sql-template-params.ts';
-import { NodePgSQLValuesDriver } from './driver.ts';
 import { NodePgSQLTemplate } from './sql-template.ts';
 import type { NodePgSQLParamType, UnsafeParamType } from './types.ts';
 import { dbQuery, isConfig } from './utils.ts';
@@ -46,7 +45,7 @@ const createSqlTemplate = (
 			return new PgSQLIdentifier(value);
 		},
 		values: (value: PgValues) => {
-			return new PgSQLValues(value, new NodePgSQLValuesDriver());
+			return new PgSQLValues(value);
 		},
 		raw: (value: Raw) => {
 			return new SQLRaw(value);
