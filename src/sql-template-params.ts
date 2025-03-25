@@ -84,13 +84,11 @@ export abstract class SQLIdentifier<Q extends IdentifierObject> {
 	}
 }
 
-export type Values<Value> = Value[][];
 export abstract class SQLValues<Value> {
-	constructor(private readonly value: Values<Value>) {}
+	constructor(private readonly value: Value[][]) {}
 	protected params: Value[] = [];
 
 	generateSQL(lastParamIdx: number) {
-		this.params = [];
 		if (!Array.isArray(this.value)) {
 			if (this.value === null) {
 				throw new Error(`you can't specify null as parameter for sql.values.`);

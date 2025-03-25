@@ -1,5 +1,4 @@
-import type { Client as ClientT, Pool as PoolT } from 'pg';
-import pg from 'pg';
+import pg, { type Client, type Pool } from 'pg';
 import type { PgIdentifierObject, PgValues } from '../pg-core/dialect.ts';
 import { PgSQLIdentifier, PgSQLValues } from '../pg-core/dialect.ts';
 import type { Identifier, Raw } from '../sql-template-params.ts';
@@ -8,13 +7,10 @@ import { NodePgSQLTemplate } from './sql-template.ts';
 import type { NodePgSQLParamType, UnsafeParamType } from './types.ts';
 import { dbQuery, isConfig } from './utils.ts';
 
-const { Client, Pool } = pg;
-
 type RowData = {
 	[columnName: string]: any;
 };
 
-export { SQLTemplate } from '../sql-template.ts';
 export interface SQL {
 	<T = RowData>(strings: TemplateStringsArray, ...params: NodePgSQLParamType[]): NodePgSQLTemplate<T>;
 	identifier(value: Identifier<PgIdentifierObject>): PgSQLIdentifier;
@@ -33,7 +29,7 @@ export interface SQL {
 }
 
 const createSqlTemplate = (
-	client: ClientT | PoolT,
+	client: Client | Pool,
 ): SQL => {
 	// [strings, params]: Parameters<SQL>
 	const fn = <T>(strings: TemplateStringsArray, ...params: NodePgSQLParamType[]): NodePgSQLTemplate<T> => {
@@ -70,7 +66,7 @@ const createSqlTemplate = (
 };
 
 const unsafeFunc = async (
-	client: ClientT | PoolT,
+	client: Client | Pool,
 	query: string,
 	params: UnsafeParamType[],
 	options: { rowMode: 'array' | 'object' },
@@ -103,14 +99,14 @@ export function waddler(
 	},
 ) {
 	if (typeof param === 'string') {
-		const client = new Pool({
+		const client = new pg.Pool({
 			connectionString: param,
 		});
 
 		return createSqlTemplate(client);
 	}
 
-	if (param instanceof Client || param instanceof Pool) {
+	if (param instanceof pg.Client || param instanceof pg.Pool) {
 		return createSqlTemplate(param);
 	}
 
@@ -129,18 +125,18 @@ export function waddler(
 
 		if (connection !== undefined) {
 			if (typeof connection === 'string') {
-				const pool = new Pool({
+				const pool = new pg.Pool({
 					connectionString: connection,
 				});
 
 				return createSqlTemplate(pool);
 			}
-			const pool = new Pool(connection);
+			const pool = new pg.Pool(connection);
 
 			return createSqlTemplate(pool);
 		}
 
-		const pool = new Pool(param as pg.ClientConfig | pg.PoolConfig);
+		const pool = new pg.Pool(param as pg.ClientConfig | pg.PoolConfig);
 
 		return createSqlTemplate(pool);
 	}

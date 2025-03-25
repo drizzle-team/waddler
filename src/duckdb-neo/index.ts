@@ -11,11 +11,11 @@ import { DuckdbNeoSQLTemplate } from './sql-template.ts';
 import type { DuckDBConnectionObj, DuckdbNeoSQLParamType, UnsafeParamType } from './types.ts';
 import { bindParams } from './utils.ts';
 
+// common types
 type RowData = {
 	[columnName: string]: any;
 };
 
-export { SQLTemplate } from '../sql-template.ts';
 export interface SQL {
 	<T = RowData>(strings: TemplateStringsArray, ...params: DuckdbNeoSQLParamType[]): DuckdbNeoSQLTemplate<T>;
 	identifier(value: Identifier<DuckdbIdentifierObject>): DuckdbSQLIdentifier;

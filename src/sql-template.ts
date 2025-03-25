@@ -34,8 +34,28 @@ export abstract class SQLTemplate<T> {
 		}
 
 		const filteredParams: any[] = [];
-		let query = '',
-			param: any;
+		// select ${sql.values([['1']])} from ${users}${something}
+		// strings=["select ", " from ", '']
+		// params=[${sql.values([['1']])}, ${users}, ${something}]
+
+		// chunks=[StringChunk'select '), ${sql.values([['1']])}, StringChunk(" from ")]
+
+		// query = ['']
+		// for of chunks
+		//    if(chunk is StringChunk) {query.push(chunk.value)}
+		// ...
+		// query.join('')
+
+		// or
+
+		// query = ''
+		// for of chunks
+		//    if(chunk is StringChunk) {quer += chunk.generateSQL()}
+		// ...
+		// return query
+
+		// TODO: params should not be any
+		let query = '', param: any;
 		for (const [idx, stringI] of this.strings.entries()) {
 			if (idx === this.strings.length - 1) {
 				query += stringI;
@@ -62,6 +82,7 @@ export abstract class SQLTemplate<T> {
 			this.paramsCheck(param);
 
 			filteredParams.push(param);
+			// escapeParam
 			paramPlaceholder = `$${filteredParams.length}`;
 			query += stringI + paramPlaceholder;
 		}
