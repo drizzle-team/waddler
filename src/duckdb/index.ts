@@ -1,20 +1,20 @@
 import duckdb from 'duckdb';
+import type { DuckdbIdentifierObject, DuckdbValues } from '../duckdb-core/dialect.ts';
+import { DuckdbSQLIdentifier, DuckdbSQLValues } from '../duckdb-core/dialect.ts';
 import type { Factory } from '../pool-ts/types.ts';
 import { RecyclingPool } from '../recycling-pool.ts';
-import type { Raw } from '../sql-template-params.ts';
-import { SQLRaw } from '../sql-template-params.ts';
-import type { DuckdbIdentifier, DuckdbValues } from './sql-template-params.ts';
-import { DuckdbSQLDefault, DuckdbSQLIdentifier, DuckdbSQLValues } from './sql-template-params.ts';
+import type { Identifier, Raw } from '../sql-template-params.ts';
+import { SQLDefault, SQLRaw } from '../sql-template-params.ts';
 import { DefaultSQLTemplate } from './sql-template.ts';
 import type { DuckdbSQLParamType } from './types.ts';
 
 export { SQLTemplate } from '../sql-template.ts';
 export interface SQL {
 	<T = duckdb.RowData>(strings: TemplateStringsArray, ...params: DuckdbSQLParamType[]): DefaultSQLTemplate<T>;
-	identifier(value: DuckdbIdentifier): DuckdbSQLIdentifier;
+	identifier(value: Identifier<DuckdbIdentifierObject>): DuckdbSQLIdentifier;
 	values(value: DuckdbValues): DuckdbSQLValues;
 	raw(value: Raw): SQLRaw;
-	default: DuckdbSQLDefault;
+	default: SQLDefault;
 }
 
 const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>): SQL => {
@@ -24,7 +24,7 @@ const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>): SQL => {
 	};
 
 	Object.assign(fn, {
-		identifier: (value: DuckdbIdentifier) => {
+		identifier: (value: Identifier<DuckdbIdentifierObject>) => {
 			return new DuckdbSQLIdentifier(value);
 		},
 		values: (value: DuckdbValues) => {
@@ -33,7 +33,7 @@ const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>): SQL => {
 		raw: (value: Raw) => {
 			return new SQLRaw(value);
 		},
-		default: new DuckdbSQLDefault(),
+		default: new SQLDefault(),
 	});
 
 	return fn as any;

@@ -115,3 +115,7 @@ export abstract class SQLTemplate<T> {
 		}
 	}
 }
+
+export abstract class SQLValuesDriver {
+	abstract mapToDriver(value: any): any;
+}

@@ -1,6 +1,6 @@
-import type { SQLRaw } from '../sql-template-params.ts';
+import type { PgSQLIdentifier, PgSQLValues } from '../pg-core/dialect.ts';
+import type { SQLDefault, SQLRaw } from '../sql-template-params.ts';
 import type { JSONArray, JSONObject } from '../types.ts';
-import type { NodePgSQLDefault, NodePgSQLIdentifier, NodePgSQLValues } from './sql-template-params.ts';
 
 export type UnsafeParamType =
 	| string
@@ -21,7 +21,7 @@ export type NodePgSQLParamType =
 	| null
 	| JSONArray
 	| JSONObject
-	| NodePgSQLIdentifier
-	| NodePgSQLValues
-	| NodePgSQLDefault
+	| PgSQLIdentifier
+	| PgSQLValues
+	| SQLDefault
 	| SQLRaw;

@@ -1,9 +1,10 @@
 import type { Client as ClientT, Pool as PoolT } from 'pg';
 import pg from 'pg';
-import type { Raw } from '../sql-template-params.ts';
-import { SQLRaw } from '../sql-template-params.ts';
-import type { NodePgIdentifier, NodePgValues } from './sql-template-params.ts';
-import { NodePgSQLDefault, NodePgSQLIdentifier, NodePgSQLValues } from './sql-template-params.ts';
+import type { PgIdentifierObject, PgValues } from '../pg-core/dialect.ts';
+import { PgSQLIdentifier, PgSQLValues } from '../pg-core/dialect.ts';
+import type { Identifier, Raw } from '../sql-template-params.ts';
+import { SQLDefault, SQLRaw } from '../sql-template-params.ts';
+import { NodePgSQLValuesDriver } from './driver.ts';
 import { NodePgSQLTemplate } from './sql-template.ts';
 import type { NodePgSQLParamType, UnsafeParamType } from './types.ts';
 import { dbQuery, isConfig } from './utils.ts';
@@ -17,8 +18,8 @@ type RowData = {
 export { SQLTemplate } from '../sql-template.ts';
 export interface SQL {
 	<T = RowData>(strings: TemplateStringsArray, ...params: NodePgSQLParamType[]): NodePgSQLTemplate<T>;
-	identifier(value: NodePgIdentifier): NodePgSQLIdentifier;
-	values(value: NodePgValues): NodePgSQLValues;
+	identifier(value: Identifier<PgIdentifierObject>): PgSQLIdentifier;
+	values(value: PgValues): PgSQLValues;
 	raw(value: Raw): SQLRaw;
 	unsafe<RowMode extends 'array' | 'object' = 'object'>(
 		query: string,
@@ -29,7 +30,7 @@ export interface SQL {
 			[columnName: string]: any;
 		}[]
 	>;
-	default: NodePgSQLDefault;
+	default: SQLDefault;
 }
 
 const createSqlTemplate = (
@@ -41,11 +42,11 @@ const createSqlTemplate = (
 	};
 
 	Object.assign(fn, {
-		identifier: (value: NodePgIdentifier) => {
-			return new NodePgSQLIdentifier(value);
+		identifier: (value: Identifier<PgIdentifierObject>) => {
+			return new PgSQLIdentifier(value);
 		},
-		values: (value: NodePgValues) => {
-			return new NodePgSQLValues(value);
+		values: (value: PgValues) => {
+			return new PgSQLValues(value, new NodePgSQLValuesDriver());
 		},
 		raw: (value: Raw) => {
 			return new SQLRaw(value);
@@ -63,7 +64,7 @@ const createSqlTemplate = (
 				{ ...options as Required<typeof options> },
 			);
 		},
-		default: new NodePgSQLDefault(),
+		default: new SQLDefault(),
 	});
 
 	return fn as any;

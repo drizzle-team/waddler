@@ -1,7 +1,7 @@
 import type { DuckDBConnection, DuckDBInstance } from '@duckdb/node-api';
-import type { SQLRaw } from '../sql-template-params.ts';
+import type { DuckdbSQLIdentifier, DuckdbSQLValues } from '../duckdb-core/dialect.ts';
+import type { SQLDefault, SQLRaw } from '../sql-template-params.ts';
 import type { JSONArray, JSONObject } from '../types.ts';
-import type { DuckdbNeoSQLDefault, DuckdbNeoSQLIdentifier, DuckdbNeoSQLValues } from './sql-template-params';
 
 export interface DuckDBConnectionObj {
 	instance: DuckDBInstance;
@@ -27,7 +27,7 @@ export type DuckdbNeoSQLParamType =
 	| null
 	| JSONArray
 	| JSONObject
-	| DuckdbNeoSQLIdentifier
-	| DuckdbNeoSQLValues
-	| DuckdbNeoSQLDefault
+	| DuckdbSQLIdentifier
+	| DuckdbSQLValues
+	| SQLDefault
 	| SQLRaw;

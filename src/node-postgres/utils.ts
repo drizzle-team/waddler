@@ -69,7 +69,7 @@ export const isConfig = (data: any): boolean => {
 	return false;
 };
 
-// adapter for pg.Client, pg.Pool and PGlite
+// adapter for pg.Client, pg.Pool
 export const dbQuery = async <ParamsType extends any[]>(
 	conn: ClientT | PoolT,
 	query: string,

@@ -1,23 +1,19 @@
 import { SQLDefault, SQLIdentifier, SQLValues } from '../sql-template-params.ts';
 import type { JSONObject } from '../types.ts';
 
-export abstract class SQLValuesDriver {
-	abstract mapToDriver(value: any): any;
-}
-
-export type PgIdentifierObject = {
+export type DuckdbIdentifierObject = {
 	schema?: string;
 	table?: string;
 	column?: string;
 	as?: string;
 };
 
-export class PgSQLIdentifier extends SQLIdentifier<PgIdentifierObject> {
+export class DuckdbSQLIdentifier extends SQLIdentifier<DuckdbIdentifierObject> {
 	override escapeIdentifier(val: string): string {
 		return `"${val}"`;
 	}
 
-	checkObject(object: PgIdentifierObject) {
+	checkObject(object: DuckdbIdentifierObject) {
 		if (Object.values(object).includes(undefined!)) {
 			throw new Error(
 				`you can't specify undefined parameters. maybe you want to omit it?`,
@@ -75,17 +71,13 @@ export type Value =
 	| null
 	| JSONObject
 	| Value[];
-export type PgValues = Value[][];
-export class PgSQLValues extends SQLValues<Value> {
-	constructor(value: PgValues, private readonly driver: SQLValuesDriver) {
+export type DuckdbValues = Value[][];
+export class DuckdbSQLValues extends SQLValues<Value> {
+	constructor(value: DuckdbValues) {
 		super(value);
 	}
 
-	escapeParam(num: number): string {
-		return `$${num}`;
-	}
-
-	valueToSQL(value: Value, lastParamIdx: number): string {
+	valueToSQL(value: Value): string {
 		if (value instanceof SQLDefault) {
 			return value.generateSQL().sql;
 		}
@@ -94,15 +86,28 @@ export class PgSQLValues extends SQLValues<Value> {
 			typeof value === 'number'
 			|| typeof value === 'bigint'
 			|| typeof value === 'boolean'
-			|| typeof value === 'string'
 			|| value === null
-			|| value instanceof Date
-			|| Array.isArray(value)
-			|| typeof value === 'object'
 		) {
-			const mappedValue = this.driver.mapToDriver(value);
-			this.params.push(mappedValue);
-			return this.escapeParam(lastParamIdx + this.params.length);
+			return `${value}`;
+		}
+
+		if (value instanceof Date) {
+			return `'${value.toISOString()}'`;
+		}
+
+		if (typeof value === 'string') {
+			return `'${value}'`;
+		}
+
+		if (Array.isArray(value)) {
+			return `[${value.map((arrayValue) => this.valueToSQL(arrayValue))}]`;
+		}
+
+		if (typeof value === 'object') {
+			// object case
+			throw new Error(
+				"value can't be object. you can't specify [ [ {...}, ...], ...] as parameter for sql.values.",
+			);
 		}
 
 		if (value === undefined) {
