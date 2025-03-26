@@ -1,5 +1,5 @@
 import duckdb from 'duckdb';
-import { DuckdbSQLCommonParam } from '../duckdb-core/dialect.ts';
+import { DuckdbDialect } from '../duckdb-core/dialect.ts';
 import type { RecyclingPool } from '../recycling-pool.ts';
 import { SQLTemplate } from '../sql-template.ts';
 import { stringifyArray } from '../utils.ts';
@@ -107,7 +107,7 @@ export class DefaultSQLTemplate<T> extends SQLTemplate<T, RawParam> {
 		params: DuckdbSQLParamType[],
 		protected readonly pool: RecyclingPool<duckdb.Database>,
 	) {
-		super(strings, params, DuckdbSQLCommonParam);
+		super(strings, params, new DuckdbDialect());
 	}
 
 	protected async executeQuery() {

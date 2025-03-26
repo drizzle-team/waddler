@@ -1,8 +1,7 @@
 import pg, { type Client, type Pool } from 'pg';
 import type { PgIdentifierObject, PgValues } from '../pg-core/dialect.ts';
-import { PgSQLIdentifier, PgSQLValues } from '../pg-core/dialect.ts';
 import type { Identifier, Raw } from '../sql-template-params.ts';
-import { SQLDefault, SQLRaw } from '../sql-template-params.ts';
+import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
 import type { RowData } from '../types.ts';
 import { NodePgSQLTemplate } from './sql-template.ts';
 import type { NodePgSQLParamType, UnsafeParamType } from './types.ts';
@@ -10,8 +9,8 @@ import { dbQuery, isConfig } from './utils.ts';
 
 export interface SQL {
 	<T = RowData>(strings: TemplateStringsArray, ...params: NodePgSQLParamType[]): NodePgSQLTemplate<T>;
-	identifier(value: Identifier<PgIdentifierObject>): PgSQLIdentifier;
-	values(value: PgValues): PgSQLValues;
+	identifier(value: Identifier<PgIdentifierObject>): SQLIdentifier<PgIdentifierObject>;
+	values(value: PgValues): SQLValues<PgValues>;
 	raw(value: Raw): SQLRaw;
 	unsafe<RowMode extends 'array' | 'object' = 'object'>(
 		query: string,
@@ -35,10 +34,10 @@ const createSqlTemplate = (
 
 	Object.assign(fn, {
 		identifier: (value: Identifier<PgIdentifierObject>) => {
-			return new PgSQLIdentifier(value);
+			return new SQLIdentifier(value);
 		},
 		values: (value: PgValues) => {
-			return new PgSQLValues(value);
+			return new SQLValues(value);
 		},
 		raw: (value: Raw) => {
 			return new SQLRaw(value);

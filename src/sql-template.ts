@@ -1,3 +1,4 @@
+import type { Dialect } from './sql-template-params.ts';
 import {
 	SQLCommonParam,
 	SQLDefault,
@@ -27,7 +28,7 @@ export abstract class SQLTemplate<T, RawParam> {
 	// protected abstract strings: readonly string[];
 	// protected abstract params: SQLChunk[];
 	protected queryChunks: SQLParam[];
-	constructor(strings: readonly string[], params: ParamType[], sqlCommonParamCon: new(value: any) => SQLCommonParam) {
+	constructor(strings: readonly string[], params: ParamType[], protected readonly dialect: Dialect) {
 		this.queryChunks = [];
 		if (params.length > 0 || (strings.length > 0 && strings[0] !== '')) {
 			this.queryChunks.push(new SQLString(strings[0]!));
@@ -36,7 +37,7 @@ export abstract class SQLTemplate<T, RawParam> {
 			if (param instanceof SQLParam) this.queryChunks.push(param, new SQLString(strings[paramIndex + 1]!));
 			else {
 				this.paramsCheck(param);
-				this.queryChunks.push(new sqlCommonParamCon(param), new SQLString(strings[paramIndex + 1]!));
+				this.queryChunks.push(new SQLCommonParam(param), new SQLString(strings[paramIndex + 1]!));
 			}
 		}
 	}
@@ -83,15 +84,18 @@ export abstract class SQLTemplate<T, RawParam> {
 		for (const chunk of this.queryChunks) {
 			if (
 				chunk instanceof SQLString
-				|| chunk instanceof SQLIdentifier
 				|| chunk instanceof SQLRaw
 				|| chunk instanceof SQLDefault
 			) {
 				query += chunk.generateSQL().sql;
 			}
 
+			if (chunk instanceof SQLIdentifier) {
+				query += chunk.generateSQL({ dialect: this.dialect }).sql;
+			}
+
 			if (chunk instanceof SQLValues || chunk instanceof SQLCommonParam) {
-				const { sql, params } = chunk.generateSQL(params4driver.length);
+				const { sql, params } = chunk.generateSQL({ dialect: this.dialect, lastParamIdx: params4driver.length });
 				query += sql;
 				params4driver.push(...params);
 			}

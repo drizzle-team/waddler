@@ -1,7 +1,7 @@
 import type { Client as ClientT, Pool as PoolT, PoolClient } from 'pg';
 import pg from 'pg';
 import QueryStream from 'pg-query-stream';
-import { PgSQLCommonParam } from '../pg-core/dialect.ts';
+import { PgDialect } from '../pg-core/dialect.ts';
 import { SQLTemplate } from '../sql-template.ts';
 import type { NodePgSQLParamType, UnsafeParamType } from './types.ts';
 import { dbQuery } from './utils.ts';
@@ -14,7 +14,7 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T, UnsafeParamType> {
 		params: NodePgSQLParamType[],
 		protected readonly client: ClientT | PoolT,
 	) {
-		super(strings, params, PgSQLCommonParam);
+		super(strings, params, new PgDialect());
 	}
 
 	protected async executeQuery() {

@@ -1,29 +1,16 @@
-import { SQLCommonParam, SQLDefault, SQLIdentifier, SQLValues } from '../sql-template-params.ts';
+import { Dialect, SQLDefault } from '../sql-template-params.ts';
 import type { JSONObject } from '../types.ts';
 
-export abstract class SQLValuesDriver {
-	abstract mapToDriver(value: any): any;
-}
-
-export class PgSQLCommonParam extends SQLCommonParam {
-	override escapeParam(lastParamIdx: number): string {
+export class PgDialect extends Dialect {
+	escapeParam(lastParamIdx: number): string {
 		return `$${lastParamIdx}`;
 	}
-}
 
-export type PgIdentifierObject = {
-	schema?: string;
-	table?: string;
-	column?: string;
-	as?: string;
-};
-
-export class PgSQLIdentifier extends SQLIdentifier<PgIdentifierObject> {
-	override escapeIdentifier(val: string): string {
-		return `"${val}"`;
+	escapeIdentifier(identifier: string): string {
+		return `"${identifier}"`;
 	}
 
-	checkObject(object: PgIdentifierObject) {
+	checkIdentifierObject(object: PgIdentifierObject) {
 		if (Object.values(object).includes(undefined!)) {
 			throw new Error(
 				`you can't specify undefined parameters. maybe you want to omit it?`,
@@ -69,25 +56,16 @@ export class PgSQLIdentifier extends SQLIdentifier<PgIdentifierObject> {
 			);
 		}
 	}
-}
 
-export type Value =
-	| string
-	| number
-	| bigint
-	| boolean
-	| Date
-	| SQLDefault
-	| null
-	| JSONObject
-	| Value[];
-export type PgValues = Value[][];
-export class PgSQLValues extends SQLValues<Value> {
-	override escapeParam(lastParamIdx: number): string {
-		return `$${lastParamIdx}`;
-	}
-
-	valueToSQL(value: Value, escapeParam: (lastParamIdx: number) => string, lastParamIdx: number): string {
+	// SQLValues
+	valueToSQL<Value>(
+		{ value, escapeParam, lastParamIdx, params }: {
+			value: Value;
+			escapeParam: (lastParamIdx: number) => string;
+			lastParamIdx: number;
+			params: Value[];
+		},
+	): string {
 		if (value instanceof SQLDefault) {
 			return value.generateSQL().sql;
 		}
@@ -102,8 +80,8 @@ export class PgSQLValues extends SQLValues<Value> {
 			|| Array.isArray(value)
 			|| typeof value === 'object'
 		) {
-			this.params.push(value);
-			return escapeParam(lastParamIdx + this.params.length);
+			params.push(value);
+			return escapeParam(lastParamIdx + params.length);
 		}
 
 		if (value === undefined) {
@@ -113,3 +91,22 @@ export class PgSQLValues extends SQLValues<Value> {
 		throw new Error(`you can't specify ${typeof value} as value.`);
 	}
 }
+
+export type PgIdentifierObject = {
+	schema?: string;
+	table?: string;
+	column?: string;
+	as?: string;
+};
+
+export type Value =
+	| string
+	| number
+	| bigint
+	| boolean
+	| Date
+	| SQLDefault
+	| null
+	| JSONObject
+	| Value[];
+export type PgValues = Value[][];

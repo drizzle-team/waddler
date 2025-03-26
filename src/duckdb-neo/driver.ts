@@ -1,11 +1,10 @@
 import type { DuckDBResult } from '@duckdb/node-api';
 import { DuckDBInstance } from '@duckdb/node-api';
 import type { DuckdbIdentifierObject, DuckdbValues } from '../duckdb-core/dialect.ts';
-import { DuckdbSQLIdentifier, DuckdbSQLValues } from '../duckdb-core/dialect.ts';
 import type { Factory } from '../pool-ts/types.ts';
 import { RecyclingPool } from '../recycling-pool.ts';
 import type { Identifier, Raw } from '../sql-template-params.ts';
-import { SQLDefault, SQLRaw } from '../sql-template-params.ts';
+import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
 import type { RowData } from '../types.ts';
 import { transformResultToArrays, transformResultToObjects } from './result-transformers.ts';
 import { DuckdbNeoSQLTemplate } from './sql-template.ts';
@@ -14,8 +13,8 @@ import { bindParams } from './utils.ts';
 
 export interface SQL {
 	<T = RowData>(strings: TemplateStringsArray, ...params: DuckdbNeoSQLParamType[]): DuckdbNeoSQLTemplate<T>;
-	identifier(value: Identifier<DuckdbIdentifierObject>): DuckdbSQLIdentifier;
-	values(value: DuckdbValues): DuckdbSQLValues;
+	identifier(value: Identifier<DuckdbIdentifierObject>): SQLIdentifier<DuckdbIdentifierObject>;
+	values(value: DuckdbValues): SQLValues<DuckdbValues>;
 	raw(value: Raw): SQLRaw;
 	unsafe(query: string, params?: UnsafeParamType[], options?: { rowMode: 'array' | 'default' }): Promise<
 		{
@@ -33,10 +32,10 @@ const createSqlTemplate = (pool: RecyclingPool<DuckDBConnectionObj>): SQL => {
 
 	Object.assign(fn, {
 		identifier: (value: Identifier<DuckdbIdentifierObject>) => {
-			return new DuckdbSQLIdentifier(value);
+			return new SQLIdentifier(value);
 		},
 		values: (value: DuckdbValues) => {
-			return new DuckdbSQLValues(value);
+			return new SQLValues(value);
 		},
 		raw: (value: Raw) => {
 			return new SQLRaw(value);

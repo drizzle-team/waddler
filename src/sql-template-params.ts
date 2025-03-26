@@ -1,16 +1,36 @@
-export abstract class SQLParam {
-	abstract generateSQL(lastParamIdx?: number): { sql: string; params?: any[] };
+import type { IdentifierObject } from './types';
+
+export abstract class Dialect {
+	abstract escapeParam(lastParamIdx: number): string;
+	abstract escapeIdentifier(identifier: string): string;
+	abstract checkIdentifierObject(object: IdentifierObject): void;
+
+	// SQLValues
+	abstract valueToSQL<V>(params: {
+		value: V;
+		escapeParam: (lastParamIdx: number) => string;
+		lastParamIdx: number;
+		params: V[];
+	}): string;
 }
 
-export abstract class SQLCommonParam extends SQLParam {
+export abstract class SQLParam {
+	abstract generateSQL(
+		param: {
+			dialect?: Dialect;
+			lastParamIdx?: number;
+		},
+	): { sql: string; params?: any[] };
+}
+
+export class SQLCommonParam extends SQLParam {
 	constructor(private readonly value: any) {
 		super();
 	}
 
-	abstract escapeParam(lastParamIdx: number): string;
-	generateSQL(lastParamIdx: number): { sql: string; params: any[] } {
+	generateSQL({ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number }): { sql: string; params: any[] } {
 		return {
-			sql: this.escapeParam(lastParamIdx + 1),
+			sql: dialect.escapeParam(lastParamIdx + 1),
 			params: [this.value],
 		};
 	}
@@ -26,44 +46,34 @@ export class SQLString extends SQLParam {
 	}
 }
 
-export type IdentifierObject = {
-	schema?: string;
-	table?: string;
-	column?: string;
-	as?: string;
-};
-
 export type Identifier<Q extends IdentifierObject> =
 	| string
 	| string[]
 	| Q
 	| Q[];
 
-export abstract class SQLIdentifier<Q extends IdentifierObject> extends SQLParam {
+export class SQLIdentifier<Q extends IdentifierObject> extends SQLParam {
 	constructor(private readonly value: Identifier<Q>) {
 		super();
 	}
 
-	abstract escapeIdentifier(val: string): string;
-	abstract checkObject(val: Q): void;
-
-	objectToSQL(object: Q) {
-		this.checkObject(object);
+	objectToSQL(object: Q, dialect: Dialect) {
+		dialect.checkIdentifierObject(object);
 
 		const chunks: string[] = [];
 
-		if (object.schema !== undefined) chunks.push(`${this.escapeIdentifier(object.schema)}`);
-		if (object.table !== undefined) chunks.push(`${this.escapeIdentifier(object.table)}`);
-		if (object.column !== undefined) chunks.push(`${this.escapeIdentifier(object.column)}`);
-		const as = object.as === undefined ? '' : ` as ${this.escapeIdentifier(object.as)}`;
+		if (object.schema !== undefined) chunks.push(`${dialect.escapeIdentifier(object.schema)}`);
+		if (object.table !== undefined) chunks.push(`${dialect.escapeIdentifier(object.table)}`);
+		if (object.column !== undefined) chunks.push(`${dialect.escapeIdentifier(object.column)}`);
+		const as = object.as === undefined ? '' : ` as ${dialect.escapeIdentifier(object.as)}`;
 
 		return `${chunks.join('.')}${as}`;
 	}
 
-	generateSQL() {
+	generateSQL({ dialect }: { dialect: Dialect }) {
 		if (typeof this.value === 'string') {
 			return {
-				sql: `${this.escapeIdentifier(this.value)}`,
+				sql: `${dialect.escapeIdentifier(this.value)}`,
 			};
 		}
 
@@ -85,9 +95,9 @@ export abstract class SQLIdentifier<Q extends IdentifierObject> extends SQLParam
 				}
 
 				if (typeof val === 'string') {
-					chunks.push(this.escapeIdentifier(val));
+					chunks.push(dialect.escapeIdentifier(val));
 				} else if (typeof val === 'object' && val !== null) {
-					chunks.push(this.objectToSQL(val));
+					chunks.push(this.objectToSQL(val, dialect));
 				} else {
 					throw new Error(
 						`you can't specify array of (null or undefined or number or bigint or boolean or symbol or function) as parameter for sql.identifier.`,
@@ -99,7 +109,7 @@ export abstract class SQLIdentifier<Q extends IdentifierObject> extends SQLParam
 		}
 
 		if (typeof this.value === 'object' && this.value !== null) {
-			return { sql: this.objectToSQL(this.value) };
+			return { sql: this.objectToSQL(this.value, dialect) };
 		}
 
 		if (this.value === null) {
@@ -114,13 +124,13 @@ export abstract class SQLIdentifier<Q extends IdentifierObject> extends SQLParam
 	}
 }
 
-export abstract class SQLValues<Value> extends SQLParam {
+export class SQLValues<Value> extends SQLParam {
 	constructor(private readonly value: Value[][]) {
 		super();
 	}
 	protected params: Value[] = [];
 
-	generateSQL(lastParamIdx: number) {
+	generateSQL({ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number }) {
 		if (!Array.isArray(this.value)) {
 			if (this.value === null) {
 				throw new Error(`you can't specify null as parameter for sql.values.`);
@@ -136,7 +146,7 @@ export abstract class SQLValues<Value> extends SQLParam {
 			);
 		}
 		const sql = this.value
-			.map((rowValues) => this.rowValuesToSQL(rowValues, lastParamIdx))
+			.map((rowValues) => this.rowValuesToSQL(rowValues, dialect, lastParamIdx))
 			.join(', ');
 
 		return {
@@ -145,7 +155,7 @@ export abstract class SQLValues<Value> extends SQLParam {
 		};
 	}
 
-	rowValuesToSQL(rowValues: Value[], lastParamIdx: number) {
+	rowValuesToSQL(rowValues: Value[], dialect: Dialect, lastParamIdx: number) {
 		if (Array.isArray(rowValues)) {
 			if (rowValues.length === 0) {
 				throw new Error(`array of values can't be empty.`);
@@ -153,7 +163,9 @@ export abstract class SQLValues<Value> extends SQLParam {
 
 			return `(${
 				rowValues
-					.map((val) => this.valueToSQL(val, this.escapeParam, lastParamIdx))
+					.map((value) =>
+						dialect.valueToSQL<Value>({ value, escapeParam: dialect.escapeParam, lastParamIdx, params: this.params })
+					)
 					.join(', ')
 			})`;
 		}
@@ -167,13 +179,6 @@ export abstract class SQLValues<Value> extends SQLParam {
 			`you can't specify array of ${typeof rowValues} as parameter for sql.values.`,
 		);
 	}
-
-	// PostgreSQL and DuckDB implementations below can and should be overridden if your valueToSQL method uses the escapeParam method.
-	escapeParam(lastParamIdx: number): string {
-		return `$${lastParamIdx}`;
-	}
-
-	abstract valueToSQL(value: Value, escapeParam: (lastParamIdx: number) => string, lastParamIdx: number): string;
 }
 
 export type Raw = string | number | boolean | bigint;

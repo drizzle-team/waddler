@@ -8,3 +8,10 @@ export type JSONObject = { [key: string]: ValueForObject };
 export type RowData = {
 	[columnName: string]: any;
 };
+
+export type IdentifierObject = {
+	schema?: string;
+	table?: string;
+	column?: string;
+	as?: string;
+};

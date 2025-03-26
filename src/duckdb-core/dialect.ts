@@ -1,25 +1,16 @@
-import { SQLCommonParam, SQLDefault, SQLIdentifier, SQLValues } from '../sql-template-params.ts';
+import { Dialect, SQLDefault } from '../sql-template-params.ts';
 import type { JSONObject } from '../types.ts';
 
-export class DuckdbSQLCommonParam extends SQLCommonParam {
-	override escapeParam(lastParamIdx: number): string {
+export class DuckdbDialect extends Dialect {
+	escapeParam(lastParamIdx: number): string {
 		return `$${lastParamIdx}`;
 	}
-}
 
-export type DuckdbIdentifierObject = {
-	schema?: string;
-	table?: string;
-	column?: string;
-	as?: string;
-};
-
-export class DuckdbSQLIdentifier extends SQLIdentifier<DuckdbIdentifierObject> {
-	override escapeIdentifier(val: string): string {
-		return `"${val}"`;
+	escapeIdentifier(identifier: string): string {
+		return `"${identifier}"`;
 	}
 
-	checkObject(object: DuckdbIdentifierObject) {
+	checkIdentifierObject(object: DuckdbIdentifierObject) {
 		if (Object.values(object).includes(undefined!)) {
 			throw new Error(
 				`you can't specify undefined parameters. maybe you want to omit it?`,
@@ -65,25 +56,9 @@ export class DuckdbSQLIdentifier extends SQLIdentifier<DuckdbIdentifierObject> {
 			);
 		}
 	}
-}
 
-export type Value =
-	| string
-	| number
-	| bigint
-	| boolean
-	| Date
-	| SQLDefault
-	| null
-	| JSONObject
-	| Value[];
-export type DuckdbValues = Value[][];
-export class DuckdbSQLValues extends SQLValues<Value> {
-	constructor(value: DuckdbValues) {
-		super(value);
-	}
-
-	valueToSQL(value: Value): string {
+	// SQLValues
+	valueToSQL<Value>({ value }: { value: Value }): string {
 		if (value instanceof SQLDefault) {
 			return value.generateSQL().sql;
 		}
@@ -106,7 +81,7 @@ export class DuckdbSQLValues extends SQLValues<Value> {
 		}
 
 		if (Array.isArray(value)) {
-			return `[${value.map((arrayValue) => this.valueToSQL(arrayValue))}]`;
+			return `[${value.map((arrayValue) => this.valueToSQL({ value: arrayValue }))}]`;
 		}
 
 		if (typeof value === 'object') {
@@ -123,3 +98,22 @@ export class DuckdbSQLValues extends SQLValues<Value> {
 		throw new Error(`you can't specify ${typeof value} as value.`);
 	}
 }
+
+export type DuckdbIdentifierObject = {
+	schema?: string;
+	table?: string;
+	column?: string;
+	as?: string;
+};
+
+export type Value =
+	| string
+	| number
+	| bigint
+	| boolean
+	| Date
+	| SQLDefault
+	| null
+	| JSONObject
+	| Value[];
+export type DuckdbValues = Value[][];
