@@ -15,3 +15,13 @@ export type DuckdbSQLParamType =
 	| DuckdbSQLValues
 	| SQLDefault
 	| SQLRaw;
+
+export type RawParam =
+	| string
+	| number
+	| bigint
+	| Date
+	| boolean
+	| null
+	| JSONArray
+	| JSONObject;

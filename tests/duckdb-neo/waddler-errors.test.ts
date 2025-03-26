@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { waddler } from '../../src/duckdb-neo/index.ts';
+import { waddler } from '../../src/duckdb-neo/driver.ts';
 
 test('error during connection test', async () => {
 	const sql = waddler({ url: 'md:?motherduck_token=test', max: 10, accessMode: 'read_write' });

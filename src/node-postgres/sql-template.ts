@@ -1,21 +1,20 @@
 import type { Client as ClientT, Pool as PoolT, PoolClient } from 'pg';
 import pg from 'pg';
 import QueryStream from 'pg-query-stream';
+import { PgSQLCommonParam } from '../pg-core/dialect.ts';
 import { SQLTemplate } from '../sql-template.ts';
-import type { NodePgSQLParamType } from './types.ts';
+import type { NodePgSQLParamType, UnsafeParamType } from './types.ts';
 import { dbQuery } from './utils.ts';
 
 const { Pool, types } = pg;
 
-export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
+export class NodePgSQLTemplate<T> extends SQLTemplate<T, UnsafeParamType> {
 	constructor(
-		protected strings: readonly string[],
-		protected params: NodePgSQLParamType[],
+		strings: readonly string[],
+		params: NodePgSQLParamType[],
 		protected readonly client: ClientT | PoolT,
 	) {
-		super();
-		this.strings = strings;
-		this.params = params;
+		super(strings, params, PgSQLCommonParam);
 	}
 
 	protected async executeQuery() {

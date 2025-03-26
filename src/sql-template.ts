@@ -1,16 +1,56 @@
-import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from './sql-template-params.ts';
+import {
+	SQLCommonParam,
+	SQLDefault,
+	SQLIdentifier,
+	SQLParam,
+	SQLRaw,
+	SQLString,
+	SQLValues,
+} from './sql-template-params.ts';
+import type { JSONArray, JSONObject } from './types.ts';
 
-export abstract class SQLTemplate<T> {
-	protected abstract strings: readonly string[];
-	protected abstract params: any[];
+type ParamType =
+	| string
+	| number
+	| bigint
+	| Date
+	| boolean
+	| null
+	| JSONArray
+	| JSONObject
+	| SQLDefault
+	| SQLIdentifier<any>
+	| SQLRaw
+	| SQLValues<any>;
 
-	append(value: SQLTemplate<any>) {
-		this.strings = [
-			...this.strings.slice(0, -1),
-			`${this.strings.at(-1)}${value.strings.at(0)}`,
-			...value.strings.slice(1),
-		];
-		this.params = [...this.params, ...value.params];
+export abstract class SQLTemplate<T, RawParam> {
+	// protected abstract strings: readonly string[];
+	// protected abstract params: SQLChunk[];
+	protected queryChunks: SQLParam[];
+	constructor(strings: readonly string[], params: ParamType[], sqlCommonParamCon: new(value: any) => SQLCommonParam) {
+		this.queryChunks = [];
+		if (params.length > 0 || (strings.length > 0 && strings[0] !== '')) {
+			this.queryChunks.push(new SQLString(strings[0]!));
+		}
+		for (const [paramIndex, param] of params.entries()) {
+			if (param instanceof SQLParam) this.queryChunks.push(param, new SQLString(strings[paramIndex + 1]!));
+			else {
+				this.paramsCheck(param);
+				this.queryChunks.push(new sqlCommonParamCon(param), new SQLString(strings[paramIndex + 1]!));
+			}
+		}
+	}
+
+	append(value: SQLTemplate<T, RawParam>) {
+		const thisLastChunk = this.queryChunks.at(-1), valueFirstChunk = value.queryChunks.at(0);
+		if (thisLastChunk instanceof SQLString && valueFirstChunk instanceof SQLString) {
+			const middleChunk = new SQLString(
+				`${thisLastChunk.generateSQL().sql}${valueFirstChunk.generateSQL().sql}`,
+			);
+			this.queryChunks = [...this.queryChunks.slice(0, -1), middleChunk, ...value.queryChunks.slice(1)];
+			return;
+		}
+		this.queryChunks = [...this.queryChunks, ...value.queryChunks];
 	}
 
 	paramsCheck(param: any) {
@@ -28,68 +68,38 @@ export abstract class SQLTemplate<T> {
 	}
 
 	// Method to extract raw SQL
-	toSQL() {
-		if (this.params.length === 0) {
-			return { query: this.strings[0] ?? '', params: [] };
+	toSQL(): {
+		query: string;
+		params: RawParam[];
+	} {
+		if (this.queryChunks.length === 1 && this.queryChunks[0] instanceof SQLString) {
+			return { query: this.queryChunks[0].generateSQL().sql, params: [] };
 		}
 
-		const filteredParams: any[] = [];
-		// select ${sql.values([['1']])} from ${users}${something}
-		// strings=["select ", " from ", '']
-		// params=[${sql.values([['1']])}, ${users}, ${something}]
-
-		// chunks=[StringChunk'select '), ${sql.values([['1']])}, StringChunk(" from ")]
-
-		// query = ['']
-		// for of chunks
-		//    if(chunk is StringChunk) {query.push(chunk.value)}
-		// ...
-		// query.join('')
-
-		// or
-
-		// query = ''
-		// for of chunks
-		//    if(chunk is StringChunk) {quer += chunk.generateSQL()}
-		// ...
-		// return query
-
 		// TODO: params should not be any
-		let query = '', param: any;
-		for (const [idx, stringI] of this.strings.entries()) {
-			if (idx === this.strings.length - 1) {
-				query += stringI;
-				continue;
-			}
+		const params4driver: RawParam[] = [];
+		let query = '';
 
-			param = this.params[idx];
-			let paramPlaceholder: string;
+		for (const chunk of this.queryChunks) {
 			if (
-				param instanceof SQLIdentifier
-				|| param instanceof SQLValues
-				|| param instanceof SQLRaw
-				|| param instanceof SQLDefault
+				chunk instanceof SQLString
+				|| chunk instanceof SQLIdentifier
+				|| chunk instanceof SQLRaw
+				|| chunk instanceof SQLDefault
 			) {
-				const { sql, params } = param.generateSQL(filteredParams.length) as { sql: string; params?: any[] };
-				if (params !== undefined) {
-					filteredParams.push(...params);
-				}
-				paramPlaceholder = sql;
-				query += stringI + paramPlaceholder;
-				continue;
+				query += chunk.generateSQL().sql;
 			}
 
-			this.paramsCheck(param);
-
-			filteredParams.push(param);
-			// escapeParam
-			paramPlaceholder = `$${filteredParams.length}`;
-			query += stringI + paramPlaceholder;
+			if (chunk instanceof SQLValues || chunk instanceof SQLCommonParam) {
+				const { sql, params } = chunk.generateSQL(params4driver.length);
+				query += sql;
+				params4driver.push(...params);
+			}
 		}
 
 		return {
 			query,
-			params: filteredParams,
+			params: params4driver,
 		};
 	}
 
@@ -137,6 +147,6 @@ export abstract class SQLTemplate<T> {
 	}
 }
 
-export abstract class SQLValuesDriver {
+export abstract class SQLDriver {
 	abstract mapToDriver(value: any): any;
 }

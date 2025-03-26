@@ -1,10 +1,11 @@
-import duckdb, { RowData } from 'duckdb';
+import duckdb from 'duckdb';
 import type { DuckdbIdentifierObject, DuckdbValues } from '../duckdb-core/dialect.ts';
 import { DuckdbSQLIdentifier, DuckdbSQLValues } from '../duckdb-core/dialect.ts';
 import type { Factory } from '../pool-ts/types.ts';
 import { RecyclingPool } from '../recycling-pool.ts';
 import type { Identifier, Raw } from '../sql-template-params.ts';
 import { SQLDefault, SQLRaw } from '../sql-template-params.ts';
+import type { RowData } from '../types.ts';
 import { DefaultSQLTemplate } from './sql-template.ts';
 import type { DuckdbSQLParamType } from './types.ts';
 

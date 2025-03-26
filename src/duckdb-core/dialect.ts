@@ -1,5 +1,11 @@
-import { SQLDefault, SQLIdentifier, SQLValues } from '../sql-template-params.ts';
+import { SQLCommonParam, SQLDefault, SQLIdentifier, SQLValues } from '../sql-template-params.ts';
 import type { JSONObject } from '../types.ts';
+
+export class DuckdbSQLCommonParam extends SQLCommonParam {
+	override escapeParam(lastParamIdx: number): string {
+		return `$${lastParamIdx}`;
+	}
+}
 
 export type DuckdbIdentifierObject = {
 	schema?: string;

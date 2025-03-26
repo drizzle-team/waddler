@@ -1,9 +1,37 @@
-export interface IdentifierObject {
+export abstract class SQLParam {
+	abstract generateSQL(lastParamIdx?: number): { sql: string; params?: any[] };
+}
+
+export abstract class SQLCommonParam extends SQLParam {
+	constructor(private readonly value: any) {
+		super();
+	}
+
+	abstract escapeParam(lastParamIdx: number): string;
+	generateSQL(lastParamIdx: number): { sql: string; params: any[] } {
+		return {
+			sql: this.escapeParam(lastParamIdx + 1),
+			params: [this.value],
+		};
+	}
+}
+
+export class SQLString extends SQLParam {
+	constructor(private readonly value: string) {
+		super();
+	}
+
+	generateSQL() {
+		return { sql: this.value };
+	}
+}
+
+export type IdentifierObject = {
 	schema?: string;
 	table?: string;
 	column?: string;
 	as?: string;
-}
+};
 
 export type Identifier<Q extends IdentifierObject> =
 	| string
@@ -11,8 +39,10 @@ export type Identifier<Q extends IdentifierObject> =
 	| Q
 	| Q[];
 
-export abstract class SQLIdentifier<Q extends IdentifierObject> {
-	constructor(private readonly value: Identifier<Q>) {}
+export abstract class SQLIdentifier<Q extends IdentifierObject> extends SQLParam {
+	constructor(private readonly value: Identifier<Q>) {
+		super();
+	}
 
 	abstract escapeIdentifier(val: string): string;
 	abstract checkObject(val: Q): void;
@@ -84,8 +114,10 @@ export abstract class SQLIdentifier<Q extends IdentifierObject> {
 	}
 }
 
-export abstract class SQLValues<Value> {
-	constructor(private readonly value: Value[][]) {}
+export abstract class SQLValues<Value> extends SQLParam {
+	constructor(private readonly value: Value[][]) {
+		super();
+	}
 	protected params: Value[] = [];
 
 	generateSQL(lastParamIdx: number) {
@@ -121,7 +153,7 @@ export abstract class SQLValues<Value> {
 
 			return `(${
 				rowValues
-					.map((val) => this.valueToSQL(val, lastParamIdx))
+					.map((val) => this.valueToSQL(val, this.escapeParam, lastParamIdx))
 					.join(', ')
 			})`;
 		}
@@ -136,12 +168,19 @@ export abstract class SQLValues<Value> {
 		);
 	}
 
-	abstract valueToSQL(value: Value, lastParamIdx: number): string;
+	// PostgreSQL and DuckDB implementations below can and should be overridden if your valueToSQL method uses the escapeParam method.
+	escapeParam(lastParamIdx: number): string {
+		return `$${lastParamIdx}`;
+	}
+
+	abstract valueToSQL(value: Value, escapeParam: (lastParamIdx: number) => string, lastParamIdx: number): string;
 }
 
 export type Raw = string | number | boolean | bigint;
-export class SQLRaw {
-	constructor(private readonly value: Raw) {}
+export class SQLRaw extends SQLParam {
+	constructor(private readonly value: Raw) {
+		super();
+	}
 
 	generateSQL() {
 		if (
@@ -173,7 +212,7 @@ export class SQLRaw {
 	}
 }
 
-export class SQLDefault {
+export class SQLDefault extends SQLParam {
 	generateSQL() {
 		return { sql: 'default' };
 	}

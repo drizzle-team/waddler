@@ -4,3 +4,7 @@ type ValueForObject = string | number | boolean | null | Date | JSONObject | Arr
 export type JSONArray = Array<ValueForArray>;
 
 export type JSONObject = { [key: string]: ValueForObject };
+
+export type RowData = {
+	[columnName: string]: any;
+};

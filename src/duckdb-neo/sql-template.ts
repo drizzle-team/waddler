@@ -1,20 +1,18 @@
 import type { DuckDBVector } from '@duckdb/node-api';
+import { DuckdbSQLCommonParam } from '../duckdb-core/dialect.ts';
 import type { RecyclingPool } from '../recycling-pool.ts';
 import { SQLTemplate } from '../sql-template.ts';
 import { getColumnVectors, transformResultRowToObject, transformResultToObjects } from './result-transformers.ts';
-import type { DuckDBConnectionObj, DuckdbNeoSQLParamType } from './types.ts';
+import type { DuckDBConnectionObj, DuckdbNeoSQLParamType, UnsafeParamType } from './types.ts';
 import { bindParams } from './utils.ts';
 
-export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
+export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T, UnsafeParamType> {
 	constructor(
-		protected strings: readonly string[],
-		protected params: DuckdbNeoSQLParamType[],
+		strings: readonly string[],
+		params: DuckdbNeoSQLParamType[],
 		protected readonly pool: RecyclingPool<DuckDBConnectionObj>,
 	) {
-		super();
-		this.strings = strings;
-		this.params = params;
-		this.pool = pool;
+		super(strings, params, DuckdbSQLCommonParam);
 	}
 
 	protected async executeQuery() {
@@ -25,7 +23,6 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 		let result;
 
 		const connObj = await this.pool.acquire();
-		// console.log('connObj:', connObj);
 
 		// wrapping duckdb driver error in new js error to add stack trace to it
 		try {

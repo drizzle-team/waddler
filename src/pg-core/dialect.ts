@@ -1,8 +1,14 @@
-import { SQLDefault, SQLIdentifier, SQLValues } from '../sql-template-params.ts';
+import { SQLCommonParam, SQLDefault, SQLIdentifier, SQLValues } from '../sql-template-params.ts';
 import type { JSONObject } from '../types.ts';
 
 export abstract class SQLValuesDriver {
 	abstract mapToDriver(value: any): any;
+}
+
+export class PgSQLCommonParam extends SQLCommonParam {
+	override escapeParam(lastParamIdx: number): string {
+		return `$${lastParamIdx}`;
+	}
 }
 
 export type PgIdentifierObject = {
@@ -77,11 +83,11 @@ export type Value =
 	| Value[];
 export type PgValues = Value[][];
 export class PgSQLValues extends SQLValues<Value> {
-	escapeParam(num: number): string {
-		return `$${num}`;
+	override escapeParam(lastParamIdx: number): string {
+		return `$${lastParamIdx}`;
 	}
 
-	valueToSQL(value: Value, lastParamIdx: number): string {
+	valueToSQL(value: Value, escapeParam: (lastParamIdx: number) => string, lastParamIdx: number): string {
 		if (value instanceof SQLDefault) {
 			return value.generateSQL().sql;
 		}
@@ -97,7 +103,7 @@ export class PgSQLValues extends SQLValues<Value> {
 			|| typeof value === 'object'
 		) {
 			this.params.push(value);
-			return this.escapeParam(lastParamIdx + this.params.length);
+			return escapeParam(lastParamIdx + this.params.length);
 		}
 
 		if (value === undefined) {

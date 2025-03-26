@@ -3,8 +3,8 @@ import type { Client as ClientT } from 'pg';
 import pg from 'pg';
 import { createPgDockerDB } from 'tests/utils.ts';
 import { afterAll, beforeAll, expect, test } from 'vitest';
-import type { SQL } from '../../src/node-postgres/index.ts';
-import { waddler } from '../../src/node-postgres/index.ts';
+import type { SQL } from '../../src/node-postgres/driver.ts';
+import { waddler } from '../../src/node-postgres/driver.ts';
 
 const { Client, Pool } = pg;
 
