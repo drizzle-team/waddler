@@ -43,6 +43,6 @@
 			"~/*": ["src/*"]
 		}
 	},
-	"exclude": ["dist", "db", "src/dev/test.ts", "src/dev/db-test.ts"],
+	"exclude": ["dist", "node_modules", "db"],
 	"include": ["src", "*.ts", "scripts/build.ts", "tests"]
 }

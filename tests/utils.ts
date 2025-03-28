@@ -9,7 +9,6 @@ export const createPgDockerDB = async () => {
 
 	const pullStream = await docker.pull(image);
 	await new Promise((resolve, reject) =>
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-argument
 		docker.modem.followProgress(pullStream, (err: any) => err ? reject(err) : resolve(err))
 	);
 
