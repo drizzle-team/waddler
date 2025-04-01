@@ -1,5 +1,6 @@
 import type { Client as ClientT, Pool as PoolT, QueryArrayConfig, QueryConfig } from 'pg';
 import pg from 'pg';
+import { NodePgClient } from './driver';
 
 const { types } = pg;
 
@@ -71,7 +72,7 @@ export const isConfig = (data: any): boolean => {
 
 // adapter for pg.Client, pg.Pool
 export const dbQuery = async <ParamsType extends any[]>(
-	conn: ClientT | PoolT,
+	conn: NodePgClient,
 	query: string,
 	params: ParamsType,
 	options: { rowMode: 'array' | 'object' },

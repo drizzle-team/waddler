@@ -8,7 +8,6 @@ export abstract class Dialect {
 	// SQLValues
 	abstract valueToSQL<V>(params: {
 		value: V;
-		escapeParam: (lastParamIdx: number) => string;
 		lastParamIdx: number;
 		params: V[];
 	}): string;
@@ -163,9 +162,7 @@ export class SQLValues<Value> extends SQLParam {
 
 			return `(${
 				rowValues
-					.map((value) =>
-						dialect.valueToSQL<Value>({ value, escapeParam: dialect.escapeParam, lastParamIdx, params: this.params })
-					)
+					.map((value) => dialect.valueToSQL<Value>({ value, lastParamIdx, params: this.params }))
 					.join(', ')
 			})`;
 		}

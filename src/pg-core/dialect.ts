@@ -58,10 +58,10 @@ export class PgDialect extends Dialect {
 	}
 
 	// SQLValues
+	// TODO, should it be here?
 	valueToSQL<Value>(
-		{ value, escapeParam, lastParamIdx, params }: {
+		{ value, lastParamIdx, params }: {
 			value: Value;
-			escapeParam: (lastParamIdx: number) => string;
 			lastParamIdx: number;
 			params: Value[];
 		},
@@ -81,7 +81,7 @@ export class PgDialect extends Dialect {
 			|| typeof value === 'object'
 		) {
 			params.push(value);
-			return escapeParam(lastParamIdx + params.length);
+			return this.escapeParam(lastParamIdx + params.length);
 		}
 
 		if (value === undefined) {
@@ -109,4 +109,5 @@ export type Value =
 	| null
 	| JSONObject
 	| Value[];
+
 export type PgValues = Value[][];

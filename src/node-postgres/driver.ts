@@ -1,4 +1,5 @@
-import pg, { type Client, type Pool } from 'pg';
+import pg, { type Client, type Pool, PoolClient, PoolConfig } from 'pg';
+import { WaddlerConfig, WaddlerDriverExtension } from '~/extensions.ts';
 import type { PgIdentifierObject, PgValues } from '../pg-core/dialect.ts';
 import type { Identifier, Raw } from '../sql-template-params.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
@@ -25,11 +26,11 @@ export interface SQL {
 }
 
 const createSqlTemplate = (
-	client: Client | Pool,
+	client: NodePgClient,
+	configOptions: WaddlerConfig,
 ): SQL => {
-	// [strings, params]: Parameters<SQL>
 	const fn = <T>(strings: TemplateStringsArray, ...params: NodePgSQLParamType[]): NodePgSQLTemplate<T> => {
-		return new NodePgSQLTemplate<T>(strings, params, client);
+		return new NodePgSQLTemplate<T>(strings, params, client, configOptions);
 	};
 
 	Object.assign(fn, {
@@ -62,7 +63,7 @@ const createSqlTemplate = (
 };
 
 const unsafeFunc = async (
-	client: Client | Pool,
+	client: NodePgClient,
 	query: string,
 	params: UnsafeParamType[],
 	options: { rowMode: 'array' | 'object' },
@@ -86,57 +87,54 @@ const unsafeFunc = async (
 
 	return result;
 };
+export type NodePgClient = pg.Pool | PoolClient | Client;
 
-export function waddler(
-	param: string | pg.Client | pg.Pool | pg.PoolConfig | {
-		connection: string | pg.PoolConfig;
-	} | {
-		client: pg.Client | pg.Pool;
-	},
+export function waddler<TClient extends NodePgClient>(
+	...params:
+		| [
+			string,
+		]
+		| [
+			string,
+			WaddlerConfig,
+		]
+		| [
+			(
+				& WaddlerConfig
+				& ({
+					connection: string | PoolConfig;
+				} | {
+					client: TClient;
+				})
+			),
+		]
 ) {
-	if (typeof param === 'string') {
+	if (typeof params[0] === 'string') {
 		const client = new pg.Pool({
-			connectionString: param,
+			connectionString: params[0],
 		});
 
-		return createSqlTemplate(client);
+		return createSqlTemplate(client, params[1] as WaddlerConfig);
 	}
 
-	if (param instanceof pg.Client || param instanceof pg.Pool) {
-		return createSqlTemplate(param);
+	if (isConfig(params)) {
+		const { connection, client, ...waddlerConfig } = params[0] as (
+			& ({ connection?: PoolConfig | string; client?: TClient })
+			& WaddlerConfig
+		);
+
+		if (client) return createSqlTemplate(client, waddlerConfig);
+
+		const instance = typeof connection === 'string'
+			? new pg.Pool({
+				connectionString: connection,
+			})
+			: new pg.Pool(connection!);
+
+		return createSqlTemplate(instance, waddlerConfig);
 	}
 
-	if (isConfig(param)) {
-		const client = (param as {
-			client: pg.Client | pg.Pool;
-		}).client;
-
-		const connection = (param as {
-			connection: string | pg.PoolConfig;
-		}).connection;
-
-		if (client !== undefined) {
-			return createSqlTemplate(client);
-		}
-
-		if (connection !== undefined) {
-			if (typeof connection === 'string') {
-				const pool = new pg.Pool({
-					connectionString: connection,
-				});
-
-				return createSqlTemplate(pool);
-			}
-			const pool = new pg.Pool(connection);
-
-			return createSqlTemplate(pool);
-		}
-
-		const pool = new pg.Pool(param as pg.ClientConfig | pg.PoolConfig);
-
-		return createSqlTemplate(pool);
-	}
-
+	// Change error message
 	throw new Error(
 		'Invalid parameter for waddler.'
 			+ '\nMust be a string, pg.Client, pg.Pool, { connection: string | pg.PoolConfig }, { client: pg.Client | pg.Pool }, pg.ClientConfig or pg.PoolConfig',

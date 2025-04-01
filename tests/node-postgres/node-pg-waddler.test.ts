@@ -33,7 +33,7 @@ beforeAll(async () => {
 			pgConnectionParams = dockerPayload.connectionParams;
 			pgClient = new Client(dockerPayload.connectionParams);
 			await pgClient.connect();
-			sql = waddler(pgClient);
+			sql = waddler({ client: pgClient });
 			connected = true;
 			break;
 		} catch (e) {
@@ -97,18 +97,9 @@ const dropAllDataTypesTable = async () => {
 };
 
 test('connection test', async () => {
-	// const connectionString =
-	// 	`postgresql://${pgConnectionParams.user}:${pgConnectionParams.password}@${pgConnectionParams.host}:${pgConnectionParams.port}/${pgConnectionParams.database}`;
-	// const sql0 = waddler(
-	// 	connectionString,
-	// );
-
-	// console.log(await sql0`select 1;`);
-
-	//
 	const client = new Client({ ...pgConnectionParams });
 	await client.connect();
-	const sql1 = waddler(client);
+	const sql1 = waddler({ client });
 	await sql1`select 1;`;
 
 	const sql12 = waddler({ client });
@@ -116,7 +107,7 @@ test('connection test', async () => {
 	await client.end();
 
 	const pool = new Pool({ ...pgConnectionParams });
-	const sql2 = waddler(pool);
+	const sql2 = waddler({ client: pool });
 	await sql2`select 2;`;
 
 	const sql22 = waddler({ client: pool });
@@ -531,7 +522,7 @@ test('sql.stream test', async () => {
 
 	const client = new Client({ ...pgConnectionParams });
 	await client.connect();
-	const sqlClient = waddler(client);
+	const sqlClient = waddler({ client });
 	const streamClient = sqlClient`select * from all_data_types;`.stream();
 	for await (const row of streamClient) {
 		expect(row).toStrictEqual(expectedRes);
@@ -540,7 +531,7 @@ test('sql.stream test', async () => {
 	await client.end();
 
 	const pool = new Pool({ ...pgConnectionParams });
-	const sqlPool = waddler(pool);
+	const sqlPool = waddler({ client: pool });
 	const streamPool = sqlPool`select * from all_data_types;`.stream();
 	for await (const row of streamPool) {
 		expect(row).toStrictEqual(expectedRes);

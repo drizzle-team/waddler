@@ -1,3 +1,4 @@
+import { WaddlerConfig } from './extensions.ts';
 import type { Dialect } from './sql-template-params.ts';
 import {
 	SQLCommonParam,
@@ -25,10 +26,14 @@ type ParamType =
 	| SQLValues<any>;
 
 export abstract class SQLTemplate<T, RawParam> {
-	// protected abstract strings: readonly string[];
-	// protected abstract params: SQLChunk[];
 	protected queryChunks: SQLParam[];
-	constructor(strings: readonly string[], params: ParamType[], protected readonly dialect: Dialect) {
+
+	constructor(
+		strings: readonly string[],
+		params: ParamType[],
+		protected readonly dialect: Dialect,
+		protected configOptions: WaddlerConfig,
+	) {
 		this.queryChunks = [];
 		if (params.length > 0 || (strings.length > 0 && strings[0] !== '')) {
 			this.queryChunks.push(new SQLString(strings[0]!));
