@@ -107,7 +107,7 @@ export class DefaultSQLTemplate<T> extends SQLTemplate<T> {
 		params: SQLParamType[],
 		protected readonly pool: RecyclingPool<duckdb.Database>,
 	) {
-		super(query, params, new DuckdbDialect());
+		super(query, params);
 	}
 
 	async execute() {

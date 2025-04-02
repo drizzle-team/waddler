@@ -2,7 +2,6 @@ import type { Client as ClientT, Pool as PoolT, PoolClient, QueryArrayConfig, Qu
 import pg from 'pg';
 import { WaddlerConfig } from '~/extensions.ts';
 import { SQLParamType } from '~/types.ts';
-import { PgDialect } from '../pg-core/dialect.ts';
 import { SQLTemplate } from '../sql-template.ts';
 import { NodePgClient } from './driver.ts';
 
@@ -41,7 +40,7 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 			},
 		},
 	) {
-		super(query, params, new PgDialect(), configOptions);
+		super(query, params, configOptions);
 	}
 
 	async execute() {
@@ -72,16 +71,7 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 					'To use stream feature, you would need to provide queryStream() function to waddler extensions, example: waddler("", { extensions: [queryStream()] })',
 				);
 			}
-			const queryStream = new queryStreamObj.constructor(this.query, this.params, {
-				types: {
-					getTypeParser: (typeId: number, format: string) => {
-						if (typeId === types.builtins.INTERVAL) return (val: any) => val;
-						if (typeId === 1187) return (val: any) => val;
-						// @ts-expect-error
-						return types.getTypeParser(typeId, format);
-					},
-				},
-			});
+			const queryStream = new queryStreamObj.constructor(this.queryConfig, this.params);
 
 			const stream = conn.query(queryStream);
 

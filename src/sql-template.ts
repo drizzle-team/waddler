@@ -32,7 +32,6 @@ export abstract class SQLTemplate<T> {
 	constructor(
 		protected query: string,
 		protected params: ParamType[],
-		protected readonly dialect: Dialect,
 		protected configOptions?: WaddlerConfig,
 	) {
 	}

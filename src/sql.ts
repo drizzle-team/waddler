@@ -28,6 +28,7 @@ export type Value =
 	| SQLDefault
 	| null
 	| JSONObject
+	| JSONArray
 	| Value[];
 
 export type Values = Value[][];

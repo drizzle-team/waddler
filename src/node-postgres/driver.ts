@@ -17,12 +17,7 @@ const createSqlTemplate = (
 ): SQL => {
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): NodePgSQLTemplate<T> => {
 		const sql = new SQLWrapper(strings, ...params);
-		const query = sql.toSQL({
-			escapeParam: dialect.escapeParam,
-			escapeIdentifier: dialect.escapeIdentifier,
-			valueToSQL: dialect.valueToSQL,
-			checkIdentifierObject: dialect.checkIdentifierObject,
-		});
+		const query = sql.toSQL(dialect);
 		return new NodePgSQLTemplate<T>(query.query, query.params, client, configOptions);
 	};
 

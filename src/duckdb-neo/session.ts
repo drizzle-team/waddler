@@ -1,6 +1,5 @@
 import type { DuckDBVector } from '@duckdb/node-api';
 import { SQLParamType } from '~/types.ts';
-import { DuckdbDialect } from '../duckdb-core/dialect.ts';
 import type { RecyclingPool } from '../recycling-pool.ts';
 import { SQLTemplate } from '../sql-template.ts';
 import { getColumnVectors, transformResultRowToObject, transformResultToObjects } from './result-transformers.ts';
@@ -13,7 +12,7 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 		params: SQLParamType[],
 		protected readonly pool: RecyclingPool<DuckDBConnectionObj>,
 	) {
-		super(query, params, new DuckdbDialect());
+		super(query, params);
 	}
 
 	async execute() {
