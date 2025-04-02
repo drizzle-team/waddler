@@ -1,9 +1,9 @@
 import duckdb from 'duckdb';
+import { SQLParamType } from '~/types.ts';
 import { DuckdbDialect } from '../duckdb-core/dialect.ts';
 import type { RecyclingPool } from '../recycling-pool.ts';
 import { SQLTemplate } from '../sql-template.ts';
 import { stringifyArray } from '../utils.ts';
-import type { DuckdbSQLParamType, RawParam } from './types.ts';
 import { methodPromisify } from './utils.ts';
 
 const statementAllAsync = methodPromisify<duckdb.Statement, duckdb.TableData>(
@@ -101,16 +101,16 @@ const transformNDList = (list: any[] | any, listType: duckdb.ListTypeInfo | duck
 	return nDList;
 };
 
-export class DefaultSQLTemplate<T> extends SQLTemplate<T, RawParam> {
+export class DefaultSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
-		strings: readonly string[],
-		params: DuckdbSQLParamType[],
+		query: string,
+		params: SQLParamType[],
 		protected readonly pool: RecyclingPool<duckdb.Database>,
 	) {
-		super(strings, params, new DuckdbDialect());
+		super(query, params, new DuckdbDialect());
 	}
 
-	protected async executeQuery() {
+	async execute() {
 		// Implement your actual DB execution logic here
 		// This could be a fetch or another async operation
 		// gets connection from pool, runs query, release connection

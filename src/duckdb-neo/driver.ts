@@ -1,33 +1,28 @@
 import type { DuckDBResult } from '@duckdb/node-api';
 import { DuckDBInstance } from '@duckdb/node-api';
+import { PgDialect } from '~/pg-core/dialect.ts';
+import { IdentifierObject, SQL, SQLWrapper } from '~/sql.ts';
 import type { DuckdbIdentifierObject, DuckdbValues } from '../duckdb-core/dialect.ts';
 import type { Factory } from '../pool-ts/types.ts';
 import { RecyclingPool } from '../recycling-pool.ts';
 import type { Identifier, Raw } from '../sql-template-params.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
-import type { RowData } from '../types.ts';
+import type { SQLParamType, UnsafeParamType } from '../types.ts';
 import { transformResultToArrays, transformResultToObjects } from './result-transformers.ts';
-import { DuckdbNeoSQLTemplate } from './sql-template.ts';
-import type { DuckDBConnectionObj, DuckdbNeoSQLParamType, UnsafeParamType } from './types.ts';
+import { DuckdbNeoSQLTemplate } from './session.ts';
+import type { DuckDBConnectionObj } from './types.ts';
 import { bindParams } from './utils.ts';
 
-export interface SQL {
-	<T = RowData>(strings: TemplateStringsArray, ...params: DuckdbNeoSQLParamType[]): DuckdbNeoSQLTemplate<T>;
-	identifier(value: Identifier<DuckdbIdentifierObject>): SQLIdentifier<DuckdbIdentifierObject>;
-	values(value: DuckdbValues): SQLValues<DuckdbValues>;
-	raw(value: Raw): SQLRaw;
-	unsafe(query: string, params?: UnsafeParamType[], options?: { rowMode: 'array' | 'default' }): Promise<
-		{
-			[columnName: string]: any;
-		}[] | any[][]
-	>;
-	default: SQLDefault;
-}
-
-const createSqlTemplate = (pool: RecyclingPool<DuckDBConnectionObj>): SQL => {
-	// [strings, params]: Parameters<SQL>
-	const fn = <T>(strings: TemplateStringsArray, ...params: DuckdbNeoSQLParamType[]): DuckdbNeoSQLTemplate<T> => {
-		return new DuckdbNeoSQLTemplate<T>(strings, params, pool);
+const createSqlTemplate = (pool: RecyclingPool<DuckDBConnectionObj>, dialect: PgDialect): SQL => {
+	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): DuckdbNeoSQLTemplate<T> => {
+		const sql = new SQLWrapper(strings, ...params);
+		const query = sql.toSQL({
+			escapeParam: dialect.escapeParam,
+			escapeIdentifier: dialect.escapeIdentifier,
+			valueToSQL: dialect.valueToSQL,
+			checkIdentifierObject: dialect.checkIdentifierObject,
+		});
+		return new DuckdbNeoSQLTemplate<T>(query.query, query.params, pool);
 	};
 
 	Object.assign(fn, {
@@ -148,6 +143,7 @@ export function waddler(
 		threads?: string;
 	},
 ) {
+	const dialect = new PgDialect();
 	url = url === undefined && dbUrl !== undefined ? dbUrl : url;
 
 	const factory = createFactory({
@@ -163,5 +159,5 @@ export function waddler(
 
 	const pool = new RecyclingPool<DuckDBConnectionObj>(factory, options);
 
-	return createSqlTemplate(pool);
+	return createSqlTemplate(pool, dialect);
 }

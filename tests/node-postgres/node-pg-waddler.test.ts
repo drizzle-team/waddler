@@ -3,8 +3,9 @@ import type { Client as ClientT } from 'pg';
 import pg from 'pg';
 import { createPgDockerDB } from 'tests/utils.ts';
 import { afterAll, beforeAll, expect, test } from 'vitest';
-import type { SQL } from '../../src/node-postgres/driver.ts';
 import { waddler } from '../../src/node-postgres/driver.ts';
+import { queryStream } from '../../src/node-postgres/pg-query-stream.ts';
+import { SQL } from '../../src/sql.ts';
 
 const { Client, Pool } = pg;
 
@@ -522,7 +523,7 @@ test('sql.stream test', async () => {
 
 	const client = new Client({ ...pgConnectionParams });
 	await client.connect();
-	const sqlClient = waddler({ client });
+	const sqlClient = waddler({ client, extensions: [queryStream()] });
 	const streamClient = sqlClient`select * from all_data_types;`.stream();
 	for await (const row of streamClient) {
 		expect(row).toStrictEqual(expectedRes);
@@ -531,7 +532,7 @@ test('sql.stream test', async () => {
 	await client.end();
 
 	const pool = new Pool({ ...pgConnectionParams });
-	const sqlPool = waddler({ client: pool });
+	const sqlPool = waddler({ client: pool, extensions: [queryStream()] });
 	const streamPool = sqlPool`select * from all_data_types;`.stream();
 	for await (const row of streamPool) {
 		expect(row).toStrictEqual(expectedRes);

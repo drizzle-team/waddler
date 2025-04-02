@@ -1,4 +1,4 @@
-import type { IdentifierObject } from './types';
+import { BuildQueryConfig, IdentifierObject } from './sql';
 
 export abstract class Dialect {
 	abstract escapeParam(lastParamIdx: number): string;
@@ -13,21 +13,23 @@ export abstract class Dialect {
 	}): string;
 }
 
-export abstract class SQLParam {
+export abstract class SQLChunk {
 	abstract generateSQL(
 		param: {
-			dialect?: Dialect;
+			dialect?: Partial<BuildQueryConfig>;
 			lastParamIdx?: number;
 		},
 	): { sql: string; params?: any[] };
 }
 
-export class SQLCommonParam extends SQLParam {
+export class SQLCommonParam extends SQLChunk {
 	constructor(private readonly value: any) {
 		super();
 	}
 
-	generateSQL({ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number }): { sql: string; params: any[] } {
+	generateSQL(
+		{ dialect, lastParamIdx }: { dialect: BuildQueryConfig; lastParamIdx: number },
+	): { sql: string; params: any[] } {
 		return {
 			sql: dialect.escapeParam(lastParamIdx + 1),
 			params: [this.value],
@@ -35,7 +37,7 @@ export class SQLCommonParam extends SQLParam {
 	}
 }
 
-export class SQLString extends SQLParam {
+export class SQLString extends SQLChunk {
 	constructor(private readonly value: string) {
 		super();
 	}
@@ -51,12 +53,12 @@ export type Identifier<Q extends IdentifierObject> =
 	| Q
 	| Q[];
 
-export class SQLIdentifier<Q extends IdentifierObject> extends SQLParam {
+export class SQLIdentifier<Q extends IdentifierObject> extends SQLChunk {
 	constructor(private readonly value: Identifier<Q>) {
 		super();
 	}
 
-	objectToSQL(object: Q, dialect: Dialect) {
+	objectToSQL(object: Q, dialect: Pick<BuildQueryConfig, 'checkIdentifierObject' | 'escapeIdentifier'>) {
 		dialect.checkIdentifierObject(object);
 
 		const chunks: string[] = [];
@@ -69,7 +71,7 @@ export class SQLIdentifier<Q extends IdentifierObject> extends SQLParam {
 		return `${chunks.join('.')}${as}`;
 	}
 
-	generateSQL({ dialect }: { dialect: Dialect }) {
+	generateSQL({ dialect }: { dialect: Pick<BuildQueryConfig, 'checkIdentifierObject' | 'escapeIdentifier'> }) {
 		if (typeof this.value === 'string') {
 			return {
 				sql: `${dialect.escapeIdentifier(this.value)}`,
@@ -123,13 +125,13 @@ export class SQLIdentifier<Q extends IdentifierObject> extends SQLParam {
 	}
 }
 
-export class SQLValues<Value> extends SQLParam {
+export class SQLValues<Value> extends SQLChunk {
 	constructor(private readonly value: Value[][]) {
 		super();
 	}
 	protected params: Value[] = [];
 
-	generateSQL({ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number }) {
+	generateSQL({ dialect, lastParamIdx }: { dialect: BuildQueryConfig; lastParamIdx: number }) {
 		if (!Array.isArray(this.value)) {
 			if (this.value === null) {
 				throw new Error(`you can't specify null as parameter for sql.values.`);
@@ -154,7 +156,7 @@ export class SQLValues<Value> extends SQLParam {
 		};
 	}
 
-	rowValuesToSQL(rowValues: Value[], dialect: Dialect, lastParamIdx: number) {
+	rowValuesToSQL(rowValues: Value[], dialect: BuildQueryConfig, lastParamIdx: number) {
 		if (Array.isArray(rowValues)) {
 			if (rowValues.length === 0) {
 				throw new Error(`array of values can't be empty.`);
@@ -179,7 +181,7 @@ export class SQLValues<Value> extends SQLParam {
 }
 
 export type Raw = string | number | boolean | bigint;
-export class SQLRaw extends SQLParam {
+export class SQLRaw extends SQLChunk {
 	constructor(private readonly value: Raw) {
 		super();
 	}
@@ -214,7 +216,7 @@ export class SQLRaw extends SQLParam {
 	}
 }
 
-export class SQLDefault extends SQLParam {
+export class SQLDefault extends SQLChunk {
 	generateSQL() {
 		return { sql: 'default' };
 	}

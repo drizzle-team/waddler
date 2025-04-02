@@ -1,93 +1,54 @@
-import pg, { type Client, type Pool, PoolClient, PoolConfig } from 'pg';
-import { WaddlerConfig, WaddlerDriverExtension } from '~/extensions.ts';
-import type { PgIdentifierObject, PgValues } from '../pg-core/dialect.ts';
+import pg, { type Client, PoolClient, PoolConfig } from 'pg';
+import { SQLParamType, UnsafeParamType } from '~/types.ts';
+import { WaddlerConfig } from '../extensions.ts';
+import { PgDialect } from '../pg-core/dialect.ts';
 import type { Identifier, Raw } from '../sql-template-params.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
-import type { RowData } from '../types.ts';
-import { NodePgSQLTemplate } from './sql-template.ts';
-import type { NodePgSQLParamType, UnsafeParamType } from './types.ts';
-import { dbQuery, isConfig } from './utils.ts';
+import { IdentifierObject, SQL, SQLWrapper, Values } from '../sql.ts';
+import { NodePgSQLTemplate } from './session.ts';
+import { isConfig } from './utils.ts';
 
-export interface SQL {
-	<T = RowData>(strings: TemplateStringsArray, ...params: NodePgSQLParamType[]): NodePgSQLTemplate<T>;
-	identifier(value: Identifier<PgIdentifierObject>): SQLIdentifier<PgIdentifierObject>;
-	values(value: PgValues): SQLValues<PgValues>;
-	raw(value: Raw): SQLRaw;
-	unsafe<RowMode extends 'array' | 'object' = 'object'>(
-		query: string,
-		params?: UnsafeParamType[],
-		options?: { rowMode: RowMode },
-	): Promise<
-		RowMode extends 'array' ? any[][] : {
-			[columnName: string]: any;
-		}[]
-	>;
-	default: SQLDefault;
-}
+export type NodePgClient = pg.Pool | PoolClient | Client;
 
 const createSqlTemplate = (
 	client: NodePgClient,
 	configOptions: WaddlerConfig,
+	dialect: PgDialect,
 ): SQL => {
-	const fn = <T>(strings: TemplateStringsArray, ...params: NodePgSQLParamType[]): NodePgSQLTemplate<T> => {
-		return new NodePgSQLTemplate<T>(strings, params, client, configOptions);
+	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): NodePgSQLTemplate<T> => {
+		const sql = new SQLWrapper(strings, ...params);
+		const query = sql.toSQL({
+			escapeParam: dialect.escapeParam,
+			escapeIdentifier: dialect.escapeIdentifier,
+			valueToSQL: dialect.valueToSQL,
+			checkIdentifierObject: dialect.checkIdentifierObject,
+		});
+		return new NodePgSQLTemplate<T>(query.query, query.params, client, configOptions);
 	};
 
 	Object.assign(fn, {
-		identifier: (value: Identifier<PgIdentifierObject>) => {
+		identifier: (value: Identifier<IdentifierObject>) => {
 			return new SQLIdentifier(value);
 		},
-		values: (value: PgValues) => {
+		values: (value: Values) => {
 			return new SQLValues(value);
 		},
 		raw: (value: Raw) => {
 			return new SQLRaw(value);
 		},
-		unsafe: async (query: string, params?: UnsafeParamType[], options?: { rowMode?: 'array' | 'object' }) => {
-			options = options ?? {};
-			options.rowMode = options.rowMode ?? 'object';
-
-			params = params ?? [];
-
-			return await unsafeFunc(
-				client,
-				query,
-				params,
-				{ ...options as Required<typeof options> },
-			);
+		unsafe: async (
+			query: string,
+			params?: UnsafeParamType[],
+			options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
+		) => {
+			const unsafeDriver = new NodePgSQLTemplate(query, params ?? [], client, configOptions, options);
+			return await unsafeDriver.execute();
 		},
 		default: new SQLDefault(),
 	});
 
 	return fn as any;
 };
-
-const unsafeFunc = async (
-	client: NodePgClient,
-	query: string,
-	params: UnsafeParamType[],
-	options: { rowMode: 'array' | 'object' },
-) => {
-	let result;
-
-	// wrapping node-postgres driver error in new js error to add stack trace to it
-	try {
-		result = await dbQuery(
-			client,
-			query,
-			params,
-			options,
-		);
-	} catch (error) {
-		const newError = error instanceof AggregateError
-			? new Error(error.errors.map((e) => e.message).join('\n'))
-			: new Error((error as Error).message);
-		throw newError;
-	}
-
-	return result;
-};
-export type NodePgClient = pg.Pool | PoolClient | Client;
 
 export function waddler<TClient extends NodePgClient>(
 	...params:
@@ -109,21 +70,23 @@ export function waddler<TClient extends NodePgClient>(
 			),
 		]
 ) {
+	const dialect = new PgDialect();
+
 	if (typeof params[0] === 'string') {
 		const client = new pg.Pool({
 			connectionString: params[0],
 		});
 
-		return createSqlTemplate(client, params[1] as WaddlerConfig);
+		return createSqlTemplate(client, params[1] as WaddlerConfig, dialect);
 	}
 
-	if (isConfig(params)) {
+	if (isConfig(params[0])) {
 		const { connection, client, ...waddlerConfig } = params[0] as (
 			& ({ connection?: PoolConfig | string; client?: TClient })
 			& WaddlerConfig
 		);
 
-		if (client) return createSqlTemplate(client, waddlerConfig);
+		if (client) return createSqlTemplate(client, waddlerConfig, dialect);
 
 		const instance = typeof connection === 'string'
 			? new pg.Pool({
@@ -131,7 +94,7 @@ export function waddler<TClient extends NodePgClient>(
 			})
 			: new pg.Pool(connection!);
 
-		return createSqlTemplate(instance, waddlerConfig);
+		return createSqlTemplate(instance, waddlerConfig, dialect);
 	}
 
 	// Change error message

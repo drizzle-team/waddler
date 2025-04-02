@@ -1,3 +1,6 @@
+import { IdentifierObject, Values } from './sql';
+import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from './sql-template-params';
+
 type ValueForArray = number | bigint | boolean | null | Date | JSONObject | JSONArray;
 type ValueForObject = string | number | boolean | null | Date | JSONObject | Array<ValueForObject>;
 
@@ -9,9 +12,27 @@ export type RowData = {
 	[columnName: string]: any;
 };
 
-export type IdentifierObject = {
-	schema?: string;
-	table?: string;
-	column?: string;
-	as?: string;
-};
+// param types that can safely be passed to driver
+export type UnsafeParamType =
+	| string
+	| number
+	| bigint
+	| Date
+	| boolean
+	| null
+	| JSONObject
+	| JSONArray;
+
+export type SQLParamType =
+	| string
+	| number
+	| bigint
+	| Date
+	| boolean
+	| null
+	| JSONArray
+	| JSONObject
+	| SQLIdentifier<IdentifierObject>
+	| SQLValues<Values>
+	| SQLDefault
+	| SQLRaw;

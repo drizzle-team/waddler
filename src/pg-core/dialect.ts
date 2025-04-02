@@ -1,5 +1,5 @@
+import { IdentifierObject } from '~/sql.ts';
 import { Dialect, SQLDefault } from '../sql-template-params.ts';
-import type { JSONObject } from '../types.ts';
 
 export class PgDialect extends Dialect {
 	escapeParam(lastParamIdx: number): string {
@@ -10,7 +10,7 @@ export class PgDialect extends Dialect {
 		return `"${identifier}"`;
 	}
 
-	checkIdentifierObject(object: PgIdentifierObject) {
+	checkIdentifierObject(object: IdentifierObject) {
 		if (Object.values(object).includes(undefined!)) {
 			throw new Error(
 				`you can't specify undefined parameters. maybe you want to omit it?`,
@@ -91,23 +91,3 @@ export class PgDialect extends Dialect {
 		throw new Error(`you can't specify ${typeof value} as value.`);
 	}
 }
-
-export type PgIdentifierObject = {
-	schema?: string;
-	table?: string;
-	column?: string;
-	as?: string;
-};
-
-export type Value =
-	| string
-	| number
-	| bigint
-	| boolean
-	| Date
-	| SQLDefault
-	| null
-	| JSONObject
-	| Value[];
-
-export type PgValues = Value[][];

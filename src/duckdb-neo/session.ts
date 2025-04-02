@@ -1,21 +1,22 @@
 import type { DuckDBVector } from '@duckdb/node-api';
+import { SQLParamType } from '~/types.ts';
 import { DuckdbDialect } from '../duckdb-core/dialect.ts';
 import type { RecyclingPool } from '../recycling-pool.ts';
 import { SQLTemplate } from '../sql-template.ts';
 import { getColumnVectors, transformResultRowToObject, transformResultToObjects } from './result-transformers.ts';
-import type { DuckDBConnectionObj, DuckdbNeoSQLParamType, UnsafeParamType } from './types.ts';
+import { DuckDBConnectionObj } from './types.ts';
 import { bindParams } from './utils.ts';
 
-export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T, UnsafeParamType> {
+export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
-		strings: readonly string[],
-		params: DuckdbNeoSQLParamType[],
+		query: string,
+		params: SQLParamType[],
 		protected readonly pool: RecyclingPool<DuckDBConnectionObj>,
 	) {
-		super(strings, params, new DuckdbDialect());
+		super(query, params, new DuckdbDialect());
 	}
 
-	protected async executeQuery() {
+	async execute() {
 		// Implement your actual DB execution logic here
 		// This could be a fetch or another async operation
 		// gets connection from pool, runs query, release connection
