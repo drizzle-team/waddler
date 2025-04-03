@@ -1,5 +1,5 @@
 import QueryStream from 'pg-query-stream';
-import { WaddlerDriverExtension } from '../extensions';
+import type { WaddlerDriverExtension } from '../extensions.ts';
 
 export function queryStream(): WaddlerDriverExtension {
 	return {

@@ -1,28 +1,23 @@
 import type { DuckDBResult } from '@duckdb/node-api';
 import { DuckDBInstance } from '@duckdb/node-api';
-import { PgDialect } from '~/pg-core/dialect.ts';
-import { IdentifierObject, SQL, SQLWrapper } from '~/sql.ts';
-import type { DuckdbIdentifierObject, DuckdbValues } from '../duckdb-core/dialect.ts';
+import { DuckdbDialect, type DuckdbIdentifierObject, type DuckdbValues } from '../duckdb-core/dialect.ts';
 import type { Factory } from '../pool-ts/types.ts';
 import { RecyclingPool } from '../recycling-pool.ts';
 import type { Identifier, Raw } from '../sql-template-params.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
+import type { SQL } from '../sql.ts';
+import { SQLWrapper } from '../sql.ts';
 import type { SQLParamType, UnsafeParamType } from '../types.ts';
 import { transformResultToArrays, transformResultToObjects } from './result-transformers.ts';
 import { DuckdbNeoSQLTemplate } from './session.ts';
 import type { DuckDBConnectionObj } from './types.ts';
 import { bindParams } from './utils.ts';
 
-const createSqlTemplate = (pool: RecyclingPool<DuckDBConnectionObj>, dialect: PgDialect): SQL => {
+const createSqlTemplate = (pool: RecyclingPool<DuckDBConnectionObj>, dialect: DuckdbDialect): SQL => {
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): DuckdbNeoSQLTemplate<T> => {
-		const sql = new SQLWrapper(strings, ...params);
-		const query = sql.toSQL({
-			escapeParam: dialect.escapeParam,
-			escapeIdentifier: dialect.escapeIdentifier,
-			valueToSQL: dialect.valueToSQL,
-			checkIdentifierObject: dialect.checkIdentifierObject,
-		});
-		return new DuckdbNeoSQLTemplate<T>(query.query, query.params, pool);
+		const sql = new SQLWrapper(strings, params);
+		const query = sql.toSQL(dialect);
+		return new DuckdbNeoSQLTemplate<T>(query.query, query.params, pool, dialect, query.queryChunks);
 	};
 
 	Object.assign(fn, {
@@ -143,7 +138,7 @@ export function waddler(
 		threads?: string;
 	},
 ) {
-	const dialect = new PgDialect();
+	const dialect = new DuckdbDialect();
 	url = url === undefined && dbUrl !== undefined ? dbUrl : url;
 
 	const factory = createFactory({

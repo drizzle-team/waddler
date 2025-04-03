@@ -1,18 +1,21 @@
 import type { DuckDBVector } from '@duckdb/node-api';
-import { SQLParamType } from '~/types.ts';
 import type { RecyclingPool } from '../recycling-pool.ts';
+import type { Dialect, SQLChunk } from '../sql-template-params.ts';
 import { SQLTemplate } from '../sql-template.ts';
+import type { UnsafeParamType } from '../types.ts';
 import { getColumnVectors, transformResultRowToObject, transformResultToObjects } from './result-transformers.ts';
-import { DuckDBConnectionObj } from './types.ts';
+import type { DuckDBConnectionObj } from './types.ts';
 import { bindParams } from './utils.ts';
 
 export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
 		query: string,
-		params: SQLParamType[],
+		params: UnsafeParamType[],
 		protected readonly pool: RecyclingPool<DuckDBConnectionObj>,
+		dialect: Dialect,
+		queryChunks: SQLChunk[],
 	) {
-		super(query, params);
+		super(query, params, dialect, queryChunks);
 	}
 
 	async execute() {

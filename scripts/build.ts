@@ -70,5 +70,27 @@ await build({
 	},
 });
 
+await build({
+	entry: ['src/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
+
 fs.copyFileSync('package.json', 'dist/package.json');
 fs.copyFileSync('README.md', 'dist/README.md');

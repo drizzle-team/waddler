@@ -1,5 +1,5 @@
 import { beforeAll, expect, test } from 'vitest';
-import { waddler } from '../../src/duckdb/index.ts';
+import { waddler } from '../../src/duckdb/driver.ts';
 
 let sql: ReturnType<typeof waddler>;
 beforeAll(async () => {

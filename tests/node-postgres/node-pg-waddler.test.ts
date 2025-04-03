@@ -5,7 +5,7 @@ import { createPgDockerDB } from 'tests/utils.ts';
 import { afterAll, beforeAll, expect, test } from 'vitest';
 import { waddler } from '../../src/node-postgres/driver.ts';
 import { queryStream } from '../../src/node-postgres/pg-query-stream.ts';
-import { SQL } from '../../src/sql.ts';
+import type { SQL } from '../../src/sql.ts';
 
 const { Client, Pool } = pg;
 

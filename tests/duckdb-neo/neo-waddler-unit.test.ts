@@ -40,7 +40,7 @@ test('all types test', async () => {
 			[1, 2, 3],
 			[1, 2, 3, 4, 5],
 		],
-		{ rowMode: 'default' },
+		{ rowMode: 'object' },
 	);
 
 	let res = await sql.unsafe(`select * from all_types;`);
@@ -82,7 +82,7 @@ test('all types test', async () => {
 	await sql.unsafe(
 		`insert into float_table values ($1)`,
 		[20.3],
-		{ rowMode: 'default' },
+		{ rowMode: 'object' },
 	);
 
 	res = await sql.unsafe(`select * from float_table;`);
@@ -99,7 +99,7 @@ test('all types test', async () => {
         MAP {MAP {'a': 42.001, 'b': -32.1}: 42.001, MAP {'a1': 42.001, 'b1': -32.1}: -32.1}
         )`,
 		[],
-		{ rowMode: 'default' },
+		{ rowMode: 'object' },
 	);
 
 	const expectedMap = new Map([

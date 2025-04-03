@@ -1,10 +1,12 @@
-import pg, { type Client, PoolClient, PoolConfig } from 'pg';
-import { SQLParamType, UnsafeParamType } from '~/types.ts';
-import { WaddlerConfig } from '../extensions.ts';
+import type { Client, PoolClient, PoolConfig } from 'pg';
+import pg from 'pg';
+import type { SQLParamType, UnsafeParamType } from '~/types.ts';
+import type { WaddlerConfig } from '../extensions.ts';
 import { PgDialect } from '../pg-core/dialect.ts';
 import type { Identifier, Raw } from '../sql-template-params.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
-import { IdentifierObject, SQL, SQLWrapper, Values } from '../sql.ts';
+import type { IdentifierObject, SQL, Values } from '../sql.ts';
+import { SQLWrapper } from '../sql.ts';
 import { NodePgSQLTemplate } from './session.ts';
 import { isConfig } from './utils.ts';
 
@@ -16,9 +18,9 @@ const createSqlTemplate = (
 	dialect: PgDialect,
 ): SQL => {
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): NodePgSQLTemplate<T> => {
-		const sql = new SQLWrapper(strings, ...params);
+		const sql = new SQLWrapper(strings, params);
 		const query = sql.toSQL(dialect);
-		return new NodePgSQLTemplate<T>(query.query, query.params, client, configOptions);
+		return new NodePgSQLTemplate<T>(query.query, query.params, client, dialect, query.queryChunks, configOptions);
 	};
 
 	Object.assign(fn, {
@@ -34,9 +36,11 @@ const createSqlTemplate = (
 		unsafe: async (
 			query: string,
 			params?: UnsafeParamType[],
-			options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
+			options?: { rowMode: 'array' | 'object' },
 		) => {
-			const unsafeDriver = new NodePgSQLTemplate(query, params ?? [], client, configOptions, options);
+			params = params ?? [];
+			options = options ?? { rowMode: 'object' };
+			const unsafeDriver = new NodePgSQLTemplate(query, params, client, dialect, [], configOptions, options);
 			return await unsafeDriver.execute();
 		},
 		default: new SQLDefault(),

@@ -1,7 +1,5 @@
-import { SQLTemplate } from './sql-template';
+import type { Identifier, Raw } from './sql-template-params.ts';
 import {
-	Identifier,
-	Raw,
 	SQLChunk,
 	SQLCommonParam,
 	SQLDefault,
@@ -9,8 +7,9 @@ import {
 	SQLRaw,
 	SQLString,
 	SQLValues,
-} from './sql-template-params';
-import { JSONArray, JSONObject, RowData, SQLParamType, UnsafeParamType } from './types';
+} from './sql-template-params.ts';
+import type { SQLTemplate } from './sql-template.ts';
+import type { JSONArray, JSONObject, RowData, SQLParamType, UnsafeParamType } from './types.ts';
 
 export type IdentifierObject = {
 	schema?: string;
@@ -35,7 +34,10 @@ export type Values = Value[][];
 
 export interface Query {
 	query: string;
-	params: SQLParamType[];
+	// TODO: revise: params should have types that suitable for specific driver therefore can differ. example: pg driver and sqlite driver(can't accept Date value)
+	params: UnsafeParamType[];
+	// TODO: revise: need this to be able to use sql.append
+	queryChunks: SQLChunk[];
 }
 
 export interface BuildQueryConfig {
@@ -69,8 +71,10 @@ export interface SQL {
 }
 
 export class SQLWrapper {
-	private queryChunks: SQLChunk[] = [];
-	constructor(strings: TemplateStringsArray, ...params: SQLParamType[]) {
+	public queryChunks: SQLChunk[] = [];
+	constructor(strings?: TemplateStringsArray, params: SQLParamType[] = []) {
+		if (strings === undefined) return;
+
 		if (params.length > 0 || (strings.length > 0 && strings[0] !== '')) {
 			this.queryChunks.push(new SQLString(strings[0]!));
 		}
@@ -85,7 +89,7 @@ export class SQLWrapper {
 
 	toSQL(config: BuildQueryConfig): Query {
 		if (this.queryChunks.length === 1 && this.queryChunks[0] instanceof SQLString) {
-			return { query: this.queryChunks[0].generateSQL().sql, params: [] };
+			return { query: this.queryChunks[0].generateSQL().sql, params: [], queryChunks: this.queryChunks };
 		}
 
 		// TODO: params should not be any
@@ -115,6 +119,7 @@ export class SQLWrapper {
 		return {
 			query,
 			params: params4driver,
+			queryChunks: this.queryChunks,
 		};
 	}
 }

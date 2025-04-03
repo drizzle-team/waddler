@@ -1,5 +1,5 @@
-import { IdentifierObject, Values } from './sql';
-import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from './sql-template-params';
+import type { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from './sql-template-params.ts';
+import type { IdentifierObject, Values } from './sql.ts';
 
 type ValueForArray = number | bigint | boolean | null | Date | JSONObject | JSONArray;
 type ValueForObject = string | number | boolean | null | Date | JSONObject | Array<ValueForObject>;

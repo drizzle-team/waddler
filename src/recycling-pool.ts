@@ -1,7 +1,3 @@
-/**
- * took from ...
- */
-
 import { DefaultEvictor } from './pool-ts/DefaultEvictor.ts';
 import { Deque } from './pool-ts/Deque.ts';
 import { Pool } from './pool-ts/Pool.ts';

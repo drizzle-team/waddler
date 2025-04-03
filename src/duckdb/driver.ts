@@ -1,32 +1,27 @@
 import duckdb from 'duckdb';
-import { PgDialect } from '~/pg-core/dialect.ts';
-import { SQLWrapper } from '~/sql.ts';
 import type { DuckdbIdentifierObject, DuckdbValues } from '../duckdb-core/dialect.ts';
+import { DuckdbDialect } from '../duckdb-core/dialect.ts';
 import type { Factory } from '../pool-ts/types.ts';
 import { RecyclingPool } from '../recycling-pool.ts';
 import type { Identifier, Raw } from '../sql-template-params.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
+import { SQLWrapper } from '../sql.ts';
 import type { RowData, SQLParamType } from '../types.ts';
-import { DefaultSQLTemplate } from './session.ts';
+import { DuckdbSQLTemplate } from './session.ts';
 
 export interface SQL {
-	<T = RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): DefaultSQLTemplate<T>;
+	<T = RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): DuckdbSQLTemplate<T>;
 	identifier(value: Identifier<DuckdbIdentifierObject>): SQLIdentifier<DuckdbIdentifierObject>;
 	values(value: DuckdbValues): SQLValues<DuckdbValues>;
 	raw(value: Raw): SQLRaw;
 	default: SQLDefault;
 }
 
-const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>, dialect: PgDialect): SQL => {
-	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): DefaultSQLTemplate<T> => {
-		const sql = new SQLWrapper(strings, ...params);
-		const query = sql.toSQL({
-			escapeParam: dialect.escapeParam,
-			escapeIdentifier: dialect.escapeIdentifier,
-			valueToSQL: dialect.valueToSQL,
-			checkIdentifierObject: dialect.checkIdentifierObject,
-		});
-		return new DefaultSQLTemplate<T>(query.query, query.params, pool);
+const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>, dialect: DuckdbDialect): SQL => {
+	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): DuckdbSQLTemplate<T> => {
+		const sql = new SQLWrapper(strings, params);
+		const query = sql.toSQL(dialect);
+		return new DuckdbSQLTemplate<T>(query.query, query.params, pool, dialect, query.queryChunks);
 	};
 
 	Object.assign(fn, {
@@ -121,7 +116,7 @@ export function waddler(
 		threads?: string;
 	},
 ) {
-	const dialect = new PgDialect();
+	const dialect = new DuckdbDialect();
 	url = url === undefined && dbUrl !== undefined ? dbUrl : url;
 
 	const factory = createFactory({

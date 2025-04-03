@@ -1,5 +1,5 @@
-import { IdentifierObject } from '~/sql.ts';
 import { Dialect, SQLDefault } from '../sql-template-params.ts';
+import type { IdentifierObject } from '../sql.ts';
 
 export class PgDialect extends Dialect {
 	escapeParam(lastParamIdx: number): string {

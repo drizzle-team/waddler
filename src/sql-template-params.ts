@@ -1,4 +1,4 @@
-import { BuildQueryConfig, IdentifierObject } from './sql';
+import type { BuildQueryConfig, IdentifierObject } from './sql';
 
 export abstract class Dialect {
 	abstract escapeParam(lastParamIdx: number): string;

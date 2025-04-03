@@ -1,40 +1,31 @@
-import { WaddlerConfig } from './extensions.ts';
-import type { Dialect } from './sql-template-params.ts';
-import {
-	SQLChunk,
-	SQLCommonParam,
-	SQLDefault,
-	SQLIdentifier,
-	SQLRaw,
-	SQLString,
-	SQLValues,
-} from './sql-template-params.ts';
-import { Query, SQLWrapper } from './sql.ts';
-import type { JSONArray, JSONObject } from './types.ts';
+import type { WaddlerConfig } from './extensions.ts';
+import type { Dialect, SQLChunk } from './sql-template-params.ts';
+import { SQLString } from './sql-template-params.ts';
+import { type Query, SQLWrapper } from './sql.ts';
+import type { UnsafeParamType } from './types.ts';
 
-type ParamType =
-	| string
-	| number
-	| bigint
-	| Date
-	| boolean
-	| null
-	| JSONArray
-	| JSONObject
-	| SQLDefault
-	| SQLIdentifier<any>
-	| SQLRaw
-	| SQLValues<any>;
+// type ParamType =
+// 	| string
+// 	| number
+// 	| bigint
+// 	| Date
+// 	| boolean
+// 	| null
+// 	| JSONArray
+// 	| JSONObject
+// 	| SQLDefault
+// 	| SQLIdentifier<any>
+// 	| SQLRaw
+// 	| SQLValues<any>;
 
 export abstract class SQLTemplate<T> {
-	protected queryChunks: SQLChunk[] = [];
-
 	constructor(
 		protected query: string,
-		protected params: ParamType[],
+		protected params: UnsafeParamType[],
+		protected dialect: Dialect,
+		protected queryChunks: SQLChunk[],
 		protected configOptions?: WaddlerConfig,
-	) {
-	}
+	) {}
 
 	append(value: SQLTemplate<T>) {
 		const thisLastChunk = this.queryChunks.at(-1), valueFirstChunk = value.queryChunks.at(0);
@@ -43,12 +34,19 @@ export abstract class SQLTemplate<T> {
 				`${thisLastChunk.generateSQL().sql}${valueFirstChunk.generateSQL().sql}`,
 			);
 			this.queryChunks = [...this.queryChunks.slice(0, -1), middleChunk, ...value.queryChunks.slice(1)];
-			return;
+		} else {
+			this.queryChunks = [...this.queryChunks, ...value.queryChunks];
 		}
-		this.queryChunks = [...this.queryChunks, ...value.queryChunks];
+
+		const sqlWrapper = new SQLWrapper();
+		sqlWrapper.queryChunks = this.queryChunks;
+		const { query, params } = sqlWrapper.toSQL(this.dialect);
+
+		this.query = query;
+		this.params = params;
 	}
 
-	toSQL(): Query {
+	toSQL(): Omit<Query, 'queryChunks'> {
 		return { query: this.query, params: this.params };
 	}
 
@@ -94,8 +92,4 @@ export abstract class SQLTemplate<T> {
 			yield rows;
 		}
 	}
-}
-
-export abstract class SQLDriver {
-	abstract mapToDriver(value: any): any;
 }

@@ -1,17 +1,20 @@
 import type { Client as ClientT, Pool as PoolT, PoolClient, QueryArrayConfig, QueryConfig } from 'pg';
 import pg from 'pg';
-import { WaddlerConfig } from '~/extensions.ts';
-import { SQLParamType } from '~/types.ts';
+import type { WaddlerConfig } from '../extensions.ts';
+import type { Dialect, SQLChunk } from '../sql-template-params.ts';
 import { SQLTemplate } from '../sql-template.ts';
-import { NodePgClient } from './driver.ts';
+import type { UnsafeParamType } from '../types.ts';
+import type { NodePgClient } from './driver.ts';
 
 const { Pool, types } = pg;
 
 export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
 		protected override query: string,
-		protected override params: SQLParamType[],
+		protected override params: UnsafeParamType[],
 		protected readonly client: NodePgClient,
+		dialect: Dialect,
+		queryChunks: SQLChunk[],
 		configOptions: WaddlerConfig,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 		private queryConfig: QueryConfig = {
@@ -40,7 +43,7 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 			},
 		},
 	) {
-		super(query, params, configOptions);
+		super(query, params, dialect, queryChunks, configOptions);
 	}
 
 	async execute() {
@@ -58,6 +61,7 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 		}
 	}
 
+	// TODO: revise: maybe I should override chunked method because we can use QueryStream with option 'batchSize' in QueryStreamConfig
 	async *stream() {
 		// pool.connect() if this.client is Pool
 		const conn: ClientT | PoolT | PoolClient = this.client instanceof Pool ? await this.client.connect() : this.client;
@@ -71,7 +75,10 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 					'To use stream feature, you would need to provide queryStream() function to waddler extensions, example: waddler("", { extensions: [queryStream()] })',
 				);
 			}
-			const queryStream = new queryStreamObj.constructor(this.queryConfig, this.params);
+
+			// QueryStream constructor:
+			// constructor(text: string, values?: any[], config?: QueryStreamConfig);
+			const queryStream = new queryStreamObj.constructor(this.query, this.params, { types: this.queryConfig.types });
 
 			const stream = conn.query(queryStream);
 

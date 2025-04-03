@@ -9,7 +9,7 @@ import {
 	DuckDBTimeValue,
 	DuckDBUnionValue,
 } from '@duckdb/node-api';
-import { UnsafeParamType } from '~/types.ts';
+import type { UnsafeParamType } from '../types.ts';
 import { stringifyArray } from '../utils.ts';
 
 // Insert params

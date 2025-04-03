@@ -1,8 +1,8 @@
 import duckdb from 'duckdb';
-import { SQLParamType } from '~/types.ts';
-import { DuckdbDialect } from '../duckdb-core/dialect.ts';
 import type { RecyclingPool } from '../recycling-pool.ts';
+import type { Dialect, SQLChunk } from '../sql-template-params.ts';
 import { SQLTemplate } from '../sql-template.ts';
+import type { UnsafeParamType } from '../types.ts';
 import { stringifyArray } from '../utils.ts';
 import { methodPromisify } from './utils.ts';
 
@@ -101,13 +101,15 @@ const transformNDList = (list: any[] | any, listType: duckdb.ListTypeInfo | duck
 	return nDList;
 };
 
-export class DefaultSQLTemplate<T> extends SQLTemplate<T> {
+export class DuckdbSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
 		query: string,
-		params: SQLParamType[],
+		params: UnsafeParamType[],
 		protected readonly pool: RecyclingPool<duckdb.Database>,
+		dialect: Dialect,
+		queryChunks: SQLChunk[],
 	) {
-		super(query, params);
+		super(query, params, dialect, queryChunks);
 	}
 
 	async execute() {

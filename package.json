@@ -15,6 +15,16 @@
 	"exports": {
 		".": {
 			"import": {
+				"types": "./index.d.ts",
+				"default": "./index.js"
+			},
+			"require": {
+				"types": "./index.d.cts",
+				"default": "./index.cjs"
+			}
+		},
+		"./duckdb": {
+			"import": {
 				"types": "./duckdb/index.d.ts",
 				"default": "./duckdb/index.js"
 			},
@@ -23,7 +33,7 @@
 				"default": "./duckdb/index.cjs"
 			}
 		},
-		"./neo": {
+		"./duckdb-neo": {
 			"import": {
 				"types": "./duckdb-neo/index.d.ts",
 				"default": "./duckdb-neo/index.js"
