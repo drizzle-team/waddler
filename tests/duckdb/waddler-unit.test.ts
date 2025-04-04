@@ -2,7 +2,7 @@ import { beforeAll, expect, test } from 'vitest';
 import { waddler } from '../../src/duckdb/driver.ts';
 
 let sql: ReturnType<typeof waddler>;
-beforeAll(async () => {
+beforeAll(() => {
 	sql = waddler({ url: ':memory:', max: 10, accessMode: 'read_write' });
 });
 
@@ -277,7 +277,7 @@ test('sql.values test. number, boolean, string, bigint, null, Date, SQLDefault a
 	});
 });
 
-test('sql.values array type test', async () => {
+test('sql.values array type test', () => {
 	const dates = [
 		new Date('2024-10-31T14:25:29.425Z'),
 		new Date('2024-10-30T14:25:29.425Z'),
@@ -422,6 +422,20 @@ test('sql.default test using with sql.values.', () => {
 test('sql.default test using with sql`${}` as parameter.', () => {
 	const res = sql`insert into users (id, name) values (${sql.default}, 'name1');`.toSQL();
 	expect(res).toStrictEqual({ query: "insert into users (id, name) values (default, 'name1');", params: [] });
+});
+
+// sql.append
+test('sql.append test.', () => {
+	const query = sql<undefined>`select * from users where id = ${1}`;
+
+	query.append(sql` or id = ${3}`);
+	query.append(sql` or id = ${4};`);
+
+	const res = query.toSQL();
+	expect(res).toStrictEqual({
+		query: 'select * from users where id = $1 or id = $2 or id = $3;',
+		params: [1, 3, 4],
+	});
 });
 
 // sql template
@@ -574,18 +588,4 @@ test('sql template types test', async () => {
 		],
 	};
 	expect(res[0]).toStrictEqual(expectedRes);
-});
-
-// sql.append
-test('sql.append test.', async () => {
-	const query = sql<undefined>`select * from users where id = ${1}`;
-
-	query.append(sql` or id = ${3}`);
-	query.append(sql` or id = ${4};`);
-
-	const res = query.toSQL();
-	expect(res).toStrictEqual({
-		query: 'select * from users where id = $1 or id = $2 or id = $3;',
-		params: [1, 3, 4],
-	});
 });

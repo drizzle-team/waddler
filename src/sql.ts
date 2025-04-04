@@ -34,7 +34,7 @@ export type Values = Value[][];
 
 export interface Query {
 	query: string;
-	// TODO: revise: params should have types that suitable for specific driver therefore can differ. example: pg driver and sqlite driver(can't accept Date value)
+	// TODO: revise: params should have types that are suitable for specific driver therefore can differ. example: pg driver and sqlite driver(can't accept Date value)
 	params: UnsafeParamType[];
 }
 
@@ -68,7 +68,6 @@ export interface SQL {
 	default: SQLDefault;
 }
 
-// TODO: add tests for it
 export class SQLWrapper {
 	constructor(
 		public queryChunks: SQLChunk[] = [],

@@ -16,7 +16,6 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 		configOptions: WaddlerConfig,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 		private queryConfig: QueryConfig = {
-			text: sql.getQuery().query,
 			types: {
 				// @ts-expect-error
 				getTypeParser: (typeId: number, format: string) => {
@@ -28,7 +27,6 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 			},
 		},
 		private rawQueryConfig: QueryArrayConfig = {
-			text: sql.getQuery().query,
 			rowMode: 'array',
 			types: {
 				// @ts-expect-error
@@ -42,14 +40,17 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 		},
 	) {
 		super(sql, dialect, configOptions);
+		const query = this.sql.getQuery().query;
+		this.queryConfig.text = query;
+		this.rawQueryConfig.text = query;
 	}
 
 	async execute() {
-		const query = this.sql.getQuery();
+		const { params } = this.sql.getQuery();
 		try {
 			const queryResult = await (this.options.rowMode === 'array'
-				? this.client.query(this.rawQueryConfig, query.params)
-				: this.client.query(this.queryConfig, query.params));
+				? this.client.query(this.rawQueryConfig, params)
+				: this.client.query(this.queryConfig, params));
 
 			return queryResult.rows;
 		} catch (error) {
@@ -80,8 +81,8 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 
 			// QueryStream constructor:
 			// constructor(text: string, values?: any[], config?: QueryStreamConfig);
-			const query = this.sql.getQuery();
-			const queryStream = new queryStreamObj.constructor(query.query, query.params, { types: this.queryConfig.types });
+			const { query, params } = this.sql.getQuery();
+			const queryStream = new queryStreamObj.constructor(query, params, { types: this.queryConfig.types });
 
 			const stream = conn.query(queryStream);
 

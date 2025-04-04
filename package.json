@@ -52,6 +52,26 @@
 				"types": "./node-postgres/index.d.cts",
 				"default": "./node-postgres/index.cjs"
 			}
+		},
+		"./postgres-js": {
+			"import": {
+				"types": "./postgres-js/index.d.ts",
+				"default": "./postgres-js/index.js"
+			},
+			"require": {
+				"types": "./postgres-js/index.d.cts",
+				"default": "./postgres-js/index.cjs"
+			}
+		},
+		"./mysql2": {
+			"import": {
+				"types": "./mysql2/index.d.ts",
+				"default": "./mysql2/index.js"
+			},
+			"require": {
+				"types": "./mysql2/index.d.cts",
+				"default": "./mysql2/index.cjs"
+			}
 		}
 	},
 	"devDependencies": {
@@ -78,14 +98,18 @@
 		"tsx": "^4.19.1",
 		"typescript": "^5.5.4",
 		"vitest": "^3.0.9",
-		"zx": "^8.1.9"
+		"zx": "^8.1.9",
+		"pg": "^8.14.0",
+		"postgres": "^3.4.5",
+		"mysql2": "^3.14.0"
 	},
 	"peerDependencies": {
 		"@duckdb/node-api": "^1.1.2-alpha.4",
 		"duckdb": "^1.1.1",
 		"pg": "^8.14.0",
 		"pg-query-stream": "^4.8.0",
-		"postgres": "^3.4.5"
+		"postgres": "^3.4.5",
+		"mysql2": "^3.14.0"
 	},
 	"peerDependenciesMeta": {
 		"duckdb": {
@@ -101,6 +125,9 @@
 			"optional": true
 		},
 		"postgres": {
+			"optional": true
+		},
+		"mysql2": {
 			"optional": true
 		}
 	}

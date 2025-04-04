@@ -1,26 +1,28 @@
-import type { Options, PostgresType, Sql } from 'postgres';
-import postgres from 'postgres';
-import { PgDialect } from '../pg-core/dialect.ts';
+import type { PoolOptions } from 'mysql2';
+import { createPool } from 'mysql2';
+import type { MySQLIdentifierObject } from '../mysql-core/dialect.ts';
+import { MySQLDialect } from '../mysql-core/dialect.ts';
 import type { Identifier, Raw } from '../sql-template-params.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
-import type { IdentifierObject, SQL, Values } from '../sql.ts';
+import type { SQL, Values } from '../sql.ts';
 import { SQLWrapper } from '../sql.ts';
 import type { SQLParamType, UnsafeParamType } from '../types.ts';
-import { PostgresSQLTemplate } from './session.ts';
+import type { MySql2Client } from './session.ts';
+import { MySql2SQLTemplate } from './session.ts';
 import { isConfig } from './utils.ts';
 
 const createSqlTemplate = (
-	client: Sql,
-	dialect: PgDialect,
+	client: MySql2Client,
+	dialect: MySQLDialect,
 ): SQL => {
-	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): PostgresSQLTemplate<T> => {
+	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): MySql2SQLTemplate<T> => {
 		const sql = new SQLWrapper();
 		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
-		return new PostgresSQLTemplate<T>(sql, client, dialect);
+		return new MySql2SQLTemplate<T>(sql, client, dialect);
 	};
 
 	Object.assign(fn, {
-		identifier: (value: Identifier<IdentifierObject>) => {
+		identifier: (value: Identifier<MySQLIdentifierObject>) => {
 			return new SQLIdentifier(value);
 		},
 		values: (value: Values) => {
@@ -40,7 +42,7 @@ const createSqlTemplate = (
 			const sql = new SQLWrapper();
 			sql.with({ rawParams: { query, params } });
 
-			const unsafeDriver = new PostgresSQLTemplate(sql, client, dialect, options);
+			const unsafeDriver = new MySql2SQLTemplate(sql, client, dialect, options);
 			return await unsafeDriver.execute();
 		},
 		default: new SQLDefault(),
@@ -49,42 +51,43 @@ const createSqlTemplate = (
 	return fn as any;
 };
 
-export function waddler<TClient extends Sql>(
+export function waddler<TClient extends MySql2Client>(
 	...params: [
 		TClient | string,
 	] | [
 		(({
-			connection: string | ({ url?: string } & Options<Record<string, PostgresType>>);
+			connection: string | PoolOptions;
 		} | {
 			client: TClient;
 		})),
 	]
 ) {
-	const dialect = new PgDialect();
+	const dialect = new MySQLDialect();
 
 	if (typeof params[0] === 'string') {
-		const client = postgres(params[0] as string);
+		const connectionString = params[0]!;
+		const pool = createPool({
+			uri: connectionString,
+		});
 
-		return createSqlTemplate(client, dialect);
+		return createSqlTemplate(pool, dialect);
 	}
 
 	if (isConfig(params[0])) {
 		const { connection, client } = params[0] as {
-			connection?: { url?: string } & Options<Record<string, PostgresType>>;
+			connection?: PoolOptions | string;
 			client?: TClient;
 		};
 
 		if (client) return createSqlTemplate(client, dialect);
 
-		if (typeof connection === 'object' && connection.url !== undefined) {
-			const { url, ...config } = connection;
+		const pool = typeof connection === 'string'
+			? createPool({
+				uri: connection,
+			})
+			: createPool(connection!);
 
-			const client = postgres(url, config);
-			return createSqlTemplate(client, dialect);
-		}
-
-		const client_ = postgres(connection);
-		return createSqlTemplate(client_, dialect);
+		return createSqlTemplate(pool, dialect);
 	}
 
 	return createSqlTemplate(params[0] as TClient, dialect);

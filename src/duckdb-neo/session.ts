@@ -1,28 +1,26 @@
 import type { DuckDBVector } from '@duckdb/node-api';
 import type { RecyclingPool } from '../recycling-pool.ts';
-import type { Dialect, SQLChunk } from '../sql-template-params.ts';
+import type { Dialect } from '../sql-template-params.ts';
 import { SQLTemplate } from '../sql-template.ts';
-import type { UnsafeParamType } from '../types.ts';
+import type { SQLWrapper } from '../sql.ts';
 import { getColumnVectors, transformResultRowToObject, transformResultToObjects } from './result-transformers.ts';
 import type { DuckDBConnectionObj } from './types.ts';
 import { bindParams } from './utils.ts';
 
 export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
-		query: string,
-		params: UnsafeParamType[],
+		sql: SQLWrapper,
 		protected readonly pool: RecyclingPool<DuckDBConnectionObj>,
 		dialect: Dialect,
-		queryChunks: SQLChunk[],
 	) {
-		super(query, params, dialect, queryChunks);
+		super(sql, dialect);
 	}
 
 	async execute() {
 		// Implement your actual DB execution logic here
 		// This could be a fetch or another async operation
 		// gets connection from pool, runs query, release connection
-		const { query, params } = this.toSQL();
+		const { query, params } = this.sql.getQuery();
 		let result;
 
 		const connObj = await this.pool.acquire();
@@ -46,7 +44,7 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async *stream() {
-		const { query, params } = this.toSQL();
+		const { query, params } = this.sql.getQuery();
 
 		const connObj = await this.pool.acquire();
 

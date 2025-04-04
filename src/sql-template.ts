@@ -17,6 +17,7 @@ export abstract class SQLTemplate<T> {
 				`${thisLastChunk.generateSQL().sql}${valueFirstChunk.generateSQL().sql}`,
 			);
 			this.sql.queryChunks = [...this.sql.queryChunks.slice(0, -1), middleChunk, ...value.sql.queryChunks.slice(1)];
+			this.sql.recalculateQuery(this.dialect);
 			return;
 		}
 		this.sql.queryChunks = [...this.sql.queryChunks, ...value.sql.queryChunks];
@@ -26,7 +27,7 @@ export abstract class SQLTemplate<T> {
 		this.sql.recalculateQuery(this.dialect);
 	}
 
-	toSQL(): Omit<Query, 'queryChunks'> {
+	toSQL(): Query {
 		return this.sql.getQuery();
 	}
 

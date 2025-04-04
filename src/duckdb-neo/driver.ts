@@ -15,9 +15,10 @@ import { bindParams } from './utils.ts';
 
 const createSqlTemplate = (pool: RecyclingPool<DuckDBConnectionObj>, dialect: DuckdbDialect): SQL => {
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): DuckdbNeoSQLTemplate<T> => {
-		const sql = new SQLWrapper(strings, params);
-		const query = sql.toSQL(dialect);
-		return new DuckdbNeoSQLTemplate<T>(query.query, query.params, pool, dialect, query.queryChunks);
+		const sql = new SQLWrapper();
+		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
+
+		return new DuckdbNeoSQLTemplate<T>(sql, pool, dialect);
 	};
 
 	Object.assign(fn, {
@@ -39,6 +40,7 @@ const createSqlTemplate = (pool: RecyclingPool<DuckDBConnectionObj>, dialect: Du
 	return fn as any;
 };
 
+// TODO: remove this function so unsafe function will depend on DuckdbNeoSQLTemplate.execute
 const unsafeFunc = async (
 	pool: RecyclingPool<DuckDBConnectionObj>,
 	query: string,

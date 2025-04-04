@@ -19,9 +19,10 @@ export interface SQL {
 
 const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>, dialect: DuckdbDialect): SQL => {
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): DuckdbSQLTemplate<T> => {
-		const sql = new SQLWrapper(strings, params);
-		const query = sql.toSQL(dialect);
-		return new DuckdbSQLTemplate<T>(query.query, query.params, pool, dialect, query.queryChunks);
+		const sql = new SQLWrapper();
+		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
+
+		return new DuckdbSQLTemplate<T>(sql, pool, dialect);
 	};
 
 	Object.assign(fn, {
