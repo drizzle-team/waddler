@@ -84,7 +84,8 @@
 		"@duckdb/node-api": "^1.1.2-alpha.4",
 		"duckdb": "^1.1.1",
 		"pg": "^8.14.0",
-		"pg-query-stream": "^4.8.0"
+		"pg-query-stream": "^4.8.0",
+		"postgres": "^3.4.5"
 	},
 	"peerDependenciesMeta": {
 		"duckdb": {
@@ -97,6 +98,9 @@
 			"optional": true
 		},
 		"pg-query-stream": {
+			"optional": true
+		},
+		"postgres": {
 			"optional": true
 		}
 	}

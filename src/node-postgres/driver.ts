@@ -1,12 +1,12 @@
 import type { Client, PoolClient, PoolConfig } from 'pg';
 import pg from 'pg';
-import type { SQLParamType, UnsafeParamType } from '~/types.ts';
 import type { WaddlerConfig } from '../extensions.ts';
 import { PgDialect } from '../pg-core/dialect.ts';
 import type { Identifier, Raw } from '../sql-template-params.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
 import type { IdentifierObject, SQL, Values } from '../sql.ts';
 import { SQLWrapper } from '../sql.ts';
+import type { SQLParamType, UnsafeParamType } from '../types.ts';
 import { NodePgSQLTemplate } from './session.ts';
 import { isConfig } from './utils.ts';
 

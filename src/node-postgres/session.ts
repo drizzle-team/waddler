@@ -63,11 +63,14 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 
 	// TODO: revise: maybe I should override chunked method because we can use QueryStream with option 'batchSize' in QueryStreamConfig
 	async *stream() {
-		// pool.connect() if this.client is Pool
-		const conn: ClientT | PoolT | PoolClient = this.client instanceof Pool ? await this.client.connect() : this.client;
-
+		let conn: ClientT | PoolT | PoolClient | undefined;
 		// wrapping node-postgres driver error in new js error to add stack trace to it
 		try {
+			// pool.connect() if this.client is Pool
+			conn = this.client instanceof Pool
+				? await this.client.connect()
+				: this.client;
+
 			const queryStreamObj = this.configOptions?.extensions?.find((it) => it.name === 'WaddlerPgQueryStream');
 			// If no extensions were defined, or some were defined but did not include WaddlerPgQueryStream, we should throw an error.
 			if (!queryStreamObj) {
@@ -91,7 +94,7 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 			}
 		} catch (error) {
 			if (this.client instanceof Pool) {
-				(conn as PoolClient).release();
+				(conn as PoolClient)?.release();
 			}
 
 			const newError = error instanceof AggregateError

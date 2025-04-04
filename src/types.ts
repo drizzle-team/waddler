@@ -36,3 +36,5 @@ export type SQLParamType =
 	| SQLValues<Values>
 	| SQLDefault
 	| SQLRaw;
+
+export type isObjectEmpty<O> = keyof O extends never ? true : false;
