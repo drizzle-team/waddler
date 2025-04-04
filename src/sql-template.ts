@@ -1,53 +1,33 @@
 import type { WaddlerConfig } from './extensions.ts';
-import type { Dialect, SQLChunk } from './sql-template-params.ts';
+import type { Dialect } from './sql-template-params.ts';
 import { SQLString } from './sql-template-params.ts';
-import { type Query, SQLWrapper } from './sql.ts';
-import type { UnsafeParamType } from './types.ts';
-
-// type ParamType =
-// 	| string
-// 	| number
-// 	| bigint
-// 	| Date
-// 	| boolean
-// 	| null
-// 	| JSONArray
-// 	| JSONObject
-// 	| SQLDefault
-// 	| SQLIdentifier<any>
-// 	| SQLRaw
-// 	| SQLValues<any>;
+import type { Query, SQLWrapper } from './sql.ts';
 
 export abstract class SQLTemplate<T> {
 	constructor(
-		protected query: string,
-		protected params: UnsafeParamType[],
+		protected sql: SQLWrapper,
 		protected dialect: Dialect,
-		protected queryChunks: SQLChunk[],
 		protected configOptions?: WaddlerConfig,
 	) {}
 
 	append(value: SQLTemplate<T>) {
-		const thisLastChunk = this.queryChunks.at(-1), valueFirstChunk = value.queryChunks.at(0);
+		const thisLastChunk = this.sql.queryChunks.at(-1), valueFirstChunk = value.sql.queryChunks.at(0);
 		if (thisLastChunk instanceof SQLString && valueFirstChunk instanceof SQLString) {
 			const middleChunk = new SQLString(
 				`${thisLastChunk.generateSQL().sql}${valueFirstChunk.generateSQL().sql}`,
 			);
-			this.queryChunks = [...this.queryChunks.slice(0, -1), middleChunk, ...value.queryChunks.slice(1)];
-		} else {
-			this.queryChunks = [...this.queryChunks, ...value.queryChunks];
+			this.sql.queryChunks = [...this.sql.queryChunks.slice(0, -1), middleChunk, ...value.sql.queryChunks.slice(1)];
+			return;
 		}
+		this.sql.queryChunks = [...this.sql.queryChunks, ...value.sql.queryChunks];
 
-		const sqlWrapper = new SQLWrapper();
-		sqlWrapper.queryChunks = this.queryChunks;
-		const { query, params } = sqlWrapper.toSQL(this.dialect);
-
-		this.query = query;
-		this.params = params;
+		// should accept queryChunks that will be recalculated, I'll live it as mutating object for now,
+		// but I don't want to do it this way
+		this.sql.recalculateQuery(this.dialect);
 	}
 
 	toSQL(): Omit<Query, 'queryChunks'> {
-		return { query: this.query, params: this.params };
+		return this.sql.getQuery();
 	}
 
 	// Allow it to be awaited (like a Promise)

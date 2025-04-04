@@ -36,8 +36,6 @@ export interface Query {
 	query: string;
 	// TODO: revise: params should have types that suitable for specific driver therefore can differ. example: pg driver and sqlite driver(can't accept Date value)
 	params: UnsafeParamType[];
-	// TODO: revise: need this to be able to use sql.append
-	queryChunks: SQLChunk[];
 }
 
 export interface BuildQueryConfig {
@@ -70,26 +68,55 @@ export interface SQL {
 	default: SQLDefault;
 }
 
+// TODO: add tests for it
 export class SQLWrapper {
-	public queryChunks: SQLChunk[] = [];
-	constructor(strings?: TemplateStringsArray, params: SQLParamType[] = []) {
-		if (strings === undefined) return;
+	constructor(
+		public queryChunks: SQLChunk[] = [],
+		public query?: string,
+		public params?: UnsafeParamType[],
+	) {}
 
-		if (params.length > 0 || (strings.length > 0 && strings[0] !== '')) {
-			this.queryChunks.push(new SQLString(strings[0]!));
-		}
-		for (const [paramIndex, param] of params.entries()) {
-			if (param instanceof SQLChunk) this.queryChunks.push(param, new SQLString(strings[paramIndex + 1]!));
-			else {
-				paramsCheck(param);
-				this.queryChunks.push(new SQLCommonParam(param), new SQLString(strings[paramIndex + 1]!));
+	with({ templateParams, rawParams }: {
+		templateParams?: { strings?: TemplateStringsArray; params: SQLParamType[] };
+		rawParams?: { query: string; params: UnsafeParamType[] };
+	}): this {
+		if (templateParams) {
+			const { strings, params } = templateParams;
+			if (strings === undefined) return this;
+
+			if (params.length > 0 || (strings.length > 0 && strings[0] !== '')) {
+				this.queryChunks.push(new SQLString(strings[0]!));
 			}
+			for (const [paramIndex, param] of params.entries()) {
+				if (param instanceof SQLChunk) this.queryChunks.push(param, new SQLString(strings[paramIndex + 1]!));
+				else {
+					paramsCheck(param);
+					this.queryChunks.push(new SQLCommonParam(param), new SQLString(strings[paramIndex + 1]!));
+				}
+			}
+		} else if (rawParams) {
+			this.query = rawParams.query;
+			this.params = rawParams.params;
 		}
+		return this;
 	}
 
-	toSQL(config: BuildQueryConfig): Query {
+	getQuery(): Query {
+		return {
+			query: this.query ?? '',
+			params: this.params ?? [],
+		};
+	}
+
+	// This alias is provided to improve clarity when recalculating queries for functions such as "append."
+	recalculateQuery(config: BuildQueryConfig): this {
+		return this.prepareQuery(config);
+	}
+
+	prepareQuery(config: BuildQueryConfig): this {
 		if (this.queryChunks.length === 1 && this.queryChunks[0] instanceof SQLString) {
-			return { query: this.queryChunks[0].generateSQL().sql, params: [], queryChunks: this.queryChunks };
+			this.query = this.queryChunks[0].generateSQL().sql;
+			this.params = [];
 		}
 
 		// TODO: params should not be any
@@ -116,11 +143,10 @@ export class SQLWrapper {
 			}
 		}
 
-		return {
-			query,
-			params: params4driver,
-			queryChunks: this.queryChunks,
-		};
+		this.query = query;
+		this.params = params4driver;
+
+		return this;
 	}
 }
 

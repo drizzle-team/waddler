@@ -1,24 +1,22 @@
 import type { Client as ClientT, Pool as PoolT, PoolClient, QueryArrayConfig, QueryConfig } from 'pg';
 import pg from 'pg';
+import type { SQLWrapper } from '~/sql.ts';
 import type { WaddlerConfig } from '../extensions.ts';
-import type { Dialect, SQLChunk } from '../sql-template-params.ts';
+import type { Dialect } from '../sql-template-params.ts';
 import { SQLTemplate } from '../sql-template.ts';
-import type { UnsafeParamType } from '../types.ts';
 import type { NodePgClient } from './driver.ts';
 
 const { Pool, types } = pg;
 
 export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
-		protected override query: string,
-		protected override params: UnsafeParamType[],
+		protected override sql: SQLWrapper,
 		protected readonly client: NodePgClient,
 		dialect: Dialect,
-		queryChunks: SQLChunk[],
 		configOptions: WaddlerConfig,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 		private queryConfig: QueryConfig = {
-			text: query,
+			text: sql.getQuery().query,
 			types: {
 				// @ts-expect-error
 				getTypeParser: (typeId: number, format: string) => {
@@ -30,7 +28,7 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 			},
 		},
 		private rawQueryConfig: QueryArrayConfig = {
-			text: query,
+			text: sql.getQuery().query,
 			rowMode: 'array',
 			types: {
 				// @ts-expect-error
@@ -43,14 +41,15 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 			},
 		},
 	) {
-		super(query, params, dialect, queryChunks, configOptions);
+		super(sql, dialect, configOptions);
 	}
 
 	async execute() {
+		const query = this.sql.getQuery();
 		try {
 			const queryResult = await (this.options.rowMode === 'array'
-				? this.client.query(this.rawQueryConfig, this.params)
-				: this.client.query(this.queryConfig, this.params));
+				? this.client.query(this.rawQueryConfig, query.params)
+				: this.client.query(this.queryConfig, query.params));
 
 			return queryResult.rows;
 		} catch (error) {
@@ -81,7 +80,8 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 
 			// QueryStream constructor:
 			// constructor(text: string, values?: any[], config?: QueryStreamConfig);
-			const queryStream = new queryStreamObj.constructor(this.query, this.params, { types: this.queryConfig.types });
+			const query = this.sql.getQuery();
+			const queryStream = new queryStreamObj.constructor(query.query, query.params, { types: this.queryConfig.types });
 
 			const stream = conn.query(queryStream);
 

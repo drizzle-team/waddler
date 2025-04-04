@@ -237,6 +237,12 @@ test('all types in sql.values, sql.raw in select test', async () => {
 
 	const res = await sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' });
 
+	// TODO check
+	const q = sql`select * from users where id = ${id}`;
+	console.log(q.toSQL());
+	id = 2;
+	await q;
+
 	expect(res[0]).toStrictEqual(expectedRes);
 
 	// sql.raw case

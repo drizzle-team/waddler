@@ -18,9 +18,9 @@ const createSqlTemplate = (
 	dialect: PgDialect,
 ): SQL => {
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): NodePgSQLTemplate<T> => {
-		const sql = new SQLWrapper(strings, params);
-		const query = sql.toSQL(dialect);
-		return new NodePgSQLTemplate<T>(query.query, query.params, client, dialect, query.queryChunks, configOptions);
+		const sql = new SQLWrapper();
+		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
+		return new NodePgSQLTemplate<T>(sql, client, dialect, configOptions);
 	};
 
 	Object.assign(fn, {
@@ -40,7 +40,11 @@ const createSqlTemplate = (
 		) => {
 			params = params ?? [];
 			options = options ?? { rowMode: 'object' };
-			const unsafeDriver = new NodePgSQLTemplate(query, params, client, dialect, [], configOptions, options);
+
+			const sql = new SQLWrapper();
+			sql.with({ rawParams: { query, params } });
+
+			const unsafeDriver = new NodePgSQLTemplate(sql, client, dialect, configOptions, options);
 			return await unsafeDriver.execute();
 		},
 		default: new SQLDefault(),
