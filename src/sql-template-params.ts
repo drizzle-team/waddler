@@ -1,4 +1,4 @@
-import type { BuildQueryConfig, IdentifierObject } from './sql';
+import type { BuildQueryConfig, IdentifierObject, Value } from './sql';
 import type { ValueForArray } from './types';
 
 export abstract class Dialect {
@@ -7,17 +7,17 @@ export abstract class Dialect {
 	abstract checkIdentifierObject(object: IdentifierObject): void;
 
 	// SQLValues
-	abstract valueToSQL<Value extends ValueForArray>(params: {
-		value: Value;
+	abstract valueToSQL(params: {
+		value: ValueForArray;
 		lastParamIdx: number;
-		params: Value[];
+		params: ValueForArray[];
 	}): string;
 }
 
 export abstract class SQLChunk {
 	abstract generateSQL(
 		param: {
-			dialect?: Partial<BuildQueryConfig>;
+			dialect?: Dialect;
 			lastParamIdx?: number;
 		},
 	): { sql: string; params?: any[] };
@@ -29,7 +29,7 @@ export class SQLCommonParam extends SQLChunk {
 	}
 
 	generateSQL(
-		{ dialect, lastParamIdx }: { dialect: BuildQueryConfig; lastParamIdx: number },
+		{ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number },
 	): { sql: string; params: any[] } {
 		return {
 			sql: dialect.escapeParam(lastParamIdx + 1),
@@ -72,7 +72,7 @@ export class SQLIdentifier<Q extends IdentifierObject> extends SQLChunk {
 		return `${chunks.join('.')}${as}`;
 	}
 
-	generateSQL({ dialect }: { dialect: Pick<BuildQueryConfig, 'checkIdentifierObject' | 'escapeIdentifier'> }) {
+	generateSQL({ dialect }: { dialect: Dialect }) {
 		if (typeof this.value === 'string') {
 			return {
 				sql: `${dialect.escapeIdentifier(this.value)}`,
@@ -126,13 +126,13 @@ export class SQLIdentifier<Q extends IdentifierObject> extends SQLChunk {
 	}
 }
 
-export class SQLValues<Value> extends SQLChunk {
+export class SQLValues extends SQLChunk {
 	constructor(private readonly value: Value[][]) {
 		super();
 	}
 	protected params: Value[] = [];
 
-	generateSQL({ dialect, lastParamIdx }: { dialect: BuildQueryConfig; lastParamIdx: number }) {
+	generateSQL({ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number }) {
 		if (!Array.isArray(this.value)) {
 			if (this.value === null) {
 				throw new Error(`you can't specify null as parameter for sql.values.`);
@@ -157,7 +157,7 @@ export class SQLValues<Value> extends SQLChunk {
 		};
 	}
 
-	rowValuesToSQL(rowValues: Value[], dialect: BuildQueryConfig, lastParamIdx: number) {
+	rowValuesToSQL(rowValues: Value[], dialect: Dialect, lastParamIdx: number) {
 		if (Array.isArray(rowValues)) {
 			if (rowValues.length === 0) {
 				throw new Error(`array of values can't be empty.`);
@@ -165,7 +165,7 @@ export class SQLValues<Value> extends SQLChunk {
 
 			return `(${
 				rowValues
-					.map((value) => dialect.valueToSQL<Value>({ value, lastParamIdx, params: this.params }))
+					.map((value) => dialect.valueToSQL({ value, lastParamIdx, params: this.params }))
 					.join(', ')
 			})`;
 		}

@@ -1,4 +1,4 @@
-import type { Identifier, Raw } from './sql-template-params.ts';
+import type { Dialect, Identifier, Raw } from './sql-template-params.ts';
 import {
 	SQLChunk,
 	SQLCommonParam,
@@ -109,11 +109,11 @@ export class SQLWrapper {
 	}
 
 	// This alias is provided to improve clarity when recalculating queries for functions such as "append."
-	recalculateQuery(config: BuildQueryConfig): this {
+	recalculateQuery(config: Dialect): this {
 		return this.prepareQuery(config);
 	}
 
-	prepareQuery(config: BuildQueryConfig): this {
+	prepareQuery(config: Dialect): this {
 		if (this.queryChunks.length === 1 && this.queryChunks[0] instanceof SQLString) {
 			this.query = this.queryChunks[0].generateSQL().sql;
 			this.params = [];

@@ -8,41 +8,38 @@ import type { NodePgClient } from './driver.ts';
 
 const { Pool, types } = pg;
 
+const pgTypeConfig: pg.CustomTypesConfig = {
+	// @ts-expect-error
+	getTypeParser: (typeId: number, format: string) => {
+		if (typeId === types.builtins.INTERVAL) return (val: any) => val;
+		if (typeId === 1187) return (val: any) => val;
+		// @ts-expect-error
+		return types.getTypeParser(typeId, format);
+	},
+};
+
 export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
+	private queryConfig: QueryConfig;
+	private rawQueryConfig: QueryArrayConfig;
+
 	constructor(
 		protected override sql: SQLWrapper,
 		protected readonly client: NodePgClient,
 		dialect: Dialect,
 		configOptions: WaddlerConfig,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
-		private queryConfig: QueryConfig = {
-			types: {
-				// @ts-expect-error
-				getTypeParser: (typeId: number, format: string) => {
-					if (typeId === types.builtins.INTERVAL) return (val: any) => val;
-					if (typeId === 1187) return (val: any) => val;
-					// @ts-expect-error
-					return types.getTypeParser(typeId, format);
-				},
-			},
-		},
-		private rawQueryConfig: QueryArrayConfig = {
-			rowMode: 'array',
-			types: {
-				// @ts-expect-error
-				getTypeParser: (typeId: number, format: string) => {
-					if (typeId === types.builtins.INTERVAL) return (val: any) => val;
-					if (typeId === 1187) return (val: any) => val;
-					// @ts-expect-error
-					return types.getTypeParser(typeId, format);
-				},
-			},
-		},
 	) {
 		super(sql, dialect, configOptions);
 		const query = this.sql.getQuery().query;
-		this.queryConfig.text = query;
-		this.rawQueryConfig.text = query;
+		this.queryConfig = {
+			text: query,
+			types: pgTypeConfig,
+		};
+		this.rawQueryConfig = {
+			rowMode: 'array',
+			text: query,
+			types: pgTypeConfig,
+		};
 	}
 
 	async execute() {
@@ -66,7 +63,6 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 		let conn: ClientT | PoolT | PoolClient | undefined;
 		// wrapping node-postgres driver error in new js error to add stack trace to it
 		try {
-			// pool.connect() if this.client is Pool
 			conn = this.client instanceof Pool
 				? await this.client.connect()
 				: this.client;
@@ -79,8 +75,6 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 				);
 			}
 
-			// QueryStream constructor:
-			// constructor(text: string, values?: any[], config?: QueryStreamConfig);
 			const { query, params } = this.sql.getQuery();
 			const queryStream = new queryStreamObj.constructor(query, params, { types: this.queryConfig.types });
 

@@ -8,15 +8,9 @@ importers:
 
   .:
     dependencies:
-      pg:
-        specifier: ^8.14.0
-        version: 8.14.0
       pg-query-stream:
         specifier: ^4.8.0
         version: 4.8.0(pg@8.14.0)
-      postgres:
-        specifier: ^3.4.5
-        version: 3.4.5
     devDependencies:
       '@arethetypeswrong/cli':
         specifier: ^0.16.4
@@ -78,6 +72,12 @@ importers:
       mysql2:
         specifier: ^3.14.0
         version: 3.14.0
+      pg:
+        specifier: ^8.14.0
+        version: 8.14.0
+      postgres:
+        specifier: ^3.4.5
+        version: 3.4.5
       tsup:
         specifier: ^8.4.0
         version: 8.4.0(postcss@8.4.47)(tsx@4.19.1)(typescript@5.6.3)

@@ -15,13 +15,6 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 		private queryConfig: QueryOptions = {
 			sql: sql.getQuery().query,
-			// rowsAsArray: true,
-			// typeCast: function(field: any, next: any) {
-			// 	if (field.type === 'TIMESTAMP' || field.type === 'DATETIME' || field.type === 'DATE') {
-			// 		return field.string();
-			// 	}
-			// 	return next();
-			// },
 		},
 		private rawQueryConfig: QueryOptions = {
 			sql: sql.getQuery().query,
@@ -49,7 +42,7 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 
 	async *stream() {
 		let conn: CallbackConnection | undefined;
-		// wrapping node-postgres driver error in new js error to add stack trace to it
+		// wrapping mysql2 driver error in new js error to add stack trace to it
 		try {
 			const { params } = this.sql.getQuery();
 
