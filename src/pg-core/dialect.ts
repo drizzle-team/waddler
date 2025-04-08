@@ -1,5 +1,6 @@
 import { Dialect, SQLDefault } from '../sql-template-params.ts';
 import type { IdentifierObject } from '../sql.ts';
+import { makePgArray } from './utils.ts';
 
 export class PgDialect extends Dialect {
 	escapeParam(lastParamIdx: number): string {
@@ -70,6 +71,12 @@ export class PgDialect extends Dialect {
 			return value.generateSQL().sql;
 		}
 
+		if (Array.isArray(value)) {
+			const mappedValue = makePgArray(value);
+			params.push(mappedValue as any);
+			return this.escapeParam(lastParamIdx + params.length);
+		}
+
 		if (
 			typeof value === 'number'
 			|| typeof value === 'bigint'
@@ -77,7 +84,6 @@ export class PgDialect extends Dialect {
 			|| typeof value === 'string'
 			|| value === null
 			|| value instanceof Date
-			|| Array.isArray(value)
 			|| typeof value === 'object'
 		) {
 			params.push(value);

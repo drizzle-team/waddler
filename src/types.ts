@@ -1,7 +1,7 @@
 import type { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from './sql-template-params.ts';
 import type { IdentifierObject, Values } from './sql.ts';
 
-type ValueForArray = number | bigint | boolean | null | Date | JSONObject | JSONArray;
+export type ValueForArray = string | Buffer | number | bigint | boolean | null | Date | JSONObject | JSONArray;
 type ValueForObject = string | number | boolean | null | Date | JSONObject | Array<ValueForObject>;
 
 export type JSONArray = Array<ValueForArray>;
@@ -15,6 +15,7 @@ export type RowData = {
 // param types that can safely be passed to driver
 export type UnsafeParamType =
 	| string
+	| Buffer
 	| number
 	| bigint
 	| Date

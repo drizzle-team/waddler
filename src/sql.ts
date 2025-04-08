@@ -26,6 +26,7 @@ export type Value =
 	| Date
 	| SQLDefault
 	| null
+	| Buffer
 	| JSONObject
 	| JSONArray
 	| Value[];

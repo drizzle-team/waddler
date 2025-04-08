@@ -61,10 +61,13 @@ export class MySQLDialect extends Dialect {
 			|| typeof value === 'string'
 			|| value === null
 			|| value instanceof Date
-			|| Array.isArray(value)
-			|| typeof value === 'object'
 		) {
 			params.push(value);
+			return this.escapeParam();
+		}
+
+		if (typeof value === 'object') {
+			params.push(JSON.stringify(value) as Value);
 			return this.escapeParam();
 		}
 

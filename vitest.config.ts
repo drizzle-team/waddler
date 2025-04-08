@@ -4,7 +4,7 @@ export default defineConfig({
 	test: {
 		include: [
 			'./tests/**/*.test.ts',
-			// './tests/postgres-js/waddler.test.ts',
+			// './tests/mysql2/waddler.test.ts',
 		],
 		exclude: [],
 		typecheck: {

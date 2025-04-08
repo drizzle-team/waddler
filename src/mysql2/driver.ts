@@ -1,5 +1,6 @@
-import type { PoolOptions } from 'mysql2';
-import { createPool } from 'mysql2';
+import type { Connection as CallbackConnection, Pool as CallbackPool, PoolOptions } from 'mysql2';
+import { createPool } from 'mysql2/promise';
+import type { Connection, Pool } from 'mysql2/promise';
 import type { MySQLIdentifierObject } from '../mysql-core/dialect.ts';
 import { MySQLDialect } from '../mysql-core/dialect.ts';
 import type { Identifier, Raw } from '../sql-template-params.ts';
@@ -7,12 +8,11 @@ import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-pa
 import type { SQL, Values } from '../sql.ts';
 import { SQLWrapper } from '../sql.ts';
 import type { SQLParamType, UnsafeParamType } from '../types.ts';
-import type { MySql2Client } from './session.ts';
 import { MySql2SQLTemplate } from './session.ts';
-import { isConfig } from './utils.ts';
+import { isCallbackClient, isConfig } from './utils.ts';
 
 const createSqlTemplate = (
-	client: MySql2Client,
+	client: Pool | Connection,
 	dialect: MySQLDialect,
 ): SQL => {
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): MySql2SQLTemplate<T> => {
@@ -51,6 +51,8 @@ const createSqlTemplate = (
 	return fn as any;
 };
 
+type MySql2Client = Pool | Connection | CallbackPool | CallbackConnection;
+
 export function waddler<TClient extends MySql2Client>(
 	...params: [
 		TClient | string,
@@ -79,7 +81,11 @@ export function waddler<TClient extends MySql2Client>(
 			client?: TClient;
 		};
 
-		if (client) return createSqlTemplate(client, dialect);
+		if (client) {
+			const promiseClient = isCallbackClient(client) ? client.promise() : client as (Pool | Connection);
+
+			return createSqlTemplate(promiseClient, dialect);
+		}
 
 		const pool = typeof connection === 'string'
 			? createPool({
@@ -90,5 +96,7 @@ export function waddler<TClient extends MySql2Client>(
 		return createSqlTemplate(pool, dialect);
 	}
 
-	return createSqlTemplate(params[0] as TClient, dialect);
+	const client = isCallbackClient(params[0]) ? params[0].promise() : params[0];
+
+	return createSqlTemplate(client as (Pool | Connection), dialect);
 }

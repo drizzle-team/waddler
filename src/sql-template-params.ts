@@ -1,4 +1,5 @@
 import type { BuildQueryConfig, IdentifierObject } from './sql';
+import type { ValueForArray } from './types';
 
 export abstract class Dialect {
 	abstract escapeParam(lastParamIdx: number): string;
@@ -6,10 +7,10 @@ export abstract class Dialect {
 	abstract checkIdentifierObject(object: IdentifierObject): void;
 
 	// SQLValues
-	abstract valueToSQL<V>(params: {
-		value: V;
+	abstract valueToSQL<Value extends ValueForArray>(params: {
+		value: Value;
 		lastParamIdx: number;
-		params: V[];
+		params: Value[];
 	}): string;
 }
 

@@ -11,22 +11,6 @@ export class PostgresSQLTemplate<T> extends SQLTemplate<T> {
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
 		super(sql, dialect);
-
-		// const transparentParser = (val: any) => val;
-
-		// Override postgres.js default date parsers: https://github.com/porsager/postgres/discussions/761
-		// TODO: revise: why do we need to override these types?
-		// for (const type of ['1184', '1082', '1083', '1114']) {
-		// 	this.client.options.parsers[type as any] = transparentParser;
-		// 	this.client.options.serializers[type as any] = transparentParser;
-		// }
-		// this.client.options.serializers['114'] = transparentParser;
-		// this.client.options.serializers['3802'] = transparentParser;
-
-		// // TODO: revise: somehow it doesn't have any effect on _bool type (bool[])
-		this.client.options.serializers['1000'] = (val: boolean[]) =>
-			JSON.stringify(val).replaceAll('[', '{').replaceAll(']', '}');
-		this.client.options.parsers['1000'] = (val: string) => JSON.parse(val.replaceAll('{', '[').replaceAll('}', ']'));
 	}
 
 	async execute() {
@@ -48,22 +32,12 @@ export class PostgresSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	/**
-	 * For now, the method executes the query, loads the result into memory, and iterates over it to simulate streaming.
-	 * This current implementation (a placeholder) will be replaced once Postgre.js acquires streaming support or when a suitable third-party solution is found.
+	 * For now, throws the Error.
+	 * Current implementation (a placeholder) will be replaced once Postgre.js acquires streaming support or when a suitable third-party solution is found.
 	 */
+	// eslint-disable-next-line require-yield
 	async *stream() {
-		const { query, params } = this.sql.getQuery();
-		// wrapping postgres-js driver error in new js error to add stack trace to it
-		try {
-			const queryStream = this.client.unsafe(query, params as any[]);
-			for (const row of await queryStream) {
-				yield row as T;
-			}
-		} catch (error) {
-			const newError = error instanceof AggregateError
-				? new Error(error.errors.map((e) => e.message).join('\n'))
-				: new Error((error as Error).message);
-			throw newError;
-		}
+		// TODO not implemented yet
+		throw new Error('Not implemented yet.');
 	}
 }
