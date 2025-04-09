@@ -1,5 +1,4 @@
 import type { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from './sql-template-params.ts';
-import type { IdentifierObject, Values } from './sql.ts';
 
 export type ValueForArray = string | Buffer | number | bigint | boolean | null | Date | JSONObject | JSONArray;
 export type ValueForObject = string | number | boolean | null | Date | JSONObject | Array<ValueForObject>;
@@ -18,14 +17,17 @@ export type UnsafeParamType =
 	| Buffer
 	| number
 	| bigint
-	| Date
 	| boolean
+	| Date
 	| null
 	| JSONObject
 	| JSONArray;
 
+// SQL params---------------------------------------------------------------
+
 export type SQLParamType =
 	| string
+	| Buffer
 	| number
 	| bigint
 	| Date
@@ -34,8 +36,41 @@ export type SQLParamType =
 	| JSONArray
 	| JSONObject
 	| SQLIdentifier<IdentifierObject>
-	| SQLValues<Values>
+	| SQLValues
 	| SQLDefault
 	| SQLRaw;
 
+export type Identifier<Q extends IdentifierObject> =
+	| string
+	| string[]
+	| Q
+	| Q[];
+
+export type IdentifierObject = {
+	schema?: string;
+	table?: string;
+	column?: string;
+	as?: string;
+};
+
+export type Value =
+	| string
+	| Buffer
+	| number
+	| bigint
+	| boolean
+	| Date
+	| null
+	| JSONObject
+	| JSONArray
+	| SQLDefault
+	| Value[];
+
+export type Values = Value[][];
+
+export type Raw = string | number | boolean | bigint;
+
+// ------------------------------------------------------------------------------------
+
+// Utils types
 export type isObjectEmpty<O> = keyof O extends never ? true : false;

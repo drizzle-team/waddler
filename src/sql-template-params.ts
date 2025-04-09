@@ -1,16 +1,16 @@
-import type { BuildQueryConfig, IdentifierObject, Value } from './sql';
-import type { ValueForArray } from './types';
+import type { BuildQueryConfig } from './sql';
+import type { Identifier, IdentifierObject, Raw, UnsafeParamType, Value } from './types';
 
-export abstract class Dialect {
+export abstract class Dialect implements BuildQueryConfig {
 	abstract escapeParam(lastParamIdx: number): string;
 	abstract escapeIdentifier(identifier: string): string;
 	abstract checkIdentifierObject(object: IdentifierObject): void;
 
 	// SQLValues
-	abstract valueToSQL(params: {
-		value: ValueForArray;
+	abstract valueToSQL<V extends Value = Value>(params: {
+		value: V;
 		lastParamIdx: number;
-		params: ValueForArray[];
+		params: UnsafeParamType[];
 	}): string;
 }
 
@@ -47,12 +47,6 @@ export class SQLString extends SQLChunk {
 		return { sql: this.value };
 	}
 }
-
-export type Identifier<Q extends IdentifierObject> =
-	| string
-	| string[]
-	| Q
-	| Q[];
 
 export class SQLIdentifier<Q extends IdentifierObject> extends SQLChunk {
 	constructor(private readonly value: Identifier<Q>) {
@@ -130,7 +124,7 @@ export class SQLValues extends SQLChunk {
 	constructor(private readonly value: Value[][]) {
 		super();
 	}
-	protected params: Value[] = [];
+	protected params: UnsafeParamType[] = [];
 
 	generateSQL({ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number }) {
 		if (!Array.isArray(this.value)) {
@@ -181,7 +175,6 @@ export class SQLValues extends SQLChunk {
 	}
 }
 
-export type Raw = string | number | boolean | bigint;
 export class SQLRaw extends SQLChunk {
 	constructor(private readonly value: Raw) {
 		super();

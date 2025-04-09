@@ -1,4 +1,4 @@
-import type { Dialect, Identifier, Raw } from './sql-template-params.ts';
+import type { Dialect } from './sql-template-params.ts';
 import {
 	SQLChunk,
 	SQLCommonParam,
@@ -9,29 +9,16 @@ import {
 	SQLValues,
 } from './sql-template-params.ts';
 import type { SQLTemplate } from './sql-template.ts';
-import type { JSONArray, JSONObject, RowData, SQLParamType, UnsafeParamType } from './types.ts';
-
-export type IdentifierObject = {
-	schema?: string;
-	table?: string;
-	column?: string;
-	as?: string;
-};
-
-export type Value =
-	| string
-	| number
-	| bigint
-	| boolean
-	| Date
-	| SQLDefault
-	| null
-	| Buffer
-	| JSONObject
-	| JSONArray
-	| Value[];
-
-export type Values = Value[][];
+import type {
+	Identifier,
+	IdentifierObject,
+	Raw,
+	RowData,
+	SQLParamType,
+	UnsafeParamType,
+	Value,
+	Values,
+} from './types.ts';
 
 export interface Query {
 	query: string;
@@ -43,7 +30,7 @@ export interface BuildQueryConfig {
 	escapeIdentifier(identifier: string): string;
 	escapeParam(lastParamIdx: number): string;
 	checkIdentifierObject(object: IdentifierObject): void;
-	valueToSQL<Value>(
+	valueToSQL(
 		{ value, lastParamIdx, params }: {
 			value: Value;
 			lastParamIdx: number;
@@ -55,7 +42,7 @@ export interface BuildQueryConfig {
 export interface SQL {
 	<T = RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLTemplate<T>;
 	identifier(value: Identifier<IdentifierObject>): SQLIdentifier<IdentifierObject>;
-	values(value: Values): SQLValues<Values>;
+	values(value: Values): SQLValues;
 	raw(value: Raw): SQLRaw;
 	unsafe<RowMode extends 'array' | 'object' = 'object'>(
 		query: string,

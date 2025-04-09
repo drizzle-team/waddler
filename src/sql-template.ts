@@ -22,7 +22,7 @@ export abstract class SQLTemplate<T> {
 		}
 		this.sql.queryChunks = [...this.sql.queryChunks, ...value.sql.queryChunks];
 
-		// should accept queryChunks that will be recalculated, I'll live it as mutating object for now,
+		// should accept queryChunks that will be recalculated, I'll leave it as mutating object for now,
 		// but I don't want to do it this way
 		this.sql.recalculateQuery(this.dialect);
 	}

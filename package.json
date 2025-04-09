@@ -84,6 +84,7 @@
 		"@types/node": "^22.7.6",
 		"@types/pg": "^8.11.11",
 		"@typescript-eslint/eslint-plugin": "^8.28.0",
+		"better-sqlite3": "^11.9.1",
 		"concurrently": "^8.2.1",
 		"dockerode": "^4.0.4",
 		"dprint": "^0.46.2",
@@ -94,22 +95,22 @@
 		"eslint-plugin-unicorn": "^56.0.1",
 		"eslint-plugin-unused-imports": "^4.1.4",
 		"get-port": "^7.1.0",
+		"mysql2": "^3.14.0",
+		"pg": "^8.14.0",
+		"postgres": "^3.4.5",
 		"tsup": "^8.4.0",
 		"tsx": "^4.19.1",
 		"typescript": "^5.5.4",
 		"vitest": "^3.0.9",
-		"zx": "^8.1.9",
-		"pg": "^8.14.0",
-		"postgres": "^3.4.5",
-		"mysql2": "^3.14.0"
+		"zx": "^8.1.9"
 	},
 	"peerDependencies": {
 		"@duckdb/node-api": "^1.1.2-alpha.4",
 		"duckdb": "^1.1.1",
+		"mysql2": "^3.14.0",
 		"pg": "^8.14.0",
 		"pg-query-stream": "^4.8.0",
-		"postgres": "^3.4.5",
-		"mysql2": "^3.14.0"
+		"postgres": "^3.4.5"
 	},
 	"peerDependenciesMeta": {
 		"duckdb": {

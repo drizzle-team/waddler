@@ -1,10 +1,20 @@
-import { beforeAll, expect, test } from 'vitest';
-import { waddler } from '../../src/duckdb-neo/driver.ts';
+import { commonTests } from 'tests/common/common.test';
+import { commonPgTests } from 'tests/pg-core';
+import { beforeAll, beforeEach, expect, test } from 'vitest';
+import type { SQL } from '../../src/duckdb-neo';
+import { waddler } from '../../src/duckdb-neo';
 
 let sql: ReturnType<typeof waddler>;
 beforeAll(async () => {
 	sql = waddler({ url: ':memory:', max: 10, accessMode: 'read_write' });
 });
+
+beforeEach<{ sql: SQL }>((ctx) => {
+	ctx.sql = sql;
+});
+
+commonTests();
+commonPgTests();
 
 // UNSAFE-------------------------------------------------------------------
 test('all types test', async () => {
@@ -695,7 +705,7 @@ test('sql template types test', async () => {
 			);
 	`;
 
-	const res = await sql`select * from sql_template_table;`;
+	const res = await sql`select * from ${sql.identifier('sql_template_table')};`;
 
 	const dateWithoutTime = new Date(date);
 	dateWithoutTime.setUTCHours(0, 0, 0, 0);

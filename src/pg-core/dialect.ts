@@ -1,5 +1,5 @@
 import { Dialect, SQLDefault } from '../sql-template-params.ts';
-import type { IdentifierObject } from '../sql.ts';
+import type { IdentifierObject, UnsafeParamType, Value } from '../types.ts';
 import { makePgArray } from './utils.ts';
 
 export class PgDialect extends Dialect {
@@ -60,11 +60,11 @@ export class PgDialect extends Dialect {
 
 	// SQLValues
 	// TODO, should it be here?
-	valueToSQL<Value>(
+	valueToSQL(
 		{ value, lastParamIdx, params }: {
 			value: Value;
 			lastParamIdx: number;
-			params: Value[];
+			params: UnsafeParamType[];
 		},
 	): string {
 		if (value instanceof SQLDefault) {

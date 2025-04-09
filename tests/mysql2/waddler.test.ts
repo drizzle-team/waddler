@@ -2,9 +2,10 @@ import type Docker from 'dockerode';
 import mysqlCallback from 'mysql2';
 import type { Connection } from 'mysql2/promise';
 import mysql from 'mysql2/promise';
-import { createAllDataTypesTable, defaultValue, dropAllDataTypesTable } from 'tests/mysql-core';
+import { commonTests } from 'tests/common/common.test';
+import { commonMysqlTests, createAllDataTypesTable, defaultValue, dropAllDataTypesTable } from 'tests/mysql-core';
 import { createMysqlDockerDB } from 'tests/utils';
-import { afterAll, beforeAll, expect, test } from 'vitest';
+import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
 import type { SQL } from '~/sql';
 import { waddler } from '../../src/mysql2';
 
@@ -54,6 +55,13 @@ afterAll(async () => {
 	await mysqlClient?.end().catch(console.error);
 	await mysqlContainer?.stop().catch(console.error);
 });
+
+beforeEach<{ sql: SQL }>((ctx) => {
+	ctx.sql = sql;
+});
+
+commonTests();
+commonMysqlTests();
 
 test('connection test', async () => {
 	// pool(promise)

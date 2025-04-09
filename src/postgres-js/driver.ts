@@ -1,11 +1,10 @@
 import type { Options, PostgresType, Sql } from 'postgres';
 import postgres from 'postgres';
 import { PgDialect } from '../pg-core/dialect.ts';
-import type { Identifier, Raw } from '../sql-template-params.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
-import type { IdentifierObject, SQL, Values } from '../sql.ts';
+import type { SQL } from '../sql.ts';
 import { SQLWrapper } from '../sql.ts';
-import type { SQLParamType, UnsafeParamType } from '../types.ts';
+import type { Identifier, IdentifierObject, Raw, SQLParamType, UnsafeParamType, Values } from '../types.ts';
 import { PostgresSQLTemplate } from './session.ts';
 import { isConfig } from './utils.ts';
 

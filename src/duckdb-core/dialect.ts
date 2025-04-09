@@ -1,5 +1,5 @@
 import { Dialect, SQLDefault } from '../sql-template-params.ts';
-import type { JSONObject } from '../types.ts';
+import type { IdentifierObject, JSONArray, Value } from '../types.ts';
 
 export class DuckdbDialect extends Dialect {
 	escapeParam(lastParamIdx: number): string {
@@ -10,7 +10,7 @@ export class DuckdbDialect extends Dialect {
 		return `"${identifier}"`;
 	}
 
-	checkIdentifierObject(object: DuckdbIdentifierObject) {
+	checkIdentifierObject(object: IdentifierObject) {
 		if (Object.values(object).includes(undefined!)) {
 			throw new Error(
 				`you can't specify undefined parameters. maybe you want to omit it?`,
@@ -58,7 +58,7 @@ export class DuckdbDialect extends Dialect {
 	}
 
 	// SQLValues
-	valueToSQL<Value>({ value }: { value: Value }): string {
+	valueToSQL<DuckdbValue>({ value }: { value: DuckdbValue }): string {
 		if (value instanceof SQLDefault) {
 			return value.generateSQL().sql;
 		}
@@ -99,21 +99,6 @@ export class DuckdbDialect extends Dialect {
 	}
 }
 
-export type DuckdbIdentifierObject = {
-	schema?: string;
-	table?: string;
-	column?: string;
-	as?: string;
-};
+export type DuckdbValue = Exclude<Value, Buffer | JSONArray>;
 
-export type Value =
-	| string
-	| number
-	| bigint
-	| boolean
-	| Date
-	| SQLDefault
-	| null
-	| JSONObject
-	| Value[];
 export type DuckdbValues = Value[][];

@@ -1,21 +1,22 @@
 import { Dialect, SQLDefault } from '../sql-template-params.ts';
 import type { UnsafeParamType, Value } from '../types.ts';
 
-export type MySQLIdentifierObject = {
+export type SqliteIdentifierObject = {
 	table?: string;
 	column?: string;
 	as?: string;
 };
-export class MySQLDialect extends Dialect {
+
+export class SqliteDialect extends Dialect {
 	escapeParam(): string {
 		return `?`;
 	}
 
 	escapeIdentifier(identifier: string): string {
-		return `\`${identifier}\``;
+		return `"${identifier}"`;
 	}
 
-	checkIdentifierObject(object: MySQLIdentifierObject) {
+	checkIdentifierObject(object: SqliteIdentifierObject) {
 		if (Object.values(object).includes(undefined!)) {
 			throw new Error(
 				`you can't specify undefined parameters. maybe you want to omit it?`,
@@ -43,8 +44,6 @@ export class MySQLDialect extends Dialect {
 		}
 	}
 
-	// SQLValues
-	// TODO, should it be here?
 	valueToSQL(
 		{ value, params }: {
 			value: Value;

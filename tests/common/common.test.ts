@@ -1,8 +1,16 @@
-import { expect, test } from 'vitest';
+import { describe, expect, test } from 'vitest';
+import type { SQL as SQL4Duckdb } from '../../src/duckdb';
 import { PgDialect } from '../../src/pg-core/dialect.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../src/sql-template-params.ts';
+import type { SQL } from '../../src/sql.ts';
 import { SQLWrapper } from '../../src/sql.ts';
 import type { SQLParamType } from '../../src/types.ts';
+
+declare module 'vitest' {
+	export interface TestContext {
+		sql: SQL | SQL4Duckdb;
+	}
+}
 
 const templateFunction = (strings: TemplateStringsArray, ...params: SQLParamType[]) => {
 	return { strings, params };
@@ -11,7 +19,7 @@ const dialect = new PgDialect();
 
 test('SQLWrapper with template params(SQLIdentifier, SQLValues) test', () => {
 	const sql = new SQLWrapper();
-	const templateParams = templateFunction`insert into ${new SQLIdentifier('users')} values ${new SQLValues<any>([[
+	const templateParams = templateFunction`insert into ${new SQLIdentifier('users')} values ${new SQLValues([[
 		1,
 		new SQLDefault(),
 	]])};`;
@@ -64,3 +72,83 @@ test('SQLWrapper with raw params test', () => {
 	expect(query).toBe('insert into users values (default, $1, $2, $3, $4, $5);');
 	expect(params).toEqual([1, '2', BigInt(1), date, true]);
 });
+
+export const commonTests = () => {
+	describe('common_tests', () => {
+		// toSQL
+		test('base test', (ctx) => {
+			const res = ctx.sql`select 1;`.toSQL();
+
+			expect(res).toStrictEqual({ query: `select 1;`, params: [] });
+		});
+
+		// toSQL errors
+		test('base test with undefined param. error', (ctx) => {
+			// @ts-ignore
+			expect(() => ctx.sql`select ${undefined};`.toSQL())
+				.toThrowError("you can't specify undefined as parameter");
+		});
+
+		test('base test with symbol param. error', (ctx) => {
+			// @ts-ignore
+			expect(() => ctx.sql`select ${Symbol('fooo')};`.toSQL())
+				.toThrowError("you can't specify symbol as parameter");
+		});
+
+		test('base test with function param. error', (ctx) => {
+			// @ts-ignore
+			expect(() => ctx.sql`select ${() => {}};`.toSQL())
+				.toThrowError("you can't specify function as parameter");
+		});
+
+		// sql.raw ----------------------------------------------------------------------------------
+		test('sql.raw test. number | boolean | bigint | string as parameter.', (ctx) => {
+			let res = ctx.sql`select ${ctx.sql.raw(1)};`.toSQL();
+			expect(res).toStrictEqual({ query: 'select 1;', params: [] });
+
+			res = ctx.sql`select ${ctx.sql.raw(true)};`.toSQL();
+			expect(res).toStrictEqual({ query: 'select true;', params: [] });
+
+			res = ctx.sql`select ${ctx.sql.raw(BigInt(10))};`.toSQL();
+			expect(res).toStrictEqual({ query: 'select 10;', params: [] });
+
+			res = ctx.sql`select ${ctx.sql.raw('* from users')};`.toSQL();
+			expect(res).toStrictEqual({ query: 'select * from users;', params: [] });
+		});
+
+		// sql.raw errors
+		test('sql.raw test. array | object | null | undefined | symbol | function as parameter. error.', (ctx) => {
+			let paramList = [[], {}, null];
+			for (const param of paramList) {
+				expect(
+					// @ts-ignore
+					() => ctx.sql`select ${ctx.sql.raw(param)};`.toSQL(),
+				).toThrowError(`you can't specify array, object or null as parameter for sql.raw.`);
+			}
+
+			expect(
+				// @ts-ignore
+				() => ctx.sql`select ${ctx.sql.raw(undefined)};`.toSQL(),
+			).toThrowError(`you can't specify undefined as parameter for sql.raw, maybe you mean using sql.default?`);
+
+			paramList = [Symbol('fooo'), () => {}];
+			for (const param of paramList) {
+				expect(
+					// @ts-ignore
+					() => ctx.sql`select ${ctx.sql.raw(param)};`.toSQL(),
+				).toThrowError(`you can't specify ${typeof param} as parameter for sql.raw.`);
+			}
+		});
+
+		// default ------------------------------------------------------------------------------
+		test('sql.default test using with sql.values.', (ctx) => {
+			const res = ctx.sql`insert into users (id, name) values ${ctx.sql.values([[ctx.sql.default]])};`.toSQL();
+			expect(res).toStrictEqual({ query: 'insert into users (id, name) values (default);', params: [] });
+		});
+
+		test('sql.default test using with sql`${}` as parameter.', (ctx) => {
+			const res = ctx.sql`insert into users (id, name) values (${ctx.sql.default}, 'name1');`.toSQL();
+			expect(res).toStrictEqual({ query: "insert into users (id, name) values (default, 'name1');", params: [] });
+		});
+	});
+};

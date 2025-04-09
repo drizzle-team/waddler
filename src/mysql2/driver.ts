@@ -3,11 +3,10 @@ import { createPool } from 'mysql2/promise';
 import type { Connection, Pool } from 'mysql2/promise';
 import type { MySQLIdentifierObject } from '../mysql-core/dialect.ts';
 import { MySQLDialect } from '../mysql-core/dialect.ts';
-import type { Identifier, Raw } from '../sql-template-params.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
-import type { SQL, Values } from '../sql.ts';
+import type { SQL } from '../sql.ts';
 import { SQLWrapper } from '../sql.ts';
-import type { SQLParamType, UnsafeParamType } from '../types.ts';
+import type { Identifier, Raw, SQLParamType, UnsafeParamType, Values } from '../types.ts';
 import { MySql2SQLTemplate } from './session.ts';
 import { isCallbackClient, isConfig } from './utils.ts';
 
