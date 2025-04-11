@@ -6,8 +6,8 @@ import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-pa
 import type { SQL } from '../sql.ts';
 import { SQLWrapper } from '../sql.ts';
 import type { Identifier, IdentifierObject, Raw, SQLParamType, UnsafeParamType, Values } from '../types.ts';
+import { isConfig } from '../utils.ts';
 import { NodePgSQLTemplate } from './session.ts';
-import { isConfig } from './utils.ts';
 
 export type NodePgClient = pg.Pool | PoolClient | Client;
 

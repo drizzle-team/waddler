@@ -1,7 +1,9 @@
 import type Docker from 'dockerode';
 import type { Sql } from 'postgres';
 import postgres from 'postgres';
+import { commonTests } from 'tests/common.test.ts';
 import {
+	commonPgTests,
 	createAllArrayDataTypesTable,
 	createAllDataTypesTable,
 	createAllNdarrayDataTypesTable,
@@ -9,7 +11,7 @@ import {
 	dropAllDataTypesTable,
 } from 'tests/pg-core.ts';
 import { createPgDockerDB } from 'tests/utils.ts';
-import { afterAll, beforeAll, expect, test } from 'vitest';
+import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
 import { waddler } from '../../src/postgres-js/index.ts';
 import type { SQL } from '../../src/sql.ts';
 
@@ -59,6 +61,13 @@ afterAll(async () => {
 	await pgClient?.end().catch(console.error);
 	await pgContainer?.stop().catch(console.error);
 });
+
+beforeEach<{ sql: SQL }>((ctx) => {
+	ctx.sql = sql;
+});
+
+commonTests();
+commonPgTests();
 
 test('connection test', async () => {
 	const pool = postgres({ ...pgConnectionParams });
@@ -403,103 +412,4 @@ test('all nd-array types in sql.values test', async () => {
 	expect(res[0]).toStrictEqual(expectedRes1);
 });
 
-// not implemented yet
-// sql.stream
-// test('sql.stream test', async () => {
-// 	await dropAllDataTypesTable(sql);
-// 	await createAllDataTypesTable(sql);
-
-// 	const date = new Date('2024-10-31T14:25:29.425Z');
-// 	const allDataTypesValues = [
-// 		1,
-// 		10,
-// 		BigInt('9007199254740992') + BigInt(1),
-// 		1,
-// 		10,
-// 		BigInt('9007199254740992') + BigInt(1),
-// 		true,
-// 		'qwerty',
-// 		'qwerty',
-// 		'qwerty',
-// 		'20.4',
-// 		20.4,
-// 		20.4,
-// 		{
-// 			name: 'alex',
-// 			age: 26,
-// 			bookIds: [1, 2, 3],
-// 			vacationRate: 2.5,
-// 			aliases: ['sasha', 'sanya'],
-// 			isMarried: true,
-// 		},
-// 		{
-// 			name: 'alex',
-// 			age: 26,
-// 			bookIds: [1, 2, 3],
-// 			vacationRate: 2.5,
-// 			aliases: ['sasha', 'sanya'],
-// 			isMarried: true,
-// 		},
-// 		'14:25:29.425',
-// 		date,
-// 		'2024-10-31',
-// 		'1 day',
-// 		'(1,2)',
-// 		'{1,2,3}',
-// 		`no,'"\`rm`,
-// 		'550e8400-e29b-41d4-a716-446655440000',
-// 		sql.default,
-// 	];
-
-// 	const expectedRes = {
-// 		integer: 1,
-// 		smallint: 10,
-// 		bigint: String(BigInt('9007199254740992') + BigInt(1)),
-// 		serial: 1,
-// 		smallserial: 10,
-// 		bigserial: String(BigInt('9007199254740992') + BigInt(1)),
-// 		boolean: true,
-// 		text: 'qwerty',
-// 		varchar: 'qwerty',
-// 		char: 'qwerty',
-// 		numeric: '20.4',
-// 		real: 20.4,
-// 		double_precision: 20.4,
-// 		json: {
-// 			name: 'alex',
-// 			age: 26,
-// 			bookIds: [1, 2, 3],
-// 			vacationRate: 2.5,
-// 			aliases: ['sasha', 'sanya'],
-// 			isMarried: true,
-// 		},
-// 		jsonb: {
-// 			name: 'alex',
-// 			age: 26,
-// 			bookIds: [1, 2, 3],
-// 			vacationRate: 2.5,
-// 			aliases: ['sasha', 'sanya'],
-// 			isMarried: true,
-// 		},
-// 		time: '14:25:29.425',
-// 		timestamp_date: new Date('2024-10-31T12:25:29.425Z'),
-// 		date: new Date('2024-10-31T00:00:00.000Z'),
-// 		interval: '1 day',
-// 		point: '(1,2)', // [1, 2]
-// 		line: '{1,2,3}', // [1, 2, 3]
-// 		mood_enum: `no,'"\`rm`,
-// 		uuid: '550e8400-e29b-41d4-a716-446655440000',
-// 		default: 3,
-// 	};
-
-// 	await sql`insert into ${sql.identifier('all_data_types')} values ${sql.values([allDataTypesValues])};`;
-
-// 	const pool = postgres({ ...pgConnectionParams });
-// 	const sqlClient = waddler({ client: pool });
-// 	const streamClient = sqlClient`select * from all_data_types;`.stream();
-// 	for await (const row of streamClient) {
-// 		expect(row).toStrictEqual(expectedRes);
-// 	}
-
-// 	await pool.end();
-// });
+// sql.stream: not implemented yet

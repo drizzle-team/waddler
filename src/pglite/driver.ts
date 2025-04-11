@@ -1,21 +1,21 @@
-import type { Options, PostgresType, Sql } from 'postgres';
-import postgres from 'postgres';
+import type { PGliteOptions } from '@electric-sql/pglite';
+import { PGlite } from '@electric-sql/pglite';
 import { PgDialect } from '../pg-core/dialect.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
 import type { SQL } from '../sql.ts';
 import { SQLWrapper } from '../sql.ts';
 import type { Identifier, IdentifierObject, Raw, SQLParamType, UnsafeParamType, Values } from '../types.ts';
 import { isConfig } from '../utils.ts';
-import { PostgresSQLTemplate } from './session.ts';
+import { PGliteSQLTemplate } from './session.ts';
 
 const createSqlTemplate = (
-	client: Sql,
+	client: PGlite,
 	dialect: PgDialect,
 ): SQL => {
-	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): PostgresSQLTemplate<T> => {
+	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): PGliteSQLTemplate<T> => {
 		const sql = new SQLWrapper();
 		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
-		return new PostgresSQLTemplate<T>(sql, client, dialect);
+		return new PGliteSQLTemplate<T>(sql, client, dialect);
 	};
 
 	Object.assign(fn, {
@@ -39,7 +39,7 @@ const createSqlTemplate = (
 			const sql = new SQLWrapper();
 			sql.with({ rawParams: { query, params } });
 
-			const unsafeDriver = new PostgresSQLTemplate(sql, client, dialect, options);
+			const unsafeDriver = new PGliteSQLTemplate(sql, client, dialect, options);
 			return await unsafeDriver.execute();
 		},
 		default: new SQLDefault(),
@@ -48,41 +48,47 @@ const createSqlTemplate = (
 	return fn as any;
 };
 
-export function waddler<TClient extends Sql>(
-	...params: [
-		TClient | string,
-	] | [
-		(({
-			connection: string | ({ url?: string } & Options<Record<string, PostgresType>>);
-		} | {
-			client: TClient;
-		})),
-	]
+export function waddler<TClient extends PGlite = PGlite>(
+	...params:
+		| []
+		| [
+			TClient | string,
+		]
+		| [
+			(
+				({
+					connection?: (PGliteOptions & { dataDir?: string }) | string;
+				} | {
+					client: TClient;
+				})
+			),
+		]
 ) {
 	const dialect = new PgDialect();
 
-	if (typeof params[0] === 'string') {
-		const client = postgres(params[0] as string);
-
+	if (params[0] === undefined || typeof params[0] === 'string') {
+		const client = new PGlite(params[0]);
 		return createSqlTemplate(client, dialect);
 	}
 
 	if (isConfig(params[0])) {
 		const { connection, client } = params[0] as {
-			connection?: { url?: string } & Options<Record<string, PostgresType>>;
+			connection?: PGliteOptions & { dataDir: string };
 			client?: TClient;
 		};
 
 		if (client) return createSqlTemplate(client, dialect);
 
-		if (typeof connection === 'object' && connection.url !== undefined) {
-			const { url, ...config } = connection;
+		if (typeof connection === 'object') {
+			const { dataDir, ...options } = connection;
 
-			const client = postgres(url, config);
+			const client = new PGlite(dataDir, options);
+
 			return createSqlTemplate(client, dialect);
 		}
 
-		const client_ = postgres(connection);
+		const client_ = new PGlite(connection);
+
 		return createSqlTemplate(client_, dialect);
 	}
 

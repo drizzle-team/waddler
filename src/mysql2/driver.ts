@@ -7,8 +7,9 @@ import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-pa
 import type { SQL } from '../sql.ts';
 import { SQLWrapper } from '../sql.ts';
 import type { Identifier, Raw, SQLParamType, UnsafeParamType, Values } from '../types.ts';
+import { isConfig } from '../utils.ts';
 import { MySql2SQLTemplate } from './session.ts';
-import { isCallbackClient, isConfig } from './utils.ts';
+import { isCallbackClient } from './utils.ts';
 
 const createSqlTemplate = (
 	client: Pool | Connection,

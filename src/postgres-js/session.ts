@@ -38,6 +38,6 @@ export class PostgresSQLTemplate<T> extends SQLTemplate<T> {
 	// eslint-disable-next-line require-yield
 	async *stream() {
 		// TODO not implemented yet
-		throw new Error('Not implemented yet.');
+		throw new Error('stream is not implemented for postgres-js yet.');
 	}
 }

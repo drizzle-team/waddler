@@ -63,6 +63,16 @@
 				"default": "./postgres-js/index.cjs"
 			}
 		},
+		"./pglite": {
+			"import": {
+				"types": "./pglite/index.d.ts",
+				"default": "./pglite/index.js"
+			},
+			"require": {
+				"types": "./pglite/index.d.cts",
+				"default": "./pglite/index.cjs"
+			}
+		},
 		"./mysql2": {
 			"import": {
 				"types": "./mysql2/index.d.ts",
@@ -87,6 +97,7 @@
 	"devDependencies": {
 		"@arethetypeswrong/cli": "^0.16.4",
 		"@duckdb/node-api": "1.1.2-alpha.4",
+		"@electric-sql/pglite": "^0.2.17",
 		"@eslint/compat": "^1.2.7",
 		"@eslint/eslintrc": "^3.3.1",
 		"@eslint/js": "^9.23.0",
@@ -116,13 +127,14 @@
 		"zx": "^8.1.9"
 	},
 	"peerDependencies": {
-		"duckdb": "^1.2.1",
 		"@duckdb/node-api": "^1.1.2-alpha.4",
+		"better-sqlite3": "^11.9.1",
+		"duckdb": "^1.2.1",
 		"mysql2": "^3.14.0",
 		"pg": "^8.14.0",
 		"pg-query-stream": "^4.8.0",
 		"postgres": "^3.4.5",
-		"better-sqlite3": "^11.9.1"
+		"@electric-sql/pglite": "^0.2.17"
 	},
 	"peerDependenciesMeta": {
 		"duckdb": {
@@ -144,6 +156,9 @@
 			"optional": true
 		},
 		"better-sqlite3": {
+			"optional": true
+		},
+		"pglite": {
 			"optional": true
 		}
 	}

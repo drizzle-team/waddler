@@ -18,6 +18,9 @@ importers:
       '@duckdb/node-api':
         specifier: 1.1.2-alpha.4
         version: 1.1.2-alpha.4
+      '@electric-sql/pglite':
+        specifier: ^0.2.17
+        version: 0.2.17
       '@eslint/compat':
         specifier: ^1.2.7
         version: 1.2.7(eslint@9.23.0)
@@ -192,6 +195,9 @@ packages:
 
   '@duckdb/node-bindings@1.1.2-alpha.4':
     resolution: {integrity: sha512-y3c55+RkGJUdNQPx+TMDVvd+4TmHvJo8AuLsts04n+7DazImfqNh+4ohs1NsmcWOKQOFaeUBJ3otBbyIeaQ5VA==}
+
+  '@electric-sql/pglite@0.2.17':
+    resolution: {integrity: sha512-qEpKRT2oUaWDH6tjRxLHjdzMqRUGYDnGZlKrnL4dJ77JVMcP2Hpo3NYnOSPKdZdeec57B6QPprCUFg0picx5Pw==}
 
   '@esbuild/aix-ppc64@0.21.5':
     resolution: {integrity: sha512-1SDgH6ZSPTlggy1yI6+Dbkiz8xzpHJEVAlF/AM1tHPLsf5STom9rwtjE4hKAF20FfXXNTFqEYXyJNWh1GiZedQ==}
@@ -3291,6 +3297,8 @@ snapshots:
       '@duckdb/node-bindings-darwin-arm64': 1.1.2-alpha.4
       '@duckdb/node-bindings-linux-x64': 1.1.2-alpha.4
       '@duckdb/node-bindings-win32-x64': 1.1.2-alpha.4
+
+  '@electric-sql/pglite@0.2.17': {}
 
   '@esbuild/aix-ppc64@0.21.5':
     optional: true

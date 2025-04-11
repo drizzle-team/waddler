@@ -5,8 +5,8 @@ import { SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
 import { SQLWrapper } from '../sql.ts';
 import { SqliteDialect } from '../sqlite-core/dialect.ts';
 import type { Identifier, Raw, RowData, SQLParamType, UnsafeParamType, Values } from '../types.ts';
+import { isConfig } from '../utils.ts';
 import { BetterSqlite3SQLTemplate } from './session.ts';
-import { isConfig } from './utils.ts';
 
 export interface BetterSqlite3SQL extends Omit<SQL, 'default' | 'unsafe'> {
 	/**
