@@ -2,7 +2,7 @@ import type Docker from 'dockerode';
 import mysqlCallback from 'mysql2';
 import type { Connection } from 'mysql2/promise';
 import mysql from 'mysql2/promise';
-import { commonTests } from 'tests/common/common.test';
+import { commonTests } from 'tests/common.test';
 import { commonMysqlTests, createAllDataTypesTable, defaultValue, dropAllDataTypesTable } from 'tests/mysql-core';
 import { createMysqlDockerDB } from 'tests/utils';
 import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
@@ -221,8 +221,8 @@ test('all types in sql.values test', async () => {
 		100.23,
 		101.23,
 		1,
-		'qwerty',
-		'qwerty',
+		Buffer.from('qwerty'),
+		Buffer.from('qwerty'),
 		'qwerty',
 		'qwerty',
 		'qwerty',

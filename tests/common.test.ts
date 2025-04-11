@@ -1,14 +1,15 @@
 import { describe, expect, test } from 'vitest';
-import type { SQL as SQL4Duckdb } from '../../src/duckdb';
-import { PgDialect } from '../../src/pg-core/dialect.ts';
-import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../src/sql-template-params.ts';
-import type { SQL } from '../../src/sql.ts';
-import { SQLWrapper } from '../../src/sql.ts';
-import type { SQLParamType } from '../../src/types.ts';
+import type { BetterSqlite3SQL } from '~/better-sqlite3/driver.ts';
+import type { SQL as DuckdbSQL } from '../src/duckdb/index.ts';
+import { PgDialect } from '../src/pg-core/dialect.ts';
+import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../src/sql-template-params.ts';
+import type { SQL } from '../src/sql.ts';
+import { SQLWrapper } from '../src/sql.ts';
+import type { SQLParamType } from '../src/types.ts';
 
 declare module 'vitest' {
 	export interface TestContext {
-		sql: SQL | SQL4Duckdb;
+		sql: SQL | DuckdbSQL | BetterSqlite3SQL;
 	}
 }
 
@@ -138,17 +139,6 @@ export const commonTests = () => {
 					() => ctx.sql`select ${ctx.sql.raw(param)};`.toSQL(),
 				).toThrowError(`you can't specify ${typeof param} as parameter for sql.raw.`);
 			}
-		});
-
-		// default ------------------------------------------------------------------------------
-		test('sql.default test using with sql.values.', (ctx) => {
-			const res = ctx.sql`insert into users (id, name) values ${ctx.sql.values([[ctx.sql.default]])};`.toSQL();
-			expect(res).toStrictEqual({ query: 'insert into users (id, name) values (default);', params: [] });
-		});
-
-		test('sql.default test using with sql`${}` as parameter.', (ctx) => {
-			const res = ctx.sql`insert into users (id, name) values (${ctx.sql.default}, 'name1');`.toSQL();
-			expect(res).toStrictEqual({ query: "insert into users (id, name) values (default, 'name1');", params: [] });
 		});
 	});
 };

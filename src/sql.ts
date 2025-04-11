@@ -40,7 +40,10 @@ export interface BuildQueryConfig {
 }
 
 export interface SQL {
-	<T = RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLTemplate<T>;
+	<T = RowData>(
+		strings: TemplateStringsArray,
+		...params: SQLParamType[]
+	): SQLTemplate<T>;
 	identifier(value: Identifier<IdentifierObject>): SQLIdentifier<IdentifierObject>;
 	values(value: Values): SQLValues;
 	raw(value: Raw): SQLRaw;

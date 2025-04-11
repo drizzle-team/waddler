@@ -6,6 +6,7 @@ export type MySQLIdentifierObject = {
 	column?: string;
 	as?: string;
 };
+
 export class MySQLDialect extends Dialect {
 	escapeParam(): string {
 		return `?`;
@@ -62,6 +63,7 @@ export class MySQLDialect extends Dialect {
 			|| typeof value === 'string'
 			|| value === null
 			|| value instanceof Date
+			|| Buffer.isBuffer(value)
 		) {
 			params.push(value);
 			return this.escapeParam();

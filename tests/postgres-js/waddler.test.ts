@@ -130,11 +130,12 @@ test('all types in sql.unsafe test', async () => {
 		'{1,2,3}',
 		`no,'"\`rm`,
 		'550e8400-e29b-41d4-a716-446655440000',
+		Buffer.from('qwerty'),
 		// sql.default,
 	];
 
 	await sql.unsafe(
-		`insert into all_data_types values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, default);`,
+		`insert into all_data_types values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, default);`,
 		values,
 		{ rowMode: 'object' },
 	);
@@ -181,7 +182,8 @@ test('all types in sql.unsafe test', async () => {
 		line: '{1,2,3}', // [1, 2, 3]
 		mood_enum: `no,'"\`rm`,
 		uuid: '550e8400-e29b-41d4-a716-446655440000',
-		default: 3,
+		bytea: Buffer.from('qwerty'),
+		default: defaultValue,
 	};
 
 	expect(res[0]).toStrictEqual(expectedRes);
@@ -235,6 +237,7 @@ test('all types in sql.values, sql.raw in select test', async () => {
 		'{1,2,3}',
 		`no,'"\`rm`,
 		'550e8400-e29b-41d4-a716-446655440000',
+		Buffer.from('qwerty'),
 		sql.default,
 	];
 
@@ -262,7 +265,8 @@ test('all types in sql.values, sql.raw in select test', async () => {
 		'{1,2,3}', // [1, 2, 3],
 		`no,'"\`rm`,
 		'550e8400-e29b-41d4-a716-446655440000',
-		3,
+		Buffer.from('qwerty'),
+		defaultValue,
 	];
 
 	await sql`insert into ${sql.identifier('all_data_types')} values ${sql.values([allDataTypesValues])};`;

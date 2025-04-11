@@ -1,56 +1,28 @@
 import { describe, expect, test } from 'vitest';
-import type { SQL } from '~/sql';
+import type { BetterSqlite3SQL } from '../src/better-sqlite3';
 
-export const createAllDataTypesTable = async (sql: SQL) => {
-	await sql.unsafe(`
-			    CREATE TABLE \`all_data_types\` (
-				\`integer\` int,
-				\`tinyint\` tinyint,
-				\`smallint\` smallint,
-				\`mediumint\` mediumint,
-				\`bigint\` bigint,
-				\`real\` real,
-				\`decimal\` decimal(4,2),
-				\`double\` double,
-				\`float\` float,
-				\`serial\` serial AUTO_INCREMENT,
-				\`binary\` binary(6),
-				\`varbinary\` varbinary(6),
-				\`char\` char(255),
-				\`varchar\` varchar(256),
-				\`text\` text,
-				\`boolean\` boolean,
-				\`date\` date,
-				\`datetime\` datetime,
-				\`time\` time,
-				\`year\` year,
-				\`timestamp\` timestamp,
-				\`json\` json,
-				\`popularity\` enum('unknown','known','popular'),
-                \`default\` int default 3
-			);
-		`);
+export const createAllDataTypesTable = async (sql: BetterSqlite3SQL) => {
+	await sql`
+		    CREATE TABLE "all_data_types" (
+			"integer_number" integer,
+			"integer_bigint" integer,
+			"real" real,
+			"text" text,
+			"text_json" text,
+			"blob_bigint" blob,
+			"blob_buffer" blob,
+			"blob_json" blob,
+			"numeric" numeric
+		);
+	`.run();
 };
 
-export const dropAllDataTypesTable = async (sql: SQL) => {
-	await sql.unsafe('drop table if exists all_data_types;');
+export const dropAllDataTypesTable = async (sql: BetterSqlite3SQL) => {
+	await sql`drop table if exists "all_data_types";`.run();
 };
 
-export const defaultValue = 3;
-
-export const commonMysqlTests = () => {
-	describe('common_mysql_tests', () => {
-		// default ------------------------------------------------------------------------------
-		test<{ sql: SQL }>('sql.default test using with sql.values.', (ctx) => {
-			const res = ctx.sql`insert into users (id, name) values ${ctx.sql.values([[ctx.sql.default]])};`.toSQL();
-			expect(res).toStrictEqual({ query: 'insert into users (id, name) values (default);', params: [] });
-		});
-
-		test<{ sql: SQL }>('sql.default test using with sql`${}` as parameter.', (ctx) => {
-			const res = ctx.sql`insert into users (id, name) values (${ctx.sql.default}, 'name1');`.toSQL();
-			expect(res).toStrictEqual({ query: "insert into users (id, name) values (default, 'name1');", params: [] });
-		});
-
+export const commonSqliteTests = () => {
+	describe('common_sqlite_tests', () => {
 		// toSQL
 		test('base test with number param', (ctx) => {
 			const res = ctx.sql`select ${1};`.toSQL();
@@ -106,19 +78,19 @@ export const commonMysqlTests = () => {
 		test('sql.identifier test. string parameter', (ctx) => {
 			const res = ctx.sql`select ${ctx.sql.identifier('name')} from users;`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select \`name\` from users;`, params: [] });
+			expect(res).toStrictEqual({ query: `select "name" from users;`, params: [] });
 		});
 
 		test('sql.identifier test. string[] parameter', (ctx) => {
 			const res = ctx.sql`select ${ctx.sql.identifier(['name', 'email', 'phone'])} from users;`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select \`name\`, \`email\`, \`phone\` from users;`, params: [] });
+			expect(res).toStrictEqual({ query: `select "name", "email", "phone" from users;`, params: [] });
 		});
 
 		test('sql.identifier test. object parameter', (ctx) => {
 			const res = ctx.sql`select * from ${ctx.sql.identifier({ schema: 'public', table: 'users' })};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select * from \`public\`.\`users\`;`, params: [] });
+			expect(res).toStrictEqual({ query: `select * from "public"."users";`, params: [] });
 		});
 
 		test('sql.identifier test. object[] parameter', (ctx) => {
@@ -130,7 +102,7 @@ export const commonMysqlTests = () => {
 			} from users;`.toSQL();
 
 			expect(res).toStrictEqual({
-				query: `select \`public\`.\`users\`.\`name\`, \`public\`.\`users\`.\`email\` from users;`,
+				query: `select "public"."users"."name", "public"."users"."email" from users;`,
 				params: [],
 			});
 		});
@@ -144,8 +116,7 @@ export const commonMysqlTests = () => {
 			} from users;`.toSQL();
 
 			expect(res).toStrictEqual({
-				query:
-					`select \`public\`.\`users\`.\`name\` as \`user_name\`, \`public\`.\`users\`.\`email\` as \`user_email\` from users;`,
+				query: `select "public"."users"."name" as "user_name", "public"."users"."email" as "user_email" from users;`,
 				params: [],
 			});
 		});
@@ -205,14 +176,13 @@ export const commonMysqlTests = () => {
 
 		test("sql.identifier error test. 'undefined in parameters' error with object parameter", (ctx) => {
 			expect(
-				() =>
-					ctx.sql`select ${ctx.sql.identifier({ schema: undefined })}, \`email\`, \`phone\` from \`users\`;`.toSQL(),
+				() => ctx.sql`select ${ctx.sql.identifier({ schema: undefined })}, "email", "phone" from "users";`.toSQL(),
 			).toThrowError(`you can't specify undefined parameters. maybe you want to omit it?`);
 		});
 
 		test("sql.identifier error test. 'no parameters' error with object parameter", (ctx) => {
 			expect(
-				() => ctx.sql`select ${ctx.sql.identifier({})}, \`email\`, \`phone\` from \`users\`;`.toSQL(),
+				() => ctx.sql`select ${ctx.sql.identifier({})}, "email", "phone" from "users";`.toSQL(),
 			).toThrowError(`you need to specify at least one parameter.`);
 		});
 
@@ -234,7 +204,7 @@ export const commonMysqlTests = () => {
 							table: 'users',
 							column: 'name',
 							as: 4,
-						})}, \`email\`, \`phone\` from \`users\`;`.toSQL(),
+						})}, "email", "phone" from "users";`.toSQL(),
 			).toThrowError(`object properties 'table', 'column', 'as' should be of string type or omitted.`);
 
 			expect(
@@ -246,7 +216,7 @@ export const commonMysqlTests = () => {
 							table: 'users',
 							column: 4,
 							as: 'user_name',
-						})}, \`email\`, \`phone\` from \`users\`;`.toSQL(),
+						})}, "email", "phone" from "users";`.toSQL(),
 			).toThrowError(`object properties 'table', 'column', 'as' should be of string type or omitted.`);
 
 			expect(
@@ -258,8 +228,10 @@ export const commonMysqlTests = () => {
 							table: 4,
 							column: 'name',
 							as: 'user_name',
-						})}, \`email\`, \`phone\` from \`users\`;`.toSQL(),
+						})}, "email", "phone" from "users";`.toSQL(),
 			).toThrowError(`object properties 'table', 'column', 'as' should be of string type or omitted.`);
 		});
 	});
 };
+
+export const defaultValue = 3;

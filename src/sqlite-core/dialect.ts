@@ -60,6 +60,7 @@ export class SqliteDialect extends Dialect {
 			|| typeof value === 'boolean'
 			|| typeof value === 'string'
 			|| value === null
+			|| Buffer.isBuffer(value)
 			|| value instanceof Date
 		) {
 			params.push(value);
@@ -72,7 +73,7 @@ export class SqliteDialect extends Dialect {
 		}
 
 		if (value === undefined) {
-			throw new Error("value can't be undefined, maybe you mean sql.default?");
+			throw new Error("value can't be undefined"); // , maybe you mean sql.default?
 		}
 
 		throw new Error(`you can't specify ${typeof value} as value.`);

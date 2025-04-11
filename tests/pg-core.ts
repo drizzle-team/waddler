@@ -34,6 +34,7 @@ export const createAllDataTypesTable = async (sql: SQL) => {
 	"line" "line",
 	"mood_enum" "public"."mood_enum",
 	"uuid" "uuid",
+	"bytea" "bytea",
 	"default" int default ${defaultValue}
     );`);
 };
@@ -99,6 +100,17 @@ export const createAllNdarrayDataTypesTable = async (sql: SQL) => {
 
 export const commonPgTests = () => {
 	describe('common_pg_tests', () => {
+		// default ------------------------------------------------------------------------------
+		test<{ sql: SQL }>('sql.default test using with sql.values.', (ctx) => {
+			const res = ctx.sql`insert into users (id, name) values ${ctx.sql.values([[ctx.sql.default]])};`.toSQL();
+			expect(res).toStrictEqual({ query: 'insert into users (id, name) values (default);', params: [] });
+		});
+
+		test<{ sql: SQL }>('sql.default test using with sql`${}` as parameter.', (ctx) => {
+			const res = ctx.sql`insert into users (id, name) values (${ctx.sql.default}, 'name1');`.toSQL();
+			expect(res).toStrictEqual({ query: "insert into users (id, name) values (default, 'name1');", params: [] });
+		});
+
 		// toSQL
 		test('base test with number param', (ctx) => {
 			const res = ctx.sql`select ${1};`.toSQL();

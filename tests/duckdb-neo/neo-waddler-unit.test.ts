@@ -1,4 +1,4 @@
-import { commonTests } from 'tests/common/common.test';
+import { commonTests } from 'tests/common.test';
 import { commonPgTests } from 'tests/pg-core';
 import { beforeAll, beforeEach, expect, test } from 'vitest';
 import type { SQL } from '../../src/duckdb-neo';
