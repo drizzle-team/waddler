@@ -1,21 +1,22 @@
-import Client, { type Database, type Options } from 'better-sqlite3';
-import type { SqliteIdentifierObject } from '~/sqlite-core';
+/// <reference types="bun-types" />
+import { Database } from 'bun:sqlite';
 import type { SQL } from '../sql';
 import { SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
 import { SQLWrapper } from '../sql.ts';
+import type { SqliteIdentifierObject } from '../sqlite-core';
 import { SqliteDialect } from '../sqlite-core/dialect.ts';
 import type { Identifier, Raw, RowData, SQLParamType, UnsafeParamType, Values } from '../types.ts';
 import { isConfig } from '../utils.ts';
-import { BetterSqlite3SQLTemplate } from './session.ts';
+import { BunSqliteSQLTemplate } from './session.ts';
 
-export interface BetterSqlite3SQL extends Omit<SQL, 'default' | 'unsafe'> {
+export interface BunSqliteSQL extends Omit<SQL, 'default' | 'unsafe'> {
 	/**
 	 * sql.default is not implemented for sqlite because sqlite doesn't support feature of specifying 'default' keyword in insert statements.
 	 */
 	<T = RowData>(
 		strings: TemplateStringsArray,
 		...params: SQLParamType[]
-	): BetterSqlite3SQLTemplate<T>;
+	): BunSqliteSQLTemplate<T>;
 	unsafe<RowMode extends 'array' | 'object' = 'object'>(
 		query: string,
 		params?: UnsafeParamType[],
@@ -28,7 +29,7 @@ export interface BetterSqlite3SQL extends Omit<SQL, 'default' | 'unsafe'> {
 }
 
 class UnsafePromise<T> {
-	constructor(private driver: BetterSqlite3SQLTemplate<T>) {}
+	constructor(private driver: BunSqliteSQLTemplate<T>) {}
 
 	run(): Omit<UnsafePromise<T>, 'run' | 'all'> {
 		this.driver.run();
@@ -64,13 +65,13 @@ class UnsafePromise<T> {
 const createSqlTemplate = (
 	client: Database,
 	dialect: SqliteDialect,
-): BetterSqlite3SQL => {
-	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): BetterSqlite3SQLTemplate<T> => {
+): BunSqliteSQL => {
+	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): BunSqliteSQLTemplate<T> => {
 		const sql = new SQLWrapper();
 		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
 		// TODO: revise: this will return all integers as bigints
 		// client.defaultSafeIntegers(true);
-		return new BetterSqlite3SQLTemplate<T>(sql, client, dialect);
+		return new BunSqliteSQLTemplate<T>(sql, client, dialect);
 	};
 
 	Object.assign(fn, {
@@ -94,7 +95,7 @@ const createSqlTemplate = (
 			const sql = new SQLWrapper();
 			sql.with({ rawParams: { query, params } });
 
-			const unsafeDriver = new BetterSqlite3SQLTemplate(sql, client, dialect, options);
+			const unsafeDriver = new BunSqliteSQLTemplate(sql, client, dialect, options);
 			const unsafePromise = new UnsafePromise(unsafeDriver);
 
 			return unsafePromise;
@@ -107,53 +108,76 @@ const createSqlTemplate = (
 	return fn as any;
 };
 
-export type BetterSQLite3DatabaseConfig =
+type BunSqliteDatabaseOptions = {
+	/**
+	 * Open the database as read-only (no write operations, no create).
+	 *
+	 * Equivalent to {@link constants.SQLITE_OPEN_READONLY}
+	 */
+	readonly?: boolean;
+	/**
+	 * Allow creating a new database
+	 *
+	 * Equivalent to {@link constants.SQLITE_OPEN_CREATE}
+	 */
+	create?: boolean;
+	/**
+	 * Open the database as read-write
+	 *
+	 * Equivalent to {@link constants.SQLITE_OPEN_READWRITE}
+	 */
+	readwrite?: boolean;
+};
+
+export type BunSqliteDatabaseConfig =
 	| ({
-		source?:
-			| string
-			| Buffer;
-	} & Options)
+		source?: string;
+	} & BunSqliteDatabaseOptions)
 	| string
 	| undefined;
 
-export function waddler(
+export function waddler<TClient extends Database = Database>(
 	...params:
 		| []
 		| [
-			Database | string,
+			TClient | string,
 		]
 		| [
-			(({
-				connection?: BetterSQLite3DatabaseConfig;
-			} | {
-				client: Database;
-			})),
+			(
+				({
+					connection?: BunSqliteDatabaseConfig;
+				} | {
+					client: TClient;
+				})
+			),
 		]
 ) {
 	const dialect = new SqliteDialect();
 
 	if (params[0] === undefined || typeof params[0] === 'string') {
-		const client = params[0] === undefined ? new Client() : new Client(params[0]);
+		const client = params[0] === undefined ? new Database() : new Database(params[0]);
 		return createSqlTemplate(client, dialect);
 	}
 
 	if (isConfig(params[0])) {
 		const { connection, client } = params[0] as {
-			connection?: BetterSQLite3DatabaseConfig;
-			client?: Database;
+			connection?: BunSqliteDatabaseConfig | string;
+			client?: TClient;
 		};
 
 		if (client) return createSqlTemplate(client, dialect);
 
 		if (typeof connection === 'object') {
-			const { source, ...options } = connection;
+			const { source, ...opts } = connection;
 
-			const client = new Client(source, options);
+			const options = Object.values(opts).filter((v) => v !== undefined).length ? opts : undefined;
+
+			const client = new Database(source, options);
 
 			return createSqlTemplate(client, dialect);
 		}
 
-		const client_ = new Client(connection);
+		const client_ = new Database(connection);
 
 		return createSqlTemplate(client_, dialect);
 	}

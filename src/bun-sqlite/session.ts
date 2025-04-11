@@ -1,9 +1,9 @@
-import type { Database } from 'better-sqlite3';
+import type { Database } from 'bun:sqlite';
 import type { Dialect } from '~/sql-template-params.ts';
 import type { SQLWrapper } from '~/sql.ts';
 import { SQLTemplate } from '../sql-template.ts';
 
-export class BetterSqlite3SQLTemplate<T> extends SQLTemplate<T> {
+export class BunSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	private returningData: boolean = true;
 
 	constructor(
@@ -15,12 +15,12 @@ export class BetterSqlite3SQLTemplate<T> extends SQLTemplate<T> {
 		super(sql, dialect);
 	}
 
-	all(): Omit<BetterSqlite3SQLTemplate<T>, 'all' | 'run'> {
+	all(): Omit<BunSqliteSQLTemplate<T>, 'all' | 'run'> {
 		this.returningData = true;
 		return this;
 	}
 
-	run(): Omit<BetterSqlite3SQLTemplate<T>, 'all' | 'run'> {
+	run(): Omit<BunSqliteSQLTemplate<T>, 'all' | 'run'> {
 		this.returningData = false;
 		return this;
 	}
@@ -28,21 +28,23 @@ export class BetterSqlite3SQLTemplate<T> extends SQLTemplate<T> {
 	async execute() {
 		const { query, params } = this.sql.getQuery();
 
-		// wrapping better-sqlite3 driver error in new js error to add stack trace to it
+		// wrapping bun-sqlite driver error in new js error to add stack trace to it
 		try {
 			const stmt = this.client.prepare(query);
 			if (this.returningData) {
 				if (this.options.rowMode === 'array') {
-					return stmt.raw().all(...params) as T[];
+					// TODO revise: is it okay to use 'as any[]' here
+					return stmt.values(...params as any[]) as T[];
 				}
 
-				return stmt.all(...params) as T[];
+				return stmt.all(...params as any) as T[];
 			} else {
-				if (this.options.rowMode === 'array') {
-					return stmt.raw().run(...params) as any;
-				}
+				// TODO: revise: there is no point in branching here because stmt.run should not return data.
+				// if (this.options.rowMode === 'array') {
+				// 	return stmt.run(...params as any[]) as any;
+				// }
 
-				return stmt.run(...params);
+				return stmt.run(...params as any[]) as any;
 			}
 		} catch (error) {
 			const queryStr = `\nquery: '${query}'\n`;
@@ -61,7 +63,9 @@ export class BetterSqlite3SQLTemplate<T> extends SQLTemplate<T> {
 		try {
 			const stmt = this.client.prepare(query);
 
-			const stream = this.options.rowMode === 'array' ? stmt.raw().iterate(...params) : stmt.iterate(...params);
+			const stream = this.options.rowMode === 'array'
+				? stmt.native.raw().iterate(...params as any[])
+				: stmt.iterate(...params as any[]);
 
 			for await (const row of stream) {
 				yield row as T;

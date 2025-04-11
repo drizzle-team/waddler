@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { BetterSqlite3SQL } from '~/better-sqlite3/driver.ts';
+import type { BunSqliteSQL } from '~/bun-sqlite/index.ts';
 import type { SQL as DuckdbSQL } from '../src/duckdb/index.ts';
 import { PgDialect } from '../src/pg-core/dialect.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../src/sql-template-params.ts';
@@ -9,7 +10,7 @@ import type { SQLParamType } from '../src/types.ts';
 
 declare module 'vitest' {
 	export interface TestContext {
-		sql: SQL | DuckdbSQL | BetterSqlite3SQL;
+		sql: SQL | DuckdbSQL | BetterSqlite3SQL | BunSqliteSQL;
 	}
 }
 

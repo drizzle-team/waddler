@@ -33,6 +33,9 @@ importers:
       '@types/better-sqlite3':
         specifier: ^7.6.13
         version: 7.6.13
+      '@types/bun':
+        specifier: ^1.2.9
+        version: 1.2.9
       '@types/dockerode':
         specifier: ^3.3.35
         version: 3.3.35
@@ -48,6 +51,12 @@ importers:
       better-sqlite3:
         specifier: ^11.9.1
         version: 11.9.1
+      bun:
+        specifier: ^1.2.9
+        version: 1.2.9
+      bun-types:
+        specifier: ^1.2.9
+        version: 1.2.9
       concurrently:
         specifier: ^8.2.1
         version: 8.2.2
@@ -768,6 +777,61 @@ packages:
     engines: {node: ^12.13.0 || ^14.15.0 || >=16.0.0}
     deprecated: This functionality has been moved to @npmcli/fs
 
+  '@oven/bun-darwin-aarch64@1.2.9':
+    resolution: {integrity: sha512-A190s6twmzNE6KGVoUxEDQaSebXUY0bTYXUwnAqTWpE/LxkkDZ7VLhDKxe0nqiDOWStSTTXpfZcFp5T2D6c8iQ==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@oven/bun-darwin-x64-baseline@1.2.9':
+    resolution: {integrity: sha512-iCqYZJ1lLlAirNoidH/nAx8Rg8WXoUs/8BjkMaCfjJG99YXSU00LH39MuxJQDRKlgKnd7IWQNJAluPuuB7j1Tw==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@oven/bun-darwin-x64@1.2.9':
+    resolution: {integrity: sha512-s3unmXAPwhaZYpPWoiHb5X6Kxgl7sehf8AB+VQFr85WCaOZoqZhsFl4GzC9G06cdt8pBLxo6l5lI9bi4YmRFBw==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@oven/bun-linux-aarch64-musl@1.2.9':
+    resolution: {integrity: sha512-IUA/5zR0FqWF6vwg7Ad9gFRbuu/uqGtoNyuq+mcfxZI1HhG0LKWVciuyXe0rpQ9Eno0YkEjcr2z271NTDyeNWg==}
+    cpu: [aarch64]
+    os: [linux]
+
+  '@oven/bun-linux-aarch64@1.2.9':
+    resolution: {integrity: sha512-tyf8g3H+/CLyItST7/UKkLpRawViaBwroOAOVo0KB4fK+d8WZTDZdHJK9reifs7wwOWhgNrARakPV3d7Sj01HQ==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@oven/bun-linux-x64-baseline@1.2.9':
+    resolution: {integrity: sha512-OSa6e8fCgNO8AtM6OL2Tgav+/DiJ5aRuzvAy4lLWQWkmGuzbCqLz/+nJqRrpfL6ALAFDg66ucx8GMa0w2bL4+g==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oven/bun-linux-x64-musl-baseline@1.2.9':
+    resolution: {integrity: sha512-/ZEVcz3RQIazmT9825t9+/rckUOz8vSosq4FylE4JCWmTJtQWnrbCYbC7VwdO8XLcf8iFuCM+o0pXkMKch/4iw==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oven/bun-linux-x64-musl@1.2.9':
+    resolution: {integrity: sha512-xvoKSGzBCeTwNkLnkKlAv1xDw+HCACrUctMXx0eyWr0in/hcsG10QIfeCqec32xdunPLtOPSHv2H1CHO10LB0A==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oven/bun-linux-x64@1.2.9':
+    resolution: {integrity: sha512-FoTJmItasGca/GDpwsBPTCbzxGngSgtbXxuV8JjQYDr4YeoRGt6Upc3FH7UV9uBBwxRRYb9sdvyqge1u+Pf/rQ==}
+    cpu: [x64]
+    os: [linux]
+
+  '@oven/bun-windows-x64-baseline@1.2.9':
+    resolution: {integrity: sha512-PhcIgGkcJwylH5MgRidgnMfIELT7a7ikOIbjFkkMTVetm3K1j4U1K2aH9paBrWVs6K57088E2CItCM0rvQd1QQ==}
+    cpu: [x64]
+    os: [win32]
+
+  '@oven/bun-windows-x64@1.2.9':
+    resolution: {integrity: sha512-jAcIc+NBBzw0VQc+mx/Xwqiv3aubGiXMakYUcr40HpTiuokVn0Kl/U4SKt0IQ12l1wxBpfd6nIwKaXH6Yb3p8w==}
+    cpu: [x64]
+    os: [win32]
+
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
@@ -916,6 +980,9 @@ packages:
   '@types/better-sqlite3@7.6.13':
     resolution: {integrity: sha512-NMv9ASNARoKksWtsq/SHakpYAYnhBrQgGD8zkLYk/jaK8jUGn08CfEdTRgYhMypUQAfzSP8W6gNLe0q19/t4VA==}
 
+  '@types/bun@1.2.9':
+    resolution: {integrity: sha512-epShhLGQYc4Bv/aceHbmBhOz1XgUnuTZgcxjxk+WXwNyDXavv5QHD1QEFV0FwbTSQtNq6g4ZcV6y0vZakTjswg==}
+
   '@types/docker-modem@3.0.6':
     resolution: {integrity: sha512-yKpAGEuKRSS8wwx0joknWxsmLha78wNMe9R2S3UNsVOkZded8UqOrV8KoeDXoXsjndxwyF3eIhyClGbO1SEhEg==}
 
@@ -951,6 +1018,9 @@ packages:
 
   '@types/ssh2@1.15.4':
     resolution: {integrity: sha512-9JTQgVBWSgq6mAen6PVnrAmty1lqgCMvpfN+1Ck5WRUsyMYPa6qd50/vMJ0y1zkGpOEgLzm8m8Dx/Y5vRouLaA==}
+
+  '@types/ws@8.18.1':
+    resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
   '@typescript-eslint/eslint-plugin@8.28.0':
     resolution: {integrity: sha512-lvFK3TCGAHsItNdWZ/1FkvpzCxTHUVuFrdnOGLMa0GGCFIbCgQWVk3CzCGdA7kM3qGVc+dfW9tr0Z/sHnGDFyg==}
@@ -1211,6 +1281,14 @@ packages:
   builtin-modules@3.3.0:
     resolution: {integrity: sha512-zhaCDicdLuWN5UbN5IMnFqNMhNfo919sH85y2/ea+5Yg9TsTkeZxpL+JLbp6cgYFS4sRLp3YV4S6yDuqVWHYOw==}
     engines: {node: '>=6'}
+
+  bun-types@1.2.9:
+    resolution: {integrity: sha512-dk/kOEfQbajENN/D6FyiSgOKEuUi9PWfqKQJEgwKrCMWbjS/S6tEXp178mWvWAcUSYm9ArDlWHZKO3T/4cLXiw==}
+
+  bun@1.2.9:
+    resolution: {integrity: sha512-4l1MnbCk2aEDeyJPs8+St6XsVPwkQvq7XTHG501e7pdFOWvWCy9shfxsHtBwYzmT82gdvx9//AL4qStYfYMO4Q==}
+    os: [darwin, linux, win32]
+    hasBin: true
 
   bundle-require@5.1.0:
     resolution: {integrity: sha512-3WrrOuZiyaaZPWiEt4G3+IffISVC9HYlWueJEBWED4ZH4aIAC2PnkdnuRrR94M+w6yGWn4AglWtJtBI8YqvgoA==}
@@ -3664,6 +3742,39 @@ snapshots:
       mkdirp: 1.0.4
       rimraf: 3.0.2
 
+  '@oven/bun-darwin-aarch64@1.2.9':
+    optional: true
+
+  '@oven/bun-darwin-x64-baseline@1.2.9':
+    optional: true
+
+  '@oven/bun-darwin-x64@1.2.9':
+    optional: true
+
+  '@oven/bun-linux-aarch64-musl@1.2.9':
+    optional: true
+
+  '@oven/bun-linux-aarch64@1.2.9':
+    optional: true
+
+  '@oven/bun-linux-x64-baseline@1.2.9':
+    optional: true
+
+  '@oven/bun-linux-x64-musl-baseline@1.2.9':
+    optional: true
+
+  '@oven/bun-linux-x64-musl@1.2.9':
+    optional: true
+
+  '@oven/bun-linux-x64@1.2.9':
+    optional: true
+
+  '@oven/bun-windows-x64-baseline@1.2.9':
+    optional: true
+
+  '@oven/bun-windows-x64@1.2.9':
+    optional: true
+
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
@@ -3760,6 +3871,10 @@ snapshots:
     dependencies:
       '@types/node': 22.7.8
 
+  '@types/bun@1.2.9':
+    dependencies:
+      bun-types: 1.2.9
+
   '@types/docker-modem@3.0.6':
     dependencies:
       '@types/node': 22.7.8
@@ -3807,6 +3922,10 @@ snapshots:
   '@types/ssh2@1.15.4':
     dependencies:
       '@types/node': 18.19.80
+
+  '@types/ws@8.18.1':
+    dependencies:
+      '@types/node': 22.7.8
 
   '@typescript-eslint/eslint-plugin@8.28.0(@typescript-eslint/parser@8.11.0(eslint@9.23.0)(typescript@5.6.3))(eslint@9.23.0)(typescript@5.6.3)':
     dependencies:
@@ -4131,6 +4250,25 @@ snapshots:
     optional: true
 
   builtin-modules@3.3.0: {}
+
+  bun-types@1.2.9:
+    dependencies:
+      '@types/node': 22.7.8
+      '@types/ws': 8.18.1
+
+  bun@1.2.9:
+    optionalDependencies:
+      '@oven/bun-darwin-aarch64': 1.2.9
+      '@oven/bun-darwin-x64': 1.2.9
+      '@oven/bun-darwin-x64-baseline': 1.2.9
+      '@oven/bun-linux-aarch64': 1.2.9
+      '@oven/bun-linux-aarch64-musl': 1.2.9
+      '@oven/bun-linux-x64': 1.2.9
+      '@oven/bun-linux-x64-baseline': 1.2.9
+      '@oven/bun-linux-x64-musl': 1.2.9
+      '@oven/bun-linux-x64-musl-baseline': 1.2.9
+      '@oven/bun-windows-x64': 1.2.9
+      '@oven/bun-windows-x64-baseline': 1.2.9
 
   bundle-require@5.1.0(esbuild@0.25.1):
     dependencies:
