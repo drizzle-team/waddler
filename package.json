@@ -73,6 +73,26 @@
 				"default": "./pglite/index.cjs"
 			}
 		},
+		"./neon-http": {
+			"import": {
+				"types": "./neon-http/index.d.ts",
+				"default": "./neon-http/index.js"
+			},
+			"require": {
+				"types": "./neon-http/index.d.cts",
+				"default": "./neon-http/index.cjs"
+			}
+		},
+		"./neon-serverless": {
+			"import": {
+				"types": "./neon-serverless/index.d.ts",
+				"default": "./neon-serverless/index.js"
+			},
+			"require": {
+				"types": "./neon-serverless/index.d.cts",
+				"default": "./neon-serverless/index.cjs"
+			}
+		},
 		"./mysql2": {
 			"import": {
 				"types": "./mysql2/index.d.ts",
@@ -101,6 +121,7 @@
 		"@eslint/compat": "^1.2.7",
 		"@eslint/eslintrc": "^3.3.1",
 		"@eslint/js": "^9.23.0",
+		"@neondatabase/serverless": "^1.0.0",
 		"@types/better-sqlite3": "^7.6.13",
 		"@types/bun": "^1.2.9",
 		"@types/dockerode": "^3.3.35",
@@ -112,6 +133,7 @@
 		"bun-types": "^1.2.9",
 		"concurrently": "^8.2.1",
 		"dockerode": "^4.0.4",
+		"dotenv": "^16.5.0",
 		"dprint": "^0.46.2",
 		"duckdb": "^1.2.1",
 		"eslint": "^9.23.0",
@@ -130,14 +152,15 @@
 		"zx": "^8.1.9"
 	},
 	"peerDependencies": {
-		"@duckdb/node-api": "^1.1.2-alpha.4",
-		"@electric-sql/pglite": "^0.2.17",
-		"better-sqlite3": "^11.9.1",
 		"duckdb": "^1.2.1",
-		"mysql2": "^3.14.0",
+		"@duckdb/node-api": "^1.1.2-alpha.4",
 		"pg": "^8.14.0",
 		"pg-query-stream": "^4.8.0",
-		"postgres": "^3.4.5"
+		"postgres": "^3.4.5",
+		"@electric-sql/pglite": "^0.2.17",
+		"@neondatabase/serverless": "^1.0.0",
+		"mysql2": "^3.14.0",
+		"better-sqlite3": "^11.9.1"
 	},
 	"peerDependenciesMeta": {
 		"duckdb": {
@@ -155,13 +178,16 @@
 		"postgres": {
 			"optional": true
 		},
+		"@electric-sql/pglite": {
+			"optional": true
+		},
+		"@neondatabase/serverless": {
+			"optional": true
+		},
 		"mysql2": {
 			"optional": true
 		},
 		"better-sqlite3": {
-			"optional": true
-		},
-		"pglite": {
 			"optional": true
 		}
 	}

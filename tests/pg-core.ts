@@ -75,6 +75,10 @@ export const createAllArrayDataTypesTable = async (sql: SQL) => {
 );`);
 };
 
+export const dropAllArrayDataTypesTable = async (sql: SQL) => {
+	await sql.unsafe('drop table if exists all_array_data_types;');
+};
+
 export const createAllNdarrayDataTypesTable = async (sql: SQL) => {
 	await sql.unsafe(`DO $$ BEGIN
         CREATE TYPE "public"."mood_enum" AS ENUM('sad', 'ok', 'happy', 'no,''"\`rm', 'mo''",\`}{od', 'mo,\`od');
@@ -96,6 +100,10 @@ export const createAllNdarrayDataTypesTable = async (sql: SQL) => {
    "mood_enum_array_2d" "public"."mood_enum"[][],
    uuid_array_2d "uuid"[][]
 );`);
+};
+
+export const dropAllNdarrayDataTypesTable = async (sql: SQL) => {
+	await sql.unsafe('drop table if exists all_nd_array_data_types;');
 };
 
 export const commonPgTests = () => {
