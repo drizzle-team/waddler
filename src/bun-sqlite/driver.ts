@@ -17,7 +17,7 @@ export interface BunSqliteSQL extends Omit<SQL, 'default' | 'unsafe'> {
 		strings: TemplateStringsArray,
 		...params: SQLParamType[]
 	): BunSqliteSQLTemplate<T>;
-	unsafe<RowMode extends 'array' | 'object' = 'object'>(
+	unsafe<RowMode extends 'array' | 'object'>(
 		query: string,
 		params?: UnsafeParamType[],
 		options?: { rowMode: RowMode },

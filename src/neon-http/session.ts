@@ -27,14 +27,12 @@ const queryConfig: HTTPQueryOptions<true, true> = {
 	types: pgTypeConfig,
 };
 
-export type NeonAuthToken = string | (() => string | Promise<string>);
-
 export class NeonHttpSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
 		protected override sql: SQLWrapper,
 		protected readonly client: NeonHttpClient,
 		dialect: Dialect,
-		private options: { rowMode: 'array' | 'object'; token?: NeonAuthToken } = { rowMode: 'object' },
+		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
 		super(sql, dialect);
 	}
@@ -48,14 +46,14 @@ export class NeonHttpSQLTemplate<T> extends SQLTemplate<T> {
 				const queryResult = await this.client.query(
 					query,
 					params,
-					this.options.token === undefined ? queryConfig : { ...queryConfig, authToken: this.options.token! },
+					queryConfig,
 				);
 				return queryResult.rows as T[];
 			} else {
 				const queryResult = await this.client.query(
 					query,
 					params,
-					this.options.token === undefined ? rawQueryConfig : { ...rawQueryConfig, authToken: this.options.token! },
+					rawQueryConfig,
 				);
 				return queryResult.rows as T[];
 			}

@@ -1,5 +1,6 @@
 import 'dotenv/config';
-import { Client } from '@neondatabase/serverless';
+import type { VercelClient } from '@vercel/postgres';
+import { createClient, createPool } from '@vercel/postgres';
 import { commonTests } from 'tests/common.test.ts';
 import {
 	commonPgTests,
@@ -9,60 +10,63 @@ import {
 	nodePgTests,
 } from 'tests/pg-core.ts';
 import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
-
-import type { NeonClient } from '../../src/neon-serverless';
-import { waddler } from '../../src/neon-serverless';
-import { queryStream } from '../../src/neon-serverless/pg-query-stream.ts';
 import type { SQL } from '../../src/sql.ts';
+import { waddler } from '../../src/vercel-postgres/driver.ts';
+import { queryStream } from '../../src/vercel-postgres/pg-query-stream.ts';
 
-let pgClient: NeonClient;
-let connectionString: string;
+let pgClient: VercelClient;
+let pgConnectionStringPool: string;
+let pgConnectionStringClient: string;
 
 let sql: SQL;
 beforeAll(async () => {
-	const connectionString_ = process.env['NEON_SERVERLESS_CONNECTION_STRING'];
-	if (!connectionString_) {
-		throw new Error('NEON_SERVERLESS_CONNECTION_STRING is not defined');
+	const pgConnectionStringPool_ = process.env['VERCEL_POOL_CONNECTION_STRING'];
+	if (!pgConnectionStringPool_) {
+		throw new Error('VERCEL_POOL_CONNECTION_STRING is not defined');
 	}
-	connectionString = connectionString_;
-	pgClient = new Client(connectionString);
+	pgConnectionStringPool = pgConnectionStringPool_!;
+
+	const pgConnectionStringClient_ = process.env['VERCEL_CLIENT_CONNECTION_STRING'];
+	if (!pgConnectionStringClient_) {
+		throw new Error('VERCEL_CLIENT_CONNECTION_STRING is not defined');
+	}
+	pgConnectionStringClient = pgConnectionStringClient_!;
+
+	pgClient = createClient({ connectionString: pgConnectionStringClient });
 	await pgClient.connect();
-	sql = waddler({ client: pgClient });
+	sql = waddler(pgClient);
+});
+
+afterAll(async () => {
+	await pgClient?.end().catch(console.error);
 });
 
 beforeEach<{ sql: SQL }>((ctx) => {
 	ctx.sql = sql;
 });
 
-afterAll(async () => {
-	await (pgClient as Client).end();
-});
-
 commonTests();
 commonPgTests();
 
 test('connection test', async () => {
-	const client = new Client(connectionString);
+	// client connection test
+	const client = createClient({ connectionString: pgConnectionStringClient });
 	await client.connect();
-
-	const sql1 = waddler({ client });
+	const sql1 = waddler(client);
 	await sql1`select 1;`;
 
-	const sql2 = waddler(client);
-	await sql2`select 2;`;
-
+	const sql12 = waddler({ client });
+	await sql12`select 12;`;
 	await client.end();
 
-	const sql3 = waddler(connectionString);
-	await sql3`select 3;`;
+	// pool connection test
+	const pool = createPool({ connectionString: pgConnectionStringPool });
+	const sql2 = waddler(pool);
+	await sql2`select 2;`;
 
-	const sql4 = waddler({ connection: connectionString });
-	await sql4`select 4;`;
-
-	const sql5 = waddler({ connection: { connectionString } });
-	await sql5`select 5;`;
-
-	// TODO: add case with ws connection
+	const sql22 = waddler({ client: pool });
+	await sql22`select 22;`;
+	await pool.end();
 });
 
 nodePgTests();
@@ -145,9 +149,22 @@ test('sql.stream test', async () => {
 
 	await sql`insert into ${sql.identifier('all_data_types')} values ${sql.values([allDataTypesValues])};`;
 
-	const sqlClient = waddler({ client: pgClient, extensions: [queryStream()] });
+	const client = createClient({ connectionString: pgConnectionStringClient });
+	await client.connect();
+	const sqlClient = waddler({ client, extensions: [queryStream()] });
 	const streamClient = sqlClient`select * from all_data_types;`.stream();
 	for await (const row of streamClient) {
 		expect(row).toStrictEqual(expectedRes);
 	}
+
+	await client.end();
+
+	const pool = createPool({ connectionString: pgConnectionStringPool });
+	const sqlPool = waddler({ client: pool, extensions: [queryStream()] });
+	const streamPool = sqlPool`select * from all_data_types;`.stream();
+	for await (const row of streamPool) {
+		expect(row).toStrictEqual(expectedRes);
+	}
+
+	await pool.end();
 });

@@ -47,7 +47,7 @@ export interface SQL {
 	identifier(value: Identifier<IdentifierObject>): SQLIdentifier<IdentifierObject>;
 	values(value: Values): SQLValues;
 	raw(value: Raw): SQLRaw;
-	unsafe<RowMode extends 'array' | 'object' = 'object'>(
+	unsafe<RowMode extends 'array' | 'object'>(
 		query: string,
 		params?: UnsafeParamType[],
 		options?: { rowMode: RowMode },

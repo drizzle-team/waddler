@@ -1,14 +1,13 @@
-import type { Client as ClientT, Pool as PoolT, PoolClient, QueryArrayConfig, QueryConfig } from 'pg';
-import pg from 'pg';
+import type { QueryArrayConfig, QueryConfig, VercelClient, VercelPoolClient } from '@vercel/postgres';
+import { types, VercelPool } from '@vercel/postgres';
+import type { WaddlerConfig } from '~/extensions.ts';
 import type { SQLWrapper } from '~/sql.ts';
-import type { WaddlerConfig } from '../extensions.ts';
 import type { PgDialect } from '../pg-core/dialect.ts';
 import { SQLTemplate } from '../sql-template.ts';
-import type { NodePgClient } from './driver.ts';
 
-const { Pool, types } = pg;
+export type VercelPgClient = VercelPool | VercelClient | VercelPoolClient;
 
-const pgTypeConfig: pg.CustomTypesConfig = {
+const pgTypeConfig: Required<QueryConfig['types']> = {
 	// @ts-expect-error
 	getTypeParser: (typeId: number, format: string) => {
 		if (typeId === types.builtins.INTERVAL) return (val: any) => val;
@@ -18,13 +17,13 @@ const pgTypeConfig: pg.CustomTypesConfig = {
 	},
 };
 
-export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
-	private queryConfig: QueryConfig;
-	private rawQueryConfig: QueryArrayConfig;
+export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
+	private rawQueryConfig: QueryConfig;
+	private queryConfig: QueryArrayConfig;
 
 	constructor(
 		protected override sql: SQLWrapper,
-		protected readonly client: NodePgClient,
+		protected readonly client: VercelPgClient,
 		dialect: PgDialect,
 		configOptions: WaddlerConfig,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
@@ -32,11 +31,11 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 		super(sql, dialect, configOptions);
 		const query = this.sql.getQuery().query;
 		this.queryConfig = {
+			rowMode: 'array',
 			text: query,
 			types: pgTypeConfig,
 		};
 		this.rawQueryConfig = {
-			rowMode: 'array',
 			text: query,
 			types: pgTypeConfig,
 		};
@@ -44,10 +43,11 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { params } = this.sql.getQuery();
+		// wrapping vercel-postgres driver error in new js error to add stack trace to it
 		try {
 			const queryResult = await (this.options.rowMode === 'array'
-				? this.client.query(this.rawQueryConfig, params)
-				: this.client.query(this.queryConfig, params));
+				? this.client.query(this.queryConfig, params)
+				: this.client.query(this.rawQueryConfig, params));
 
 			return queryResult.rows;
 		} catch (error) {
@@ -60,10 +60,10 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 
 	// TODO: revise: maybe I should override chunked method because we can use QueryStream with option 'batchSize' in QueryStreamConfig
 	async *stream() {
-		let conn: ClientT | PoolT | PoolClient | undefined;
-		// wrapping node-postgres driver error in new js error to add stack trace to it
+		let conn: VercelPoolClient | VercelClient | undefined;
+		// wrapping vercel-postgres driver error in new js error to add stack trace to it
 		try {
-			conn = this.client instanceof Pool
+			conn = this.client instanceof VercelPool
 				? await this.client.connect()
 				: this.client;
 
@@ -84,12 +84,12 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 				yield row;
 			}
 
-			if (this.client instanceof Pool) {
-				(conn as PoolClient).release();
+			if (this.client instanceof VercelPool) {
+				(conn as VercelPoolClient).release();
 			}
 		} catch (error) {
-			if (this.client instanceof Pool) {
-				(conn as PoolClient)?.release();
+			if (this.client instanceof VercelPool) {
+				(conn as VercelPoolClient)?.release();
 			}
 
 			const newError = error instanceof AggregateError

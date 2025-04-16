@@ -1,8 +1,7 @@
 import 'dotenv/config';
 import { neon } from '@neondatabase/serverless';
 import { commonTests } from 'tests/common.test.ts';
-import { neonTests } from 'tests/neon.ts';
-import { commonPgTests } from 'tests/pg-core.ts';
+import { commonPgTests, nodePgTests } from 'tests/pg-core.ts';
 import { beforeAll, beforeEach, test } from 'vitest';
 import type { NeonHttpClient } from '../../src/neon-http';
 import { waddler } from '../../src/neon-http';
@@ -13,9 +12,9 @@ let connectionString: string;
 
 let sql: SQL;
 beforeAll(async () => {
-	const connectionString_ = process.env['NEON_CONNECTION_STRING'];
+	const connectionString_ = process.env['NEON_HTTP_CONNECTION_STRING'];
 	if (!connectionString_) {
-		throw new Error('NEON_CONNECTION_STRING is not defined');
+		throw new Error('NEON_HTTP_CONNECTION_STRING is not defined');
 	}
 	connectionString = connectionString_;
 	pgClient = neon(connectionString);
@@ -44,4 +43,4 @@ test('connection test', async () => {
 	await sql4`select 4;`;
 });
 
-neonTests();
+nodePgTests();

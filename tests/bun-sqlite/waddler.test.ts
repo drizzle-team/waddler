@@ -1,6 +1,7 @@
 import Database from 'bun:sqlite';
 import { beforeAll, expect, test } from 'bun:test';
 import { createAllDataTypesTable, dropAllDataTypesTable } from 'tests/sqlite-core';
+// import { beforeEach } from 'vitest';
 import { type BunSqliteSQL, waddler } from '../../src/bun-sqlite';
 
 let sql: BunSqliteSQL;
@@ -229,8 +230,15 @@ test('sql.stream test', async () => {
 	}
 
 	// sql.unsafe(...).stream()
-	const unsafeQueryStream = sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' }).stream();
+	const unsafeQueryStream = sql.unsafe(
+		`select * from all_data_types;`,
+		[],
+		{ rowMode: 'array' },
+	).stream();
 	for await (const row of unsafeQueryStream) {
 		expect(row).toStrictEqual(expectedRes);
 	}
 });
+
+// commonTests();
+// commonSqliteTests();

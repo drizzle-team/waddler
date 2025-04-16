@@ -16,7 +16,7 @@ export interface BetterSqlite3SQL extends Omit<SQL, 'default' | 'unsafe'> {
 		strings: TemplateStringsArray,
 		...params: SQLParamType[]
 	): BetterSqlite3SQLTemplate<T>;
-	unsafe<RowMode extends 'array' | 'object' = 'object'>(
+	unsafe<RowMode extends 'array' | 'object'>(
 		query: string,
 		params?: UnsafeParamType[],
 		options?: { rowMode: RowMode },
@@ -99,6 +99,7 @@ const createSqlTemplate = (
 
 			return unsafePromise;
 		},
+		// TODO: implement default
 		// get default() {
 		// 	throw new Error(`sql.default is not implemented for sqlite.`);
 		// },

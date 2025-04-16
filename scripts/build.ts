@@ -159,6 +159,50 @@ await build({
 });
 
 await build({
+	entry: ['src/vercel-postgres/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist/vercel-postgres',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
+
+await build({
+	entry: ['src/xata-http/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist/xata-http',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
+
+await build({
 	entry: ['src/mysql2/index.ts'],
 	splitting: false,
 	sourcemap: true,
@@ -188,6 +232,29 @@ await build({
 	format: ['cjs', 'esm'],
 	bundle: true,
 	outDir: './dist/better-sqlite3',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
+
+await build({
+	entry: ['src/bun-sqlite/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	external: ['bun:sqlite'],
+	outDir: './dist/bun-sqlite',
 	outExtension(ctx) {
 		if (ctx.format === 'cjs') {
 			return {

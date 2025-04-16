@@ -59,16 +59,19 @@ export class BunSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	async *stream() {
 		const { query, params } = this.sql.getQuery();
 
-		// wrapping better-sqlite3 driver error in new js error to add stack trace to it
+		// wrapping bun-sqlite driver error in new js error to add stack trace to it
 		try {
 			const stmt = this.client.prepare(query);
 
-			const stream = this.options.rowMode === 'array'
-				? stmt.native.raw().iterate(...params as any[])
-				: stmt.iterate(...params as any[]);
+			const stream = stmt.iterate(...params as any[]);
 
 			for await (const row of stream) {
-				yield row as T;
+				if (this.options.rowMode === 'array') {
+					const rowValues = stmt.columnNames.map((colName) => (row as Record<string, any>)[colName]);
+					yield rowValues as T;
+				} else {
+					yield row as T;
+				}
 			}
 		} catch (error) {
 			const queryStr = `\nquery: '${query}'\n`;

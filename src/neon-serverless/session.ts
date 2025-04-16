@@ -8,7 +8,8 @@ import {
 	types,
 } from '@neondatabase/serverless';
 
-import type { Dialect } from '~/sql-template-params.ts';
+import type { WaddlerConfig } from '~/extensions.ts';
+import type { PgDialect } from '~/pg-core/dialect.ts';
 import type { SQLWrapper } from '~/sql.ts';
 import { SQLTemplate } from '../sql-template.ts';
 
@@ -31,10 +32,11 @@ export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
 		protected override sql: SQLWrapper,
 		protected readonly client: NeonClient,
-		dialect: Dialect,
+		dialect: PgDialect,
+		configOptions: WaddlerConfig,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sql, dialect);
+		super(sql, dialect, configOptions);
 
 		const query = this.sql.getQuery().query;
 		this.rawQueryConfig = {
@@ -76,12 +78,24 @@ export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
 		}
 	}
 
-	/**
-	 * For now, throws the Error.
-	 * Current implementation (a placeholder) will be replaced once @neondatabase/serverless acquires streaming support or when a suitable third-party solution is found.
-	 */
-	// eslint-disable-next-line require-yield
 	async *stream() {
-		throw new Error('stream is not implemented for neon-serverless yet.');
+		const queryStreamObj = this.configOptions?.extensions?.find((it) => it.name === 'WaddlerPgQueryStream');
+		// If no extensions were defined, or some were defined but did not include WaddlerPgQueryStream, we should throw an error.
+		if (!queryStreamObj) {
+			throw new Error(
+				'To use stream feature, you would need to provide queryStream() function to waddler extensions, example: waddler("", { extensions: [queryStream()] })',
+			);
+		}
+
+		const { query, params } = this.sql.getQuery();
+		const queryStream = new queryStreamObj.constructor(query, params, {
+			types: this.queryConfig.types,
+			// rowMode: 'array',
+		});
+
+		const stream = this.client.query(queryStream);
+		for await (const row of stream) {
+			yield row;
+		}
 	}
 }

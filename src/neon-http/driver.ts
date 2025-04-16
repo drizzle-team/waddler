@@ -6,7 +6,7 @@ import type { SQL } from '../sql.ts';
 import { SQLWrapper } from '../sql.ts';
 import type { Identifier, IdentifierObject, Raw, SQLParamType, UnsafeParamType, Values } from '../types.ts';
 import { isConfig } from '../utils.ts';
-import type { NeonAuthToken, NeonHttpClient } from './session.ts';
+import type { NeonHttpClient } from './session.ts';
 import { NeonHttpSQLTemplate } from './session.ts';
 
 const createSqlTemplate = (
@@ -29,13 +29,13 @@ const createSqlTemplate = (
 		raw: (value: Raw) => {
 			return new SQLRaw(value);
 		},
-		unsafe: async (
+		unsafe: async <RowMode extends 'object' | 'array'>(
 			query: string,
 			params?: UnsafeParamType[],
-			options?: { rowMode: 'array' | 'object'; token?: NeonAuthToken }, // TODO: should token be in options?
+			options?: { rowMode: RowMode },
 		) => {
 			params = params ?? [];
-			options = options ?? { rowMode: 'object' };
+			options = options ?? { rowMode: 'object' as RowMode };
 
 			const sql = new SQLWrapper();
 			sql.with({ rawParams: { query, params } });
