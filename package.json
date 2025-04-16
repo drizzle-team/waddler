@@ -114,6 +114,16 @@
 				"default": "./xata-http/index.cjs"
 			}
 		},
+		"./bun-sql": {
+			"import": {
+				"types": "./bun-sql/index.d.ts",
+				"default": "./bun-sql/index.js"
+			},
+			"require": {
+				"types": "./bun-sql/index.d.cts",
+				"default": "./bun-sql/index.cjs"
+			}
+		},
 		"./mysql2": {
 			"import": {
 				"types": "./mysql2/index.d.ts",

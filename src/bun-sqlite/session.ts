@@ -1,6 +1,6 @@
 import type { Database } from 'bun:sqlite';
-import type { Dialect } from '~/sql-template-params.ts';
 import type { SQLWrapper } from '~/sql.ts';
+import type { SqliteDialect } from '~/sqlite-core/dialect.ts';
 import { SQLTemplate } from '../sql-template.ts';
 
 export class BunSqliteSQLTemplate<T> extends SQLTemplate<T> {
@@ -9,7 +9,7 @@ export class BunSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
 		protected override sql: SQLWrapper,
 		protected readonly client: Database,
-		dialect: Dialect,
+		dialect: SqliteDialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
 		super(sql, dialect);

@@ -458,6 +458,8 @@ export const nodePgTests = () => {
 			// same as select query as above but with rowMode: "array"
 			const arrayResult = await ctx.sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' });
 			expect(arrayResult[0]).toStrictEqual(Object.values(expectedRes));
+
+			await dropAllDataTypesTable(ctx.sql);
 		});
 
 		// sql.values
@@ -530,6 +532,7 @@ export const nodePgTests = () => {
 			const res = await ctx.sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' });
 
 			expect(res[0]).toStrictEqual(expectedRes);
+			await dropAllDataTypesTable(ctx.sql);
 		});
 
 		test<{ sql: SQL }>('all array types in sql.values test', async (ctx) => {
@@ -618,6 +621,8 @@ export const nodePgTests = () => {
 			const res = await ctx.sql.unsafe(`select * from all_array_data_types;`, [], { rowMode: 'array' });
 
 			expect(res[0]).toStrictEqual(expectedRes1);
+
+			await dropAllArrayDataTypesTable(ctx.sql);
 		});
 
 		test<{ sql: SQL }>('all nd-array types in sql.values test', async (ctx) => {
@@ -668,6 +673,8 @@ export const nodePgTests = () => {
 			const res = await ctx.sql.unsafe(`select * from all_nd_array_data_types;`, [], { rowMode: 'array' });
 
 			expect(res[0]).toStrictEqual(expectedRes1);
+
+			await dropAllNdarrayDataTypesTable(ctx.sql);
 		});
 	});
 };
