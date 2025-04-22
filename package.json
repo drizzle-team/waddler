@@ -153,15 +153,80 @@
 				"types": "./bun-sqlite/index.d.cts",
 				"default": "./bun-sqlite/index.cjs"
 			}
+		},
+		"./d1": {
+			"import": {
+				"types": "./d1/index.d.ts",
+				"default": "./d1/index.js"
+			},
+			"require": {
+				"types": "./d1/index.d.cts",
+				"default": "./d1/index.cjs"
+			}
+		},
+		"./libsql": {
+			"import": {
+				"types": "./libsql/index.d.ts",
+				"default": "./libsql/index.js"
+			},
+			"require": {
+				"types": "./libsql/index.d.cts",
+				"default": "./libsql/index.cjs"
+			}
+		},
+		"./libsql/http": {
+			"import": {
+				"types": "./libsql/http/index.d.ts",
+				"default": "./libsql/http/index.js"
+			},
+			"require": {
+				"types": "./libsql/http/index.d.cts",
+				"default": "./libsql/http/index.cjs"
+			}
+		},
+		"./libsql/node": {
+			"import": {
+				"types": "./libsql/node/index.d.ts",
+				"default": "./libsql/node/index.js"
+			},
+			"require": {
+				"types": "./libsql/node/index.d.cts",
+				"default": "./libsql/node/index.cjs"
+			}
+		},
+		"./libsql/sqlite3": {
+			"import": {
+				"types": "./libsql/sqlite3/index.d.ts",
+				"default": "./libsql/sqlite3/index.js"
+			},
+			"require": {
+				"types": "./libsql/sqlite3/index.d.cts",
+				"default": "./libsql/sqlite3/index.cjs"
+			}
+		},
+		"./libsql/web": {
+			"import": {
+				"types": "./libsql/web/index.d.ts",
+				"default": "./libsql/web/index.js"
+			},
+			"require": {
+				"types": "./libsql/web/index.d.cts",
+				"default": "./libsql/web/index.cjs"
+			}
 		}
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "^0.16.4",
+		"@cloudflare/workers-types": "^4.20250422.0",
 		"@duckdb/node-api": "1.1.2-alpha.4",
 		"@electric-sql/pglite": "^0.2.17",
 		"@eslint/compat": "^1.2.7",
 		"@eslint/eslintrc": "^3.3.1",
 		"@eslint/js": "^9.23.0",
+		"@libsql/client": "^0.15.4",
+		"@libsql/client-wasm": "^0.15.4",
+		"@miniflare/d1": "^2.14.4",
+		"@miniflare/shared": "^2.14.4",
 		"@neondatabase/serverless": "^1.0.0",
 		"@types/async-retry": "^1.4.9",
 		"@types/better-sqlite3": "^7.6.13",
@@ -196,18 +261,21 @@
 		"zx": "^8.1.9"
 	},
 	"peerDependencies": {
+		"@cloudflare/workers-types": "^4.20250422.0",
 		"@duckdb/node-api": "^1.1.2-alpha.4",
 		"@electric-sql/pglite": "^0.2.17",
 		"@neondatabase/serverless": "^1.0.0",
 		"@vercel/postgres": "^0.10.0",
+		"@xata.io/client": "^0.30.1",
 		"better-sqlite3": "^11.9.1",
+		"bun-types": "*",
 		"duckdb": "^1.2.1",
 		"mysql2": "^3.14.0",
 		"pg": "^8.14.0",
 		"pg-query-stream": "^4.8.0",
 		"postgres": "^3.4.5",
-		"@xata.io/client": "^0.30.1",
-		"bun-types": "*"
+		"@libsql/client": "^0.15.4",
+		"@libsql/client-wasm": "^0.15.4"
 	},
 	"peerDependenciesMeta": {
 		"duckdb": {
@@ -244,6 +312,15 @@
 			"optional": true
 		},
 		"bun-types": {
+			"optional": true
+		},
+		"@cloudflare/workers-types": {
+			"optional": true
+		},
+		"@libsql/client": {
+			"optional": true
+		},
+		"@libsql/client-wasm": {
 			"optional": true
 		}
 	}

@@ -1,8 +1,12 @@
 import { describe, expect, test } from 'vitest';
 import type { BunSqliteSQL } from '~/bun-sqlite';
+import type { D1SQL } from '~/d1';
+import type { LibsqlSQL } from '~/libsql/driver-core';
 import type { BetterSqlite3SQL } from '../src/better-sqlite3';
 
-export const createAllDataTypesTable = async (sql: BetterSqlite3SQL | BunSqliteSQL) => {
+type SqliteSQL = BetterSqlite3SQL | BunSqliteSQL | D1SQL | LibsqlSQL;
+
+export const createAllDataTypesTable = async (sql: SqliteSQL) => {
 	await sql`
 		    CREATE TABLE "all_data_types" (
 			"integer_number" integer,
@@ -18,7 +22,7 @@ export const createAllDataTypesTable = async (sql: BetterSqlite3SQL | BunSqliteS
 	`.run();
 };
 
-export const dropAllDataTypesTable = async (sql: BetterSqlite3SQL | BunSqliteSQL) => {
+export const dropAllDataTypesTable = async (sql: SqliteSQL) => {
 	await sql`drop table if exists "all_data_types";`.run();
 };
 

@@ -74,3 +74,5 @@ export type Raw = string | number | boolean | bigint;
 
 // Utils types
 export type isObjectEmpty<O> = keyof O extends never ? true : false;
+
+export type IfNotImported<T, Y, N> = unknown extends T ? Y : N;

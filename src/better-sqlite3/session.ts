@@ -38,11 +38,7 @@ export class BetterSqlite3SQLTemplate<T> extends SQLTemplate<T> {
 
 				return stmt.all(...params) as T[];
 			} else {
-				if (this.options.rowMode === 'array') {
-					return stmt.raw().run(...params) as any;
-				}
-
-				return stmt.run(...params);
+				return stmt.run(...params) as any;
 			}
 		} catch (error) {
 			const queryStr = `\nquery: '${query}'\n`;

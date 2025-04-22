@@ -1,3 +1,7 @@
+import type { BetterSqlite3SQLTemplate } from '~/better-sqlite3/session.ts';
+import type { BunSqliteSQLTemplate } from '~/bun-sqlite/session.ts';
+import type { D1SQLTemplate } from '~/d1/session.ts';
+import type { LibsqlSQLTemplate } from '~/libsql/session.ts';
 import { Dialect, SQLDefault } from '../sql-template-params.ts';
 import type { UnsafeParamType, Value } from '../types.ts';
 
@@ -77,5 +81,42 @@ export class SqliteDialect extends Dialect {
 		}
 
 		throw new Error(`you can't specify ${typeof value} as value.`);
+	}
+}
+
+export class UnsafePromise<
+	T,
+	DriverT extends D1SQLTemplate<T> | BetterSqlite3SQLTemplate<T> | BunSqliteSQLTemplate<T> | LibsqlSQLTemplate<T>,
+> {
+	constructor(private driver: DriverT) {}
+
+	run(): Omit<UnsafePromise<T, DriverT>, 'run' | 'all'> {
+		this.driver.run();
+		return this;
+	}
+
+	all(): Omit<UnsafePromise<T, DriverT>, 'run' | 'all'> {
+		this.driver.all();
+		return this;
+	}
+
+	stream() {
+		return this.driver.stream();
+	}
+
+	// Allow it to be awaited (like a Promise)
+	then<TResult1 = T[], TResult2 = never>(
+		onfulfilled?:
+			| ((value: T[]) => TResult1 | PromiseLike<TResult1>)
+			| null
+			| undefined,
+		onrejected?:
+			| ((reason: any) => TResult2 | PromiseLike<TResult2>)
+			| null
+			| undefined,
+	): Promise<TResult1 | TResult2> {
+		// Here you could handle the query execution logic (replace with your own)
+		const result = this.driver.execute();
+		return Promise.resolve(result).then(onfulfilled, onrejected);
 	}
 }

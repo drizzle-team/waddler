@@ -4,7 +4,7 @@ import type { SQL } from '../sql';
 import { SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
 import { SQLWrapper } from '../sql.ts';
 import type { SqliteIdentifierObject } from '../sqlite-core';
-import { SqliteDialect } from '../sqlite-core/dialect.ts';
+import { SqliteDialect, UnsafePromise } from '../sqlite-core/dialect.ts';
 import type { Identifier, Raw, RowData, SQLParamType, UnsafeParamType, Values } from '../types.ts';
 import { isConfig } from '../utils.ts';
 import { BunSqliteSQLTemplate } from './session.ts';
@@ -24,42 +24,9 @@ export interface BunSqliteSQL extends Omit<SQL, 'default' | 'unsafe'> {
 	): UnsafePromise<
 		RowMode extends 'array' ? any[] : {
 			[columnName: string]: any;
-		}
+		},
+		BunSqliteSQLTemplate<any>
 	>;
-}
-
-class UnsafePromise<T> {
-	constructor(private driver: BunSqliteSQLTemplate<T>) {}
-
-	run(): Omit<UnsafePromise<T>, 'run' | 'all'> {
-		this.driver.run();
-		return this;
-	}
-
-	all(): Omit<UnsafePromise<T>, 'run' | 'all'> {
-		this.driver.all();
-		return this;
-	}
-
-	stream() {
-		return this.driver.stream();
-	}
-
-	// Allow it to be awaited (like a Promise)
-	then<TResult1 = T[], TResult2 = never>(
-		onfulfilled?:
-			| ((value: T[]) => TResult1 | PromiseLike<TResult1>)
-			| null
-			| undefined,
-		onrejected?:
-			| ((reason: any) => TResult2 | PromiseLike<TResult2>)
-			| null
-			| undefined,
-	): Promise<TResult1 | TResult2> {
-		// Here you could handle the query execution logic (replace with your own)
-		const result = this.driver.execute();
-		return Promise.resolve(result).then(onfulfilled, onrejected);
-	}
 }
 
 const createSqlTemplate = (

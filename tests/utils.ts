@@ -4,7 +4,7 @@ import crypto from 'node:crypto';
 
 export const createPgDockerDB = async () => {
 	const docker = new Docker();
-	const port = await getPort({ port: 3306 });
+	const port = await getPort();
 	const image = 'postgres:17.3';
 
 	const pullStream = await docker.pull(image);
@@ -42,7 +42,7 @@ export const createPgDockerDB = async () => {
 
 export const createMysqlDockerDB = async () => {
 	const docker = new Docker();
-	const port = await getPort({ port: 3306 });
+	const port = await getPort();
 	const image = 'mysql:8';
 
 	const pullStream = await docker.pull(image);

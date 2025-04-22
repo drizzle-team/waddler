@@ -293,6 +293,182 @@ await build({
 });
 
 await build({
+	entry: ['src/d1/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist/d1',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
+
+await build({
+	entry: ['src/libsql/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist/libsql',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
+
+await build({
+	entry: ['src/libsql/http/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist/libsql/http',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
+
+await build({
+	entry: ['src/libsql/node/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist/libsql/node',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
+
+await build({
+	entry: ['src/libsql/sqlite3/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist/libsql/sqlite3',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
+
+// await build({
+// 	entry: ['src/libsql/wasm/index.ts'],
+// 	splitting: false,
+// 	sourcemap: true,
+// 	dts: true,
+// 	format: ['cjs', 'esm'],
+// 	bundle: true,
+// 	outDir: './dist/libsql/wasm',
+// 	outExtension(ctx) {
+// 		if (ctx.format === 'cjs') {
+// 			return {
+// 				dts: '.d.cts',
+// 				js: '.cjs',
+// 			};
+// 		}
+// 		return {
+// 			dts: '.d.ts',
+// 			js: '.js',
+// 		};
+// 	},
+// });
+
+await build({
+	entry: ['src/libsql/web/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist/libsql/web',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
+
+// await build({
+// 	entry: ['src/libsql/ws/index.ts'],
+// 	splitting: false,
+// 	sourcemap: true,
+// 	dts: true,
+// 	format: ['cjs', 'esm'],
+// 	bundle: true,
+// 	outDir: './dist/libsql/ws',
+// 	outExtension(ctx) {
+// 		if (ctx.format === 'cjs') {
+// 			return {
+// 				dts: '.d.cts',
+// 				js: '.cjs',
+// 			};
+// 		}
+// 		return {
+// 			dts: '.d.ts',
+// 			js: '.js',
+// 		};
+// 	},
+// });
+
+await build({
 	entry: ['src/index.ts'],
 	splitting: false,
 	sourcemap: true,
