@@ -23,6 +23,7 @@ import type {
 export interface Query {
 	query: string;
 	// TODO: revise: params should have types that are suitable for specific driver therefore can differ. example: pg driver and sqlite driver(can't accept Date value)
+	// for now I should params as they are until I add more descriptve errors in the types
 	params: UnsafeParamType[];
 }
 
@@ -109,7 +110,6 @@ export class SQLWrapper {
 			this.params = [];
 		}
 
-		// TODO: params should not be any
 		const params4driver: UnsafeParamType[] = [];
 		let query = '';
 

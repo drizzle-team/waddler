@@ -11,7 +11,7 @@ export type RowData = {
 	[columnName: string]: any;
 };
 
-// param types that can safely be passed to driver
+// param types that will be passed to driver
 export type UnsafeParamType =
 	| string
 	| Buffer

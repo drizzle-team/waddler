@@ -24,13 +24,15 @@ export abstract class SQLChunk {
 }
 
 export class SQLCommonParam extends SQLChunk {
-	constructor(private readonly value: any) {
+	constructor(
+		private readonly value: UnsafeParamType,
+	) {
 		super();
 	}
 
 	generateSQL(
 		{ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number },
-	): { sql: string; params: any[] } {
+	) {
 		return {
 			sql: dialect.escapeParam(lastParamIdx + 1),
 			params: [this.value],

@@ -3,17 +3,18 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
 	test: {
 		include: [
+			// './tests/pg/postgres-js/waddler.test.ts',
 			'./tests/**/*.test.ts',
 		],
 		exclude: [
-			'./tests/bun-sqlite/**/*.test.ts',
-			'./tests/bun-sql/**/*.test.ts',
+			'./tests/sqlite/bun-sqlite/**/*.test.ts',
+			'./tests/pg/bun-sql/**/*.test.ts',
 		],
 		typecheck: {
 			tsconfig: 'tsconfig.json',
 		},
 		testTimeout: 1000000,
 		hookTimeout: 100000,
-		fileParallelism: true,
+		fileParallelism: false,
 	},
 });

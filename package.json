@@ -213,6 +213,26 @@
 				"types": "./libsql/web/index.d.cts",
 				"default": "./libsql/web/index.cjs"
 			}
+		},
+		"./libsql/wasm": {
+			"import": {
+				"types": "./libsql/wasm/index.d.ts",
+				"default": "./libsql/wasm/index.js"
+			},
+			"require": {
+				"types": "./libsql/wasm/index.d.cts",
+				"default": "./libsql/wasm/index.cjs"
+			}
+		},
+		"./durable-sqlite": {
+			"import": {
+				"types": "./durable-sqlite/index.d.ts",
+				"default": "./durable-sqlite/index.js"
+			},
+			"require": {
+				"types": "./durable-sqlite/index.d.cts",
+				"default": "./durable-sqlite/index.cjs"
+			}
 		}
 	},
 	"devDependencies": {
@@ -240,6 +260,7 @@
 		"async-retry": "^1.3.3",
 		"better-sqlite3": "^11.9.1",
 		"bun-types": "^1.2.9",
+		"chai": "^5.2.0",
 		"concurrently": "^8.2.1",
 		"dockerode": "^4.0.4",
 		"dotenv": "^16.5.0",
@@ -258,12 +279,15 @@
 		"tsx": "^4.19.1",
 		"typescript": "^5.5.4",
 		"vitest": "^3.1.1",
+		"wrangler": "^4.13.0",
 		"zx": "^8.1.9"
 	},
 	"peerDependencies": {
 		"@cloudflare/workers-types": "^4.20250422.0",
 		"@duckdb/node-api": "^1.1.2-alpha.4",
 		"@electric-sql/pglite": "^0.2.17",
+		"@libsql/client": "^0.15.4",
+		"@libsql/client-wasm": "^0.15.4",
 		"@neondatabase/serverless": "^1.0.0",
 		"@vercel/postgres": "^0.10.0",
 		"@xata.io/client": "^0.30.1",
@@ -273,9 +297,7 @@
 		"mysql2": "^3.14.0",
 		"pg": "^8.14.0",
 		"pg-query-stream": "^4.8.0",
-		"postgres": "^3.4.5",
-		"@libsql/client": "^0.15.4",
-		"@libsql/client-wasm": "^0.15.4"
+		"postgres": "^3.4.5"
 	},
 	"peerDependenciesMeta": {
 		"duckdb": {

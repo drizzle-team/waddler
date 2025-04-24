@@ -49,7 +49,7 @@ await build({
 });
 
 await build({
-	entry: ['src/node-postgres/index.ts'],
+	entry: ['src/pg/node-postgres/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -71,7 +71,7 @@ await build({
 });
 
 await build({
-	entry: ['src/postgres-js/index.ts'],
+	entry: ['src/pg/postgres-js/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -93,7 +93,7 @@ await build({
 });
 
 await build({
-	entry: ['src/pglite/index.ts'],
+	entry: ['src/pg/pglite/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -115,7 +115,7 @@ await build({
 });
 
 await build({
-	entry: ['src/neon-http/index.ts'],
+	entry: ['src/pg/neon-http/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -137,7 +137,7 @@ await build({
 });
 
 await build({
-	entry: ['src/neon-serverless/index.ts'],
+	entry: ['src/pg/neon-serverless/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -159,7 +159,7 @@ await build({
 });
 
 await build({
-	entry: ['src/vercel-postgres/index.ts'],
+	entry: ['src/pg/vercel-postgres/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -181,7 +181,7 @@ await build({
 });
 
 await build({
-	entry: ['src/xata-http/index.ts'],
+	entry: ['src/pg/xata-http/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -203,7 +203,7 @@ await build({
 });
 
 await build({
-	entry: ['src/bun-sql/index.ts'],
+	entry: ['src/pg/bun-sql/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -226,7 +226,7 @@ await build({
 });
 
 await build({
-	entry: ['src/mysql2/index.ts'],
+	entry: ['src/mysql/mysql2/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -248,7 +248,7 @@ await build({
 });
 
 await build({
-	entry: ['src/better-sqlite3/index.ts'],
+	entry: ['src/sqlite/better-sqlite3/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -270,7 +270,7 @@ await build({
 });
 
 await build({
-	entry: ['src/bun-sqlite/index.ts'],
+	entry: ['src/sqlite/bun-sqlite/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -293,7 +293,7 @@ await build({
 });
 
 await build({
-	entry: ['src/d1/index.ts'],
+	entry: ['src/sqlite/d1/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -315,7 +315,7 @@ await build({
 });
 
 await build({
-	entry: ['src/libsql/index.ts'],
+	entry: ['src/sqlite/libsql/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -337,7 +337,7 @@ await build({
 });
 
 await build({
-	entry: ['src/libsql/http/index.ts'],
+	entry: ['src/sqlite/libsql/http/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -359,7 +359,7 @@ await build({
 });
 
 await build({
-	entry: ['src/libsql/node/index.ts'],
+	entry: ['src/sqlite/libsql/node/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -381,7 +381,7 @@ await build({
 });
 
 await build({
-	entry: ['src/libsql/sqlite3/index.ts'],
+	entry: ['src/sqlite/libsql/sqlite3/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -402,30 +402,30 @@ await build({
 	},
 });
 
-// await build({
-// 	entry: ['src/libsql/wasm/index.ts'],
-// 	splitting: false,
-// 	sourcemap: true,
-// 	dts: true,
-// 	format: ['cjs', 'esm'],
-// 	bundle: true,
-// 	outDir: './dist/libsql/wasm',
-// 	outExtension(ctx) {
-// 		if (ctx.format === 'cjs') {
-// 			return {
-// 				dts: '.d.cts',
-// 				js: '.cjs',
-// 			};
-// 		}
-// 		return {
-// 			dts: '.d.ts',
-// 			js: '.js',
-// 		};
-// 	},
-// });
+await build({
+	entry: ['src/sqlite/libsql/wasm/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist/libsql/wasm',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
 
 await build({
-	entry: ['src/libsql/web/index.ts'],
+	entry: ['src/sqlite/libsql/web/index.ts'],
 	splitting: false,
 	sourcemap: true,
 	dts: true,
@@ -447,7 +447,7 @@ await build({
 });
 
 // await build({
-// 	entry: ['src/libsql/ws/index.ts'],
+// 	entry: ['src/sqlite/libsql/ws/index.ts'],
 // 	splitting: false,
 // 	sourcemap: true,
 // 	dts: true,
@@ -467,6 +467,28 @@ await build({
 // 		};
 // 	},
 // });
+
+await build({
+	entry: ['src/sqlite/durable-sqlite/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist/durable-sqlite',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
 
 await build({
 	entry: ['src/index.ts'],

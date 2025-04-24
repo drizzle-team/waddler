@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest';
-import type { BetterSqlite3SQL } from '~/better-sqlite3/driver.ts';
-import type { BunSqliteSQL } from '~/bun-sqlite/index.ts';
-import type { D1SQL } from '~/d1/driver.ts';
-import type { LibsqlSQL } from '~/libsql/driver-core.ts';
+import type { BetterSqlite3SQL } from '~/sqlite/better-sqlite3/driver.ts';
+import type { BunSqliteSQL } from '~/sqlite/bun-sqlite/index.ts';
+import type { D1SQL } from '~/sqlite/d1/driver.ts';
+import type { LibsqlSQL } from '~/sqlite/libsql/driver-core.ts';
 import type { SQL as DuckdbSQL } from '../src/duckdb/index.ts';
-import { PgDialect } from '../src/pg-core/dialect.ts';
+import { PgDialect } from '../src/pg/pg-core/dialect.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../src/sql-template-params.ts';
 import type { SQL } from '../src/sql.ts';
 import { SQLWrapper } from '../src/sql.ts';

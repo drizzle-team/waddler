@@ -1,5 +1,5 @@
 import { commonTests } from 'tests/common.test';
-import { commonPgTests } from 'tests/pg-core';
+import { commonPgTests } from 'tests/pg/pg-core';
 import { beforeAll, beforeEach, expect, test } from 'vitest';
 import type { SQL } from '../../src/duckdb-neo';
 import { waddler } from '../../src/duckdb-neo';
