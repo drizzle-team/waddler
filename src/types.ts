@@ -1,4 +1,5 @@
-import type { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from './sql-template-params.ts';
+// import type { DateDuration, Duration, LocalDate, LocalDateTime, LocalTime, RelativeDuration } from 'gel';
+import type { SQLDefault } from './sql-template-params.ts';
 
 export type ValueForArray = string | Buffer | number | bigint | boolean | null | Date | JSONObject | JSONArray;
 export type ValueForObject = string | number | boolean | null | Date | JSONObject | Array<ValueForObject>;
@@ -12,33 +13,41 @@ export type RowData = {
 };
 
 // param types that will be passed to driver
-export type UnsafeParamType =
-	| string
-	| Buffer
-	| number
-	| bigint
-	| boolean
-	| Date
-	| null
-	| JSONObject
-	| JSONArray;
+export type UnsafeParamType = any;
+// | string
+// | Buffer
+// | number
+// | bigint
+// | boolean
+// | Date
+// | null
+// | Uint8Array
+// | LocalDateTime
+// | LocalDate
+// | LocalTime
+// | Duration
+// | RelativeDuration
+// | DateDuration
+// | JSONObject
+// | JSONArray
+// | UnsafeParamType[];
 
 // SQL params---------------------------------------------------------------
 
-export type SQLParamType =
-	| string
-	| Buffer
-	| number
-	| bigint
-	| Date
-	| boolean
-	| null
-	| JSONArray
-	| JSONObject
-	| SQLIdentifier<IdentifierObject>
-	| SQLValues
-	| SQLDefault
-	| SQLRaw;
+export type SQLParamType = any;
+// | string
+// | Buffer
+// | number
+// | bigint
+// | Date
+// | boolean
+// | null
+// | JSONArray
+// | JSONObject
+// | SQLIdentifier<IdentifierObject>
+// | SQLValues
+// | SQLDefault
+// | SQLRaw;
 
 export type Identifier<Q extends IdentifierObject> =
 	| string
@@ -54,17 +63,27 @@ export type IdentifierObject = {
 };
 
 export type Value =
-	| string
-	| Buffer
-	| number
-	| bigint
-	| boolean
-	| Date
-	| null
-	| JSONObject
-	| JSONArray
-	| SQLDefault
-	| Value[];
+	| Value_
+	| SQLDefault;
+
+type Value_ = any;
+// | string
+// | Buffer
+// | number
+// | bigint
+// | boolean
+// | Date
+// | null
+// | Uint8Array
+// | LocalDateTime
+// | LocalDate
+// | LocalTime
+// | Duration
+// | RelativeDuration
+// | DateDuration
+// | JSONObject
+// | JSONArray
+// | Value_[];
 
 export type Values = Value[][];
 

@@ -124,6 +124,16 @@
 				"default": "./bun-sql/index.cjs"
 			}
 		},
+		"./gel": {
+			"import": {
+				"types": "./gel/index.d.ts",
+				"default": "./gel/index.js"
+			},
+			"require": {
+				"types": "./gel/index.d.cts",
+				"default": "./gel/index.cjs"
+			}
+		},
 		"./mysql2": {
 			"import": {
 				"types": "./mysql2/index.d.ts",
@@ -132,6 +142,26 @@
 			"require": {
 				"types": "./mysql2/index.d.cts",
 				"default": "./mysql2/index.cjs"
+			}
+		},
+		"./tidb-serverless": {
+			"import": {
+				"types": "./tidb-serverless/index.d.ts",
+				"default": "./tidb-serverless/index.js"
+			},
+			"require": {
+				"types": "./tidb-serverless/index.d.cts",
+				"default": "./tidb-serverless/index.cjs"
+			}
+		},
+		"./planetscale-serverless": {
+			"import": {
+				"types": "./planetscale-serverless/index.d.ts",
+				"default": "./planetscale-serverless/index.js"
+			},
+			"require": {
+				"types": "./planetscale-serverless/index.d.cts",
+				"default": "./planetscale-serverless/index.cjs"
 			}
 		},
 		"./better-sqlite3": {
@@ -248,6 +278,8 @@
 		"@miniflare/d1": "^2.14.4",
 		"@miniflare/shared": "^2.14.4",
 		"@neondatabase/serverless": "^1.0.0",
+		"@planetscale/database": "^1.19.0",
+		"@tidbcloud/serverless": "^0.2.0",
 		"@types/async-retry": "^1.4.9",
 		"@types/better-sqlite3": "^7.6.13",
 		"@types/bun": "^1.2.9",
@@ -271,6 +303,7 @@
 		"eslint-plugin-no-instanceof": "^1.0.1",
 		"eslint-plugin-unicorn": "^56.0.1",
 		"eslint-plugin-unused-imports": "^4.1.4",
+		"gel": "^2.0.2",
 		"get-port": "^7.1.0",
 		"mysql2": "^3.14.0",
 		"pg": "^8.14.0",
@@ -289,6 +322,9 @@
 		"@libsql/client": "^0.15.4",
 		"@libsql/client-wasm": "^0.15.4",
 		"@neondatabase/serverless": "^1.0.0",
+		"@planetscale/database": "^1.19.0",
+		"@tidbcloud/serverless": "^0.2.0",
+		"gel": "^2.0.2",
 		"@vercel/postgres": "^0.10.0",
 		"@xata.io/client": "^0.30.1",
 		"better-sqlite3": "^11.9.1",
@@ -327,7 +363,16 @@
 		"@xata.io/client": {
 			"optional": true
 		},
+		"gel": {
+			"optional": true
+		},
 		"mysql2": {
+			"optional": true
+		},
+		"@tidbcloud/serverless": {
+			"optional": true
+		},
+		"@planetscale/database": {
 			"optional": true
 		},
 		"better-sqlite3": {

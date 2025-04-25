@@ -36,6 +36,10 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 			const newError = error instanceof AggregateError
 				? new Error(error.errors.map((e) => e.message).join('\n'))
 				: new Error((error as Error).message);
+
+			newError.cause = (error as Error).cause;
+			newError.stack = (error as Error).stack;
+
 			throw newError;
 		}
 	}
@@ -69,6 +73,10 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 			const newError = error instanceof AggregateError
 				? new Error(error.errors.map((e) => e.message).join('\n'))
 				: new Error((error as Error).message);
+
+			newError.cause = (error as Error).cause;
+			newError.stack = (error as Error).stack;
+
 			throw newError;
 		}
 	}

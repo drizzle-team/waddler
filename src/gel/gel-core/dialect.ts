@@ -1,8 +1,7 @@
 import { Dialect, SQLDefault } from '../../sql-template-params.ts';
 import type { IdentifierObject, Value } from '../../types.ts';
-import { makePgArray } from './utils.ts';
 
-export class PgDialect extends Dialect {
+export class GelDialect extends Dialect {
 	escapeParam(lastParamIdx: number): string {
 		return `$${lastParamIdx}`;
 	}
@@ -70,29 +69,11 @@ export class PgDialect extends Dialect {
 			return value.generateSQL().sql;
 		}
 
-		if (Array.isArray(value)) {
-			const mappedValue = makePgArray(value);
-			params.push(mappedValue as any);
-			return this.escapeParam(lastParamIdx + params.length);
-		}
-
-		if (
-			typeof value === 'number'
-			|| typeof value === 'bigint'
-			|| typeof value === 'boolean'
-			|| typeof value === 'string'
-			|| value === null
-			|| value instanceof Date
-			|| typeof value === 'object'
-		) {
-			params.push(value);
-			return this.escapeParam(lastParamIdx + params.length);
-		}
-
 		if (value === undefined) {
 			throw new Error("value can't be undefined, maybe you mean sql.default?");
 		}
 
-		throw new Error(`you can't specify ${typeof value} as value.`);
+		params.push(value);
+		return this.escapeParam(lastParamIdx + params.length);
 	}
 }

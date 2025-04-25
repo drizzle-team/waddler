@@ -226,6 +226,28 @@ await build({
 });
 
 await build({
+	entry: ['src/gel/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist/gel',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
+
+await build({
 	entry: ['src/mysql/mysql2/index.ts'],
 	splitting: false,
 	sourcemap: true,
@@ -233,6 +255,50 @@ await build({
 	format: ['cjs', 'esm'],
 	bundle: true,
 	outDir: './dist/mysql2',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
+
+await build({
+	entry: ['src/mysql/tidb-serverless/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist/tidb-serverless',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
+
+await build({
+	entry: ['src/mysql/planetscale-serverless/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist/planetscale-serverless',
 	outExtension(ctx) {
 		if (ctx.format === 'cjs') {
 			return {

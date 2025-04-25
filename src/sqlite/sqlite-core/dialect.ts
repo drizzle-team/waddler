@@ -4,7 +4,7 @@ import type { D1SQLTemplate } from '~/sqlite/d1/session.ts';
 import type { DurableSqliteSQLTemplate } from '~/sqlite/durable-sqlite/session.ts';
 import type { LibsqlSQLTemplate } from '~/sqlite/libsql/session.ts';
 import { Dialect, SQLDefault } from '../../sql-template-params.ts';
-import type { UnsafeParamType, Value } from '../../types.ts';
+import type { Value } from '../../types.ts';
 
 export type SqliteIdentifierObject = {
 	table?: string;
@@ -52,7 +52,7 @@ export class SqliteDialect extends Dialect {
 	valueToSQL(
 		{ value, params }: {
 			value: Value;
-			params: UnsafeParamType[];
+			params: Value[];
 		},
 	): string {
 		if (value instanceof SQLDefault) {

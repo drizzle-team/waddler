@@ -1,5 +1,5 @@
 import { Dialect, SQLDefault } from '../sql-template-params.ts';
-import type { IdentifierObject, JSONArray, Value } from '../types.ts';
+import type { IdentifierObject } from '../types.ts';
 
 export class DuckdbDialect extends Dialect {
 	escapeParam(lastParamIdx: number): string {
@@ -99,6 +99,6 @@ export class DuckdbDialect extends Dialect {
 	}
 }
 
-export type DuckdbValue = Exclude<Value, Buffer | JSONArray>;
+// export type DuckdbValue = Exclude<Value, Buffer | JSONArray>;
 
-export type DuckdbValues = Value[][];
+// export type DuckdbValues = Value[][];

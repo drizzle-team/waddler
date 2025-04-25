@@ -52,7 +52,6 @@ const createSqlTemplate = (
 	return fn as any;
 };
 
-// TODO: not to pass client not in object with 'client' property
 export function waddler<TClient extends NodePgClient>(
 	...params:
 		| [

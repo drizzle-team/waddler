@@ -76,3 +76,53 @@ export const createMysqlDockerDB = async () => {
 		},
 	};
 };
+
+export const createGelDockerDB = async () => {
+	const docker = new Docker();
+	const port = await getPort();
+	const image = 'geldata/gel:6.5';
+	const tlsSecurity = '--tls-security=insecure';
+
+	const pullStream = await docker.pull(image);
+	await new Promise((resolve, reject) =>
+		docker.modem.followProgress(pullStream, (err) => (err ? reject(err) : resolve(err)))
+	);
+
+	const database = 'main', password = 'password';
+	const connectionString = `gel://admin:${password}@localhost:${port}/${database}`;
+	const gelContainer = await docker.createContainer({
+		Image: image,
+		Env: [
+			'GEL_CLIENT_SECURITY=insecure_dev_mode',
+			'GEL_SERVER_SECURITY=insecure_dev_mode',
+			'GEL_CLIENT_TLS_SECURITY=no_host_verification',
+			`GEL_SERVER_PASSWORD=${password}`,
+		],
+		name: `drizzle-integration-tests-${crypto.randomUUID()}`,
+		HostConfig: {
+			AutoRemove: true,
+			PortBindings: {
+				'5656/tcp': [{ HostPort: `${port}` }],
+			},
+		},
+		Healthcheck: {
+			Test: ['CMD-SHELL', `gel query "select 1;" ${tlsSecurity} --dsn=${connectionString}}`],
+			Interval: 1000000000, // 1 second, in nanoseconds
+			Retries: 7,
+		},
+	});
+
+	await gelContainer.start();
+
+	return {
+		connectionString,
+		connectionParams: {
+			host: 'localhost',
+			port,
+			user: 'admin',
+			password,
+			database,
+		},
+		gelContainer,
+	};
+};

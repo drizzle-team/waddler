@@ -1,5 +1,5 @@
 import { Dialect, SQLDefault } from '../../sql-template-params.ts';
-import type { UnsafeParamType, Value } from '../../types.ts';
+import type { Value } from '../../types.ts';
 
 export type MySQLIdentifierObject = {
 	table?: string;
@@ -48,7 +48,7 @@ export class MySQLDialect extends Dialect {
 	valueToSQL(
 		{ value, params }: {
 			value: Value;
-			params: UnsafeParamType[];
+			params: Value[];
 		},
 	): string {
 		if (value instanceof SQLDefault) {

@@ -1,12 +1,12 @@
 import type { DuckDBResult } from '@duckdb/node-api';
 import { DuckDBInstance } from '@duckdb/node-api';
-import { DuckdbDialect, type DuckdbValues } from '../duckdb-core/dialect.ts';
+import { DuckdbDialect } from '../duckdb-core/dialect.ts';
 import type { Factory } from '../pool-ts/types.ts';
 import { RecyclingPool } from '../recycling-pool.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
 import type { SQL } from '../sql.ts';
 import { SQLWrapper } from '../sql.ts';
-import type { Identifier, IdentifierObject, Raw, SQLParamType, UnsafeParamType } from '../types.ts';
+import type { Identifier, IdentifierObject, Raw, SQLParamType, UnsafeParamType, Values } from '../types.ts';
 import { transformResultToArrays, transformResultToObjects } from './result-transformers.ts';
 import { DuckdbNeoSQLTemplate } from './session.ts';
 import type { DuckDBConnectionObj } from './types.ts';
@@ -24,7 +24,7 @@ const createSqlTemplate = (pool: RecyclingPool<DuckDBConnectionObj>, dialect: Du
 		identifier: (value: Identifier<IdentifierObject>) => {
 			return new SQLIdentifier(value);
 		},
-		values: (value: DuckdbValues) => {
+		values: (value: Values) => {
 			return new SQLValues(value);
 		},
 		raw: (value: Raw) => {

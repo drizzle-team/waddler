@@ -263,3 +263,261 @@ export const commonMysqlTests = () => {
 		});
 	});
 };
+
+export const commonMysqlAllTypesTests = (driver: 'mysql2' | 'planetscale-serverless' | 'tidb-serverless') => {
+	describe('common_mysql_all_types_tests', () => {
+		test<{ sql: SQL }>('all types in sql.unsafe test', async (ctx) => {
+			await dropAllDataTypesTable(ctx.sql);
+			await createAllDataTypesTable(ctx.sql);
+
+			const values = [
+				2147483647,
+				127,
+				32767,
+				8388607,
+				BigInt('9007199254740992') + BigInt(1),
+				1.23,
+				10.23,
+				100.23,
+				101.23,
+				1,
+				Buffer.from('qwerty'),
+				Buffer.from('qwerty'),
+				'qwerty',
+				'qwerty',
+				'qwerty',
+				true,
+				new Date('2024-10-31T14:25:29.425Z'), // '2024-10-31',
+				new Date('2024-10-31T14:25:29.425Z'),
+				'14:25:29',
+				2024,
+				new Date('2024-10-31T14:25:29.425Z'),
+				JSON.stringify({
+					name: 'alex',
+					age: 26,
+					bookIds: [1, 2, 3],
+					vacationRate: 2.5,
+					aliases: ['sasha', 'sanya'],
+					isMarried: true,
+				}),
+				`known`,
+				// ctx.sql.default,
+			];
+
+			await ctx.sql.unsafe(
+				`insert into all_data_types values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, default);`,
+				values,
+				{ rowMode: 'object' },
+			);
+
+			const res = await ctx.sql.unsafe(`select * from all_data_types;`);
+
+			let expectedRes: Record<string, any>;
+			if (driver === 'planetscale-serverless' || driver === 'tidb-serverless') {
+				expectedRes = {
+					integer: 2147483647,
+					tinyint: 127,
+					smallint: 32767,
+					mediumint: 8388607,
+					bigint: '9007199254740993',
+					real: 1.23,
+					decimal: '10.23',
+					double: 100.23,
+					float: 101.23,
+					serial: '1',
+					binary: new Uint8Array(Buffer.from('qwerty')),
+					varbinary: new Uint8Array(Buffer.from('qwerty')),
+					char: 'qwerty',
+					varchar: 'qwerty',
+					text: 'qwerty',
+					boolean: 1,
+					date: '2024-10-31', // date: new Date('2024-10-30T22:00:00.000Z'), // '2024-10-31',
+					datetime: '2024-10-31 14:25:29', // new Date('2024-10-31T16:25:29'),
+					time: '14:25:29',
+					year: 2024,
+					timestamp: '2024-10-31 14:25:29', // new Date('2024-10-31T16:25:29'),
+					json: {
+						name: 'alex',
+						age: 26,
+						bookIds: [1, 2, 3],
+						vacationRate: 2.5,
+						aliases: ['sasha', 'sanya'],
+						isMarried: true,
+					},
+					popularity: `known`,
+					default: defaultValue,
+				};
+			} else if (driver === 'mysql2') {
+				expectedRes = {
+					integer: 2147483647,
+					tinyint: 127,
+					smallint: 32767,
+					mediumint: 8388607,
+
+					// TODO: revise: should return BigInt('9007199254740992') + BigInt(1) not 9007199254740992.
+					// It seems to me that mysql2 casts or fetch bigint from db as node-js number therefore type overflows at 9007199254740992.
+					bigint: 9007199254740992,
+					real: 1.23,
+					decimal: '10.23',
+					double: 100.23,
+					float: 101.23,
+					serial: 1,
+					binary: Buffer.from('qwerty'),
+					varbinary: Buffer.from('qwerty'),
+					char: 'qwerty',
+					varchar: 'qwerty',
+					text: 'qwerty',
+					boolean: 1,
+					date: new Date('2024-10-30T22:00:00.000Z'), // '2024-10-31',
+					datetime: new Date('2024-10-31T16:25:29'),
+					time: '14:25:29',
+					year: 2024,
+					timestamp: new Date('2024-10-31T16:25:29'),
+					json: {
+						name: 'alex',
+						age: 26,
+						bookIds: [1, 2, 3],
+						vacationRate: 2.5,
+						aliases: ['sasha', 'sanya'],
+						isMarried: true,
+					},
+					popularity: `known`,
+					default: defaultValue,
+				};
+			} else {
+				throw new Error('driver is not specified in sql.unsafe test.');
+			}
+
+			expect(res[0]).toStrictEqual(expectedRes);
+
+			// same as select query as above but with rowMode: "array"
+			const arrayResult = await ctx.sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' });
+			expect(arrayResult[0]).toStrictEqual(Object.values(expectedRes));
+
+			await dropAllDataTypesTable(ctx.sql);
+		});
+
+		test<{ sql: SQL }>('all types in sql.values test', async (ctx) => {
+			await dropAllDataTypesTable(ctx.sql);
+			await createAllDataTypesTable(ctx.sql);
+
+			const allDataTypesValues = [
+				2147483647,
+				127,
+				32767,
+				8388607,
+				BigInt('9007199254740992') + BigInt(1),
+				1.23,
+				10.23,
+				100.23,
+				101.23,
+				1,
+				Buffer.from('qwerty'),
+				Buffer.from('qwerty'),
+				'qwerty',
+				'qwerty',
+				'qwerty',
+				true,
+				new Date('2024-10-31T22:00:00.000Z'), // '2024-10-31',
+				new Date('2024-10-31T12:25:29Z'),
+				'14:25:29',
+				2024,
+				new Date('2024-10-31T14:25:29.425Z'),
+				{
+					name: 'alex',
+					age: 26,
+					bookIds: [1, 2, 3],
+					vacationRate: 2.5,
+					aliases: ['sasha', 'sanya'],
+					isMarried: true,
+				},
+				`known`,
+				ctx.sql.default,
+			];
+
+			let expectedRes: any[];
+			if (driver === 'planetscale-serverless' || driver === 'tidb-serverless') {
+				expectedRes = [
+					2147483647,
+					127,
+					32767,
+					8388607,
+					'9007199254740993',
+					1.23,
+					'10.23',
+					100.23,
+					101.23,
+					'1',
+					new Uint8Array(Buffer.from('qwerty')),
+					new Uint8Array(Buffer.from('qwerty')),
+					'qwerty',
+					'qwerty',
+					'qwerty',
+					1,
+					'2024-10-31', // new Date('2024-10-31T22:00:00.000Z'), // '2024-10-31',
+					'2024-10-31 12:25:29', // new Date('2024-10-31T12:25:29Z'),
+					'14:25:29',
+					2024,
+					'2024-10-31 14:25:29', // new Date('2024-10-31T14:25:29Z'),
+					{
+						name: 'alex',
+						age: 26,
+						bookIds: [1, 2, 3],
+						vacationRate: 2.5,
+						aliases: ['sasha', 'sanya'],
+						isMarried: true,
+					},
+					`known`,
+					defaultValue,
+				];
+			} else if (driver === 'mysql2') {
+				expectedRes = [
+					2147483647,
+					127,
+					32767,
+					8388607,
+
+					// TODO: revise: should return BigInt('9007199254740992') + BigInt(1) not 9007199254740992.
+					// It seems to me that mysql2 casts or fetch bigint from db as node-js number therefore type overflows at 9007199254740992.
+					9007199254740992,
+					1.23,
+					'10.23',
+					100.23,
+					101.23,
+					1,
+					Buffer.from('qwerty'),
+					Buffer.from('qwerty'),
+					'qwerty',
+					'qwerty',
+					'qwerty',
+					1,
+					new Date('2024-10-31T22:00:00.000Z'), // '2024-10-31',
+					new Date('2024-10-31T12:25:29Z'),
+					'14:25:29',
+					2024,
+					new Date('2024-10-31T14:25:29Z'),
+					{
+						name: 'alex',
+						age: 26,
+						bookIds: [1, 2, 3],
+						vacationRate: 2.5,
+						aliases: ['sasha', 'sanya'],
+						isMarried: true,
+					},
+					`known`,
+					defaultValue,
+				];
+			} else {
+				throw new Error('driver is not specified in sql.unsafe test.');
+			}
+
+			await ctx.sql`insert into ${ctx.sql.identifier('all_data_types')} values ${
+				ctx.sql.values([allDataTypesValues])
+			};`;
+
+			const res = await ctx.sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' });
+
+			expect(res[0]).toStrictEqual(expectedRes);
+		});
+	});
+};

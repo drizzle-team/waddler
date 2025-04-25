@@ -23,8 +23,8 @@ import type {
 export interface Query {
 	query: string;
 	// TODO: revise: params should have types that are suitable for specific driver therefore can differ. example: pg driver and sqlite driver(can't accept Date value)
-	// for now I should params as they are until I add more descriptve errors in the types
-	params: UnsafeParamType[];
+	// for now I should leave params as they are until I add more descriptve errors in the types
+	params: Value[];
 }
 
 export interface BuildQueryConfig {
@@ -35,7 +35,7 @@ export interface BuildQueryConfig {
 		{ value, lastParamIdx, params }: {
 			value: Value;
 			lastParamIdx: number;
-			params: Value[];
+			params: Exclude<Value, SQLDefault>[];
 		},
 	): string;
 }
