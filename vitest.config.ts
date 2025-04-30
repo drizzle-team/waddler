@@ -3,8 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
 	test: {
 		include: [
-			// './tests/**/*.test.ts',
-			'./tests/sqlite/op-sqlite/*.test.ts',
+			'./tests/**/*.test.ts',
 		],
 		exclude: [
 			'./tests/sqlite/bun-sqlite/**/*.test.ts',
