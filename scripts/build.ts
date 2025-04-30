@@ -557,6 +557,28 @@ await build({
 });
 
 await build({
+	entry: ['src/sqlite/op-sqlite/index.ts'],
+	splitting: false,
+	sourcemap: true,
+	dts: true,
+	format: ['cjs', 'esm'],
+	bundle: true,
+	outDir: './dist/op-sqlite',
+	outExtension(ctx) {
+		if (ctx.format === 'cjs') {
+			return {
+				dts: '.d.cts',
+				js: '.cjs',
+			};
+		}
+		return {
+			dts: '.d.ts',
+			js: '.js',
+		};
+	},
+});
+
+await build({
 	entry: ['src/index.ts'],
 	splitting: false,
 	sourcemap: true,

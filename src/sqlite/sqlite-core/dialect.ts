@@ -5,6 +5,8 @@ import type { DurableSqliteSQLTemplate } from '~/sqlite/durable-sqlite/session.t
 import type { LibsqlSQLTemplate } from '~/sqlite/libsql/session.ts';
 import { Dialect, SQLDefault } from '../../sql-template-params.ts';
 import type { Value } from '../../types.ts';
+import type { ExpoSqliteSQLTemplate } from '../expo-sqlite/session.ts';
+import type { OpSqliteSQLTemplate } from '../op-sqlite/session.ts';
 
 export type SqliteIdentifierObject = {
 	table?: string;
@@ -92,7 +94,9 @@ export class UnsafePromise<
 		| BetterSqlite3SQLTemplate<T>
 		| BunSqliteSQLTemplate<T>
 		| LibsqlSQLTemplate<T>
-		| DurableSqliteSQLTemplate<T>,
+		| DurableSqliteSQLTemplate<T>
+		| OpSqliteSQLTemplate<T>
+		| ExpoSqliteSQLTemplate<T>,
 > {
 	constructor(private driver: DriverT) {}
 

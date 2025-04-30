@@ -3,9 +3,10 @@ import type { BunSqliteSQL } from '~/sqlite/bun-sqlite';
 import type { D1SQL } from '~/sqlite/d1';
 import type { DurableSqliteSQL } from '~/sqlite/durable-sqlite';
 import type { LibsqlSQL } from '~/sqlite/libsql/driver-core';
+import type { OpSqliteSQL } from '~/sqlite/op-sqlite';
 import type { BetterSqlite3SQL } from '../../src/sqlite/better-sqlite3';
 
-type SqliteSQL = BetterSqlite3SQL | BunSqliteSQL | D1SQL | LibsqlSQL | DurableSqliteSQL;
+export type SqliteSQL = BetterSqlite3SQL | BunSqliteSQL | D1SQL | LibsqlSQL | DurableSqliteSQL | OpSqliteSQL;
 
 export const createAllDataTypesTable = async (sql: SqliteSQL) => {
 	await sql`

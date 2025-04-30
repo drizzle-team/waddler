@@ -263,6 +263,16 @@
 				"types": "./durable-sqlite/index.d.cts",
 				"default": "./durable-sqlite/index.cjs"
 			}
+		},
+		"./op-sqlite": {
+			"import": {
+				"types": "./op-sqlite/index.d.ts",
+				"default": "./op-sqlite/index.js"
+			},
+			"require": {
+				"types": "./op-sqlite/index.d.cts",
+				"default": "./op-sqlite/index.cjs"
+			}
 		}
 	},
 	"devDependencies": {
@@ -278,6 +288,7 @@
 		"@miniflare/d1": "^2.14.4",
 		"@miniflare/shared": "^2.14.4",
 		"@neondatabase/serverless": "^1.0.0",
+		"@op-engineering/op-sqlite": "^12.0.2",
 		"@planetscale/database": "^1.19.0",
 		"@tidbcloud/serverless": "^0.2.0",
 		"@types/async-retry": "^1.4.9",
@@ -303,6 +314,7 @@
 		"eslint-plugin-no-instanceof": "^1.0.1",
 		"eslint-plugin-unicorn": "^56.0.1",
 		"eslint-plugin-unused-imports": "^4.1.4",
+		"expo-sqlite": "^15.1.4",
 		"gel": "^2.0.2",
 		"get-port": "^7.1.0",
 		"mysql2": "^3.14.0",
@@ -322,14 +334,15 @@
 		"@libsql/client": "^0.15.4",
 		"@libsql/client-wasm": "^0.15.4",
 		"@neondatabase/serverless": "^1.0.0",
+		"@op-engineering/op-sqlite": "^12.0.2",
 		"@planetscale/database": "^1.19.0",
 		"@tidbcloud/serverless": "^0.2.0",
-		"gel": "^2.0.2",
 		"@vercel/postgres": "^0.10.0",
 		"@xata.io/client": "^0.30.1",
 		"better-sqlite3": "^11.9.1",
 		"bun-types": "*",
 		"duckdb": "^1.2.1",
+		"gel": "^2.0.2",
 		"mysql2": "^3.14.0",
 		"pg": "^8.14.0",
 		"pg-query-stream": "^4.8.0",
@@ -388,6 +401,9 @@
 			"optional": true
 		},
 		"@libsql/client-wasm": {
+			"optional": true
+		},
+		"@op-engineering/op-sqlite": {
 			"optional": true
 		}
 	}
