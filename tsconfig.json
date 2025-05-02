@@ -40,9 +40,9 @@
 		"baseUrl": ".",
 		"declaration": true,
 		"paths": {
-			"~/*": ["src/*"]
+			"~/*": ["waddler/src/*"]
 		}
 	},
-	"exclude": ["dist", "node_modules", "tests/sqlite/op-sqlite", "tests/sqlite/expo-sqlite"],
-	"include": ["src", "*.ts", "scripts/build.ts", "tests"]
+	"exclude": ["dist", "node_modules"],
+	"include": ["*.ts", "waddler/src/**/*", "integration-tests/tests/**/*", "waddler/scripts/*"]
 }
