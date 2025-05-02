@@ -74,6 +74,7 @@ export class Pool<T> {
 		const timeoutPromise = new this.promiseConstructor((resolve, reject) => {
 			setTimeout(() => {
 				reject(new Error('destroy timed out'));
+				// @ts-expect-error
 			}, this._config.destroyTimeoutMillis!).unref();
 		});
 		return this.promiseConstructor.race([timeoutPromise, promise]);
@@ -284,6 +285,7 @@ export class Pool<T> {
 			this._scheduledEviction = setTimeout(() => {
 				this._evict();
 				this._scheduleEvictorRun();
+				// @ts-expect-error
 			}, this._config.evictionRunIntervalMillis).unref();
 		}
 	}

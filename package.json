@@ -273,11 +273,21 @@
 				"types": "./op-sqlite/index.d.cts",
 				"default": "./op-sqlite/index.cjs"
 			}
+		},
+		"./expo-sqlite": {
+			"import": {
+				"types": "./expo-sqlite/index.d.ts",
+				"default": "./expo-sqlite/index.js"
+			},
+			"require": {
+				"types": "./expo-sqlite/index.d.cts",
+				"default": "./expo-sqlite/index.cjs"
+			}
 		}
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "^0.16.4",
-		"@cloudflare/workers-types": "^4.20250422.0",
+		"@cloudflare/workers-types": "^4.20250430.0",
 		"@duckdb/node-api": "1.1.2-alpha.4",
 		"@electric-sql/pglite": "^0.2.17",
 		"@eslint/compat": "^1.2.7",
@@ -295,7 +305,7 @@
 		"@types/better-sqlite3": "^7.6.13",
 		"@types/bun": "^1.2.9",
 		"@types/dockerode": "^3.3.35",
-		"@types/node": "^22.7.6",
+		"@types/node": "^22.15.3",
 		"@types/pg": "^8.11.11",
 		"@typescript-eslint/eslint-plugin": "^8.28.0",
 		"@vercel/postgres": "^0.10.0",
@@ -314,7 +324,7 @@
 		"eslint-plugin-no-instanceof": "^1.0.1",
 		"eslint-plugin-unicorn": "^56.0.1",
 		"eslint-plugin-unused-imports": "^4.1.4",
-		"expo-sqlite": "^15.1.4",
+		"expo-sqlite": "^15.2.9",
 		"gel": "^2.0.2",
 		"get-port": "^7.1.0",
 		"mysql2": "^3.14.0",
@@ -328,13 +338,11 @@
 		"zx": "^8.1.9"
 	},
 	"peerDependencies": {
-		"@cloudflare/workers-types": "^4.20250422.0",
 		"@duckdb/node-api": "^1.1.2-alpha.4",
 		"@electric-sql/pglite": "^0.2.17",
 		"@libsql/client": "^0.15.4",
 		"@libsql/client-wasm": "^0.15.4",
 		"@neondatabase/serverless": "^1.0.0",
-		"@op-engineering/op-sqlite": "^12.0.2",
 		"@planetscale/database": "^1.19.0",
 		"@tidbcloud/serverless": "^0.2.0",
 		"@vercel/postgres": "^0.10.0",

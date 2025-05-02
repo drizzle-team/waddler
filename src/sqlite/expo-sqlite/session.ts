@@ -28,9 +28,9 @@ export class ExpoSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	async execute() {
 		const { query, params } = this.sql.getQuery();
 
-		// wrapping op-sqlite driver error in new js error to add stack trace to it
+		const stmt = this.client.prepareSync(query);
+		// wrapping expo-sqlite driver error in new js error to add stack trace to it
 		try {
-			const stmt = this.client.prepareSync(query);
 			if (this.returningData === false) {
 				return await stmt.executeAsync(params) as any;
 			}
@@ -49,21 +49,22 @@ export class ExpoSqliteSQLTemplate<T> extends SQLTemplate<T> {
 				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
 				: new Error(queryStr + (error as Error).message);
 			throw newError;
+		} finally {
+			await stmt.finalizeAsync();
 		}
 	}
 
 	async *stream() {
 		const { query, params } = this.sql.getQuery();
 
-		// wrapping better-sqlite3 driver error in new js error to add stack trace to it
+		// wrapping expo-sqlite driver error in new js error to add stack trace to it
 		try {
-			// const stmt = this.client.prepareSync(query);
-			// const stream = await (this.options.rowMode === 'array'
-			// 	? stmt.executeForRawResultAsync(params)
-			// 	: stmt.executeAsync(params));
+			const stmt = this.client.prepareSync(query);
+			const stream = await (this.options.rowMode === 'array'
+				? stmt.executeForRawResultAsync(params)
+				: stmt.executeAsync(params));
 
-			// const stream = this.options.rowMode === 'array' ? stmt.raw().iterate(...params) : stmt.iterate(...params);
-			const stream = this.client.getEachAsync(query, params);
+			// const stream = this.client.getEachAsync(query, params);
 
 			for await (const row of stream) {
 				yield row as T;

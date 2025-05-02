@@ -1,45 +1,38 @@
-import { open } from '@op-engineering/op-sqlite';
-import { commonTests } from 'tests/common.test';
-import { commonSqliteTests, createAllDataTypesTable, dropAllDataTypesTable } from 'tests/sqlite/sqlite-core';
-import { beforeAll, beforeEach, expect, test } from 'vitest';
-import { type OpSqliteSQL, waddler } from '../../../src/sqlite/op-sqlite';
+// This file serves only as a reference for what and how I'm testing in a detached project.
+import { Buffer } from 'buffer';
+import { expect } from 'chai';
+// @ts-expect-error
+import type { OpSqliteSQL } from 'waddler/op-sqlite';
 
-let sql: OpSqliteSQL;
+export const createAllDataTypesTable = async (sql: OpSqliteSQL) => {
+	await sql`
+		    CREATE TABLE "all_data_types" (
+			"integer_number" integer,
+			"integer_bigint" integer,
+			"real" real,
+			"text" text,
+			"text_json" text,
+			"blob_bigint" blob,
+			"blob_buffer" blob,
+			"blob_json" blob,
+			"numeric" numeric
+		);
+	`.run();
+};
 
-beforeAll(async () => {
-	const client = open({
-		name: 'inMemoryDb',
-		location: ':memory:',
-	});
-	sql = waddler({ client });
-});
+export const dropAllDataTypesTable = async (sql: OpSqliteSQL) => {
+	await sql`drop table if exists "all_data_types";`.run();
+};
 
-beforeEach<{ sql: OpSqliteSQL }>((ctx) => {
-	ctx.sql = sql;
-});
-
-commonTests();
-commonSqliteTests();
-
-test.only('connection test', async () => {
-	const client = open({
-		name: 'inMemoryDb',
-		location: ':memory:',
-	});
-	const sql1 = waddler({ client });
-	await sql1`select 1;`;
-});
-
-// UNSAFE-------------------------------------------------------------------
-test('all types in sql.unsafe test', async () => {
+export const allDataTypesUnsafeTest = async (sql: OpSqliteSQL) => {
+	// console.log('1');
 	await dropAllDataTypesTable(sql);
+	// console.log('2');
 	await createAllDataTypesTable(sql);
-
+	// console.log('3');
 	const values = [
 		2147483647,
-		// D1 supports 64-bit signed INTEGER values internally, however BigInts ↗ are not currently supported in the API yet.
-		// https://developers.cloudflare.com/d1/worker-api/
-		// TODO: change to BigInt('9007199254740992') + BigInt(1) when D1 supports BigInt
+		// TODO: change to BigInt('9007199254740992') + BigInt(1) when op-sqlite supports BigInt
 		9007199254740992,
 		101.23,
 		'qwerty',
@@ -52,7 +45,7 @@ test('all types in sql.unsafe test', async () => {
 			isMarried: true,
 		}),
 		9007199254740992,
-		Buffer.from('qwerty'),
+		new Uint8Array(Buffer.from('qwerty')).buffer,
 		JSON.stringify({
 			name: 'alex',
 			age: 26,
@@ -63,14 +56,19 @@ test('all types in sql.unsafe test', async () => {
 		}),
 		10.23,
 	];
-
+	// console.log('31');
 	await sql.unsafe(
 		`insert into all_data_types values (?, ?, ?, ?, ?, ?, ?, ?, ?);`,
 		values,
-	).run();
+	);
 
-	const res = await sql.unsafe(`select * from all_data_types;`);
+	// console.log('4');
 
+	const res = await sql.unsafe(
+		`select * from all_data_types;`,
+	);
+	// console.log('sql.unsafe:', res[0]);
+	// console.log('5');
 	const expectedRes = {
 		integer_number: 2147483647,
 		integer_bigint: 9007199254740992,
@@ -85,7 +83,7 @@ test('all types in sql.unsafe test', async () => {
 			isMarried: true,
 		}),
 		blob_bigint: 9007199254740992,
-		blob_buffer: [...new Uint8Array(Buffer.from('qwerty'))],
+		blob_buffer: new Uint8Array(Buffer.from('qwerty')).buffer,
 		blob_json: JSON.stringify({
 			name: 'alex',
 			age: 26,
@@ -97,22 +95,23 @@ test('all types in sql.unsafe test', async () => {
 		numeric: 10.23,
 	};
 
-	expect(res[0]).toStrictEqual(expectedRes);
+	expect(res[0]).deep.equal(expectedRes);
 
+	// console.log('6');
 	// same as select query as above but with rowMode: "array"
 	const arrayResult = await sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' }).all();
-	expect(arrayResult[0]).toStrictEqual(Object.values(expectedRes));
-});
+	// console.log('10---------', arrayResult[0]);
+	expect(arrayResult[0]).deep.equal(Object.values(expectedRes));
+};
 
-// sql.values
-// ALL TYPES-------------------------------------------------------------------
-test('all types in sql.values test', async () => {
+export const allDataTypesSqlValuesTest = async (sql: OpSqliteSQL) => {
 	await dropAllDataTypesTable(sql);
 	await createAllDataTypesTable(sql);
 
-	const allDataTypesValues = [
+	const values = [
 		2147483647,
-		9007199254740992, // BigInt('9007199254740992') + BigInt(1),
+		// TODO: change to BigInt('9007199254740992') + BigInt(1) when op-sqlite supports BigInt
+		9007199254740992,
 		101.23,
 		'qwerty',
 		JSON.stringify({
@@ -123,8 +122,8 @@ test('all types in sql.values test', async () => {
 			aliases: ['sasha', 'sanya'],
 			isMarried: true,
 		}),
-		9007199254740992, // BigInt('9007199254740992') + BigInt(1),
-		Buffer.from('qwerty'),
+		9007199254740992,
+		new Uint8Array(Buffer.from('qwerty')).buffer,
 		JSON.stringify({
 			name: 'alex',
 			age: 26,
@@ -150,7 +149,7 @@ test('all types in sql.values test', async () => {
 			isMarried: true,
 		}),
 		9007199254740992,
-		[...new Uint8Array(Buffer.from('qwerty'))],
+		new Uint8Array(Buffer.from('qwerty')).buffer,
 		JSON.stringify({
 			name: 'alex',
 			age: 26,
@@ -162,11 +161,15 @@ test('all types in sql.values test', async () => {
 		10.23,
 	];
 
-	await sql`insert into ${sql.identifier('all_data_types')} values ${sql.values([allDataTypesValues])};`.run();
+	const query = sql`insert into ${sql.identifier('all_data_types')} values ${sql.values([values])};`.run();
+	// console.log('2');
+	// console.log(query.toSQL());
+	// console.log('3');
+	await query;
+	// console.log('4');
 
 	const res = await sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' }).all();
 
-	expect(res[0]).toStrictEqual(expectedRes);
-});
-
-// sql.stream, sql.unsafe(...).stream()
+	// console.log(res[0]);
+	expect(res[0]).deep.equal(expectedRes);
+};

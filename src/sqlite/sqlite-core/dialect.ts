@@ -61,29 +61,13 @@ export class SqliteDialect extends Dialect {
 			return value.generateSQL().sql;
 		}
 
-		if (
-			typeof value === 'number'
-			|| typeof value === 'bigint'
-			|| typeof value === 'boolean'
-			|| typeof value === 'string'
-			|| value === null
-			|| Buffer.isBuffer(value)
-			|| value instanceof Date
-		) {
-			params.push(value);
-			return this.escapeParam();
-		}
-
-		if (typeof value === 'object') {
+		if (typeof value === 'object' && value.constructor.name === 'Object') {
 			params.push(JSON.stringify(value));
 			return this.escapeParam();
 		}
 
-		if (value === undefined) {
-			throw new Error("value can't be undefined"); // , maybe you mean sql.default?
-		}
-
-		throw new Error(`you can't specify ${typeof value} as value.`);
+		params.push(value);
+		return this.escapeParam();
 	}
 }
 

@@ -28,6 +28,7 @@ export class OpSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	async execute() {
 		const { query, params } = this.sql.getQuery();
 
+		// TODO: do I really need branching to all and run here?
 		// wrapping op-sqlite driver error in new js error to add stack trace to it
 		try {
 			if (this.options.rowMode === 'array') {

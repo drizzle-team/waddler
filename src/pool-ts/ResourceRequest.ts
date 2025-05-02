@@ -47,6 +47,7 @@ export class ResourceRequest<T> extends Deferred<T> {
 			this.removeTimeout();
 		}
 
+		// @ts-expect-error
 		this._timeout = setTimeout(
 			fbind(this._fireTimeout, this),
 			Math.max(ttl - age, 0),

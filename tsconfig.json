@@ -43,6 +43,6 @@
 			"~/*": ["src/*"]
 		}
 	},
-	"exclude": ["dist", "node_modules", "db"],
+	"exclude": ["dist", "node_modules", "tests/sqlite/op-sqlite", "tests/sqlite/expo-sqlite"],
 	"include": ["src", "*.ts", "scripts/build.ts", "tests"]
 }

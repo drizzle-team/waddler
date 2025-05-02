@@ -7,7 +7,7 @@ import type { Identifier, Raw, RowData, SQLParamType, UnsafeParamType, Values } 
 import { SqliteDialect, UnsafePromise } from '../sqlite-core/dialect.ts';
 import { ExpoSqliteSQLTemplate } from './session.ts';
 
-export interface OpSqliteSQL extends Omit<SQL, 'default' | 'unsafe'> {
+export interface ExpoSqliteSQL extends Omit<SQL, 'default' | 'unsafe'> {
 	/**
 	 * sql.default is not implemented for sqlite because sqlite doesn't support feature of specifying 'default' keyword in insert statements.
 	 */
@@ -30,7 +30,7 @@ export interface OpSqliteSQL extends Omit<SQL, 'default' | 'unsafe'> {
 const createSqlTemplate = (
 	client: SQLiteDatabase,
 	dialect: SqliteDialect,
-): OpSqliteSQL => {
+): ExpoSqliteSQL => {
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): ExpoSqliteSQLTemplate<T> => {
 		const sql = new SQLWrapper();
 		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
