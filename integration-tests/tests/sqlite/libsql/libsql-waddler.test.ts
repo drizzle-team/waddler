@@ -2,8 +2,8 @@ import 'dotenv/config';
 import { type Client, createClient } from '@libsql/client';
 import retry from 'async-retry';
 import { afterAll, beforeAll, beforeEach, test } from 'vitest';
-import type { LibsqlSQL } from '../../../../waddler/src/sqlite/libsql/driver-core.ts';
-import { waddler } from '../../../../waddler/src/sqlite/libsql/index.ts';
+import type { LibsqlSQL } from 'waddler/libsql';
+import { waddler } from 'waddler/libsql';
 import { commonTests } from '../../common.test';
 import { commonSqliteTests } from '../sqlite-core.ts';
 import { libsqlTests } from './common.ts';
@@ -35,7 +35,6 @@ beforeAll(async () => {
 });
 
 beforeEach<{ sql: LibsqlSQL }>((ctx) => {
-	// @ts-expect-error
 	ctx.sql = sql;
 });
 

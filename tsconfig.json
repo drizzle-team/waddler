@@ -44,5 +44,11 @@
 		}
 	},
 	"exclude": ["dist", "node_modules"],
-	"include": ["*.ts", "waddler/src/**/*", "integration-tests/tests/**/*", "waddler/scripts/*"]
+	"include": [
+		"*.ts",
+		"waddler/src/**/*",
+		"integration-tests/tests/**/*",
+		"waddler/scripts/*",
+		"integration-tests/vitest.config.ts"
+	]
 }

@@ -12,8 +12,7 @@ import {
 
 import type { SQL } from 'waddler';
 import type { NeonClient } from 'waddler/neon-serverless';
-import { waddler } from 'waddler/neon-serverless';
-import { queryStream } from '../../../../waddler/src/pg/neon-serverless/pg-query-stream.ts';
+import { queryStream, waddler } from 'waddler/neon-serverless';
 
 let pgClient: NeonClient;
 let connectionString: string;
@@ -66,10 +65,7 @@ nodePgTests();
 
 // sql.stream
 test('sql.stream test', async () => {
-	// TODO fix this as well, sql should be of type SQL import type { SQL } from 'waddler';
-	// @ts-expect-error
 	await dropAllDataTypesTable(sql);
-	// @ts-expect-error
 	await createAllDataTypesTable(sql);
 
 	const date = new Date('2024-10-31T14:25:29.425Z');

@@ -5,13 +5,13 @@ import type { SqliteDialect } from '~/sqlite/sqlite-core/dialect.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 
 export class LibsqlSQLTemplate<T> extends SQLTemplate<T> {
-	private returningData: boolean = true;
+	returningData: boolean = true;
 
 	constructor(
-		protected override sql: SQLWrapper,
-		protected readonly client: Client,
+		public override sql: SQLWrapper,
+		public readonly client: Client,
 		dialect: SqliteDialect,
-		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
+		public options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
 		super(sql, dialect);
 	}

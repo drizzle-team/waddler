@@ -1,7 +1,6 @@
 // This file serves only as a reference for what and how I'm testing in a detached project.
 import { Buffer } from 'buffer';
 import { expect } from 'chai';
-// @ts-expect-error
 import type { OpSqliteSQL } from 'waddler/op-sqlite';
 
 export const createAllDataTypesTable = async (sql: OpSqliteSQL) => {

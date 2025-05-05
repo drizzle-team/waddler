@@ -30,7 +30,7 @@ export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
 	private queryConfig: QueryArrayConfig;
 
 	constructor(
-		protected override sql: SQLWrapper,
+		override sql: SQLWrapper,
 		protected readonly client: NeonClient,
 		dialect: PgDialect,
 		configOptions: WaddlerConfig,

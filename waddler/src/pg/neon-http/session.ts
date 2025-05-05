@@ -29,7 +29,7 @@ const queryConfig: HTTPQueryOptions<true, true> = {
 
 export class NeonHttpSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
-		protected override sql: SQLWrapper,
+		override sql: SQLWrapper,
 		protected readonly client: NeonHttpClient,
 		dialect: Dialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },

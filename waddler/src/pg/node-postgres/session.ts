@@ -23,7 +23,7 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 	private rawQueryConfig: QueryArrayConfig;
 
 	constructor(
-		protected override sql: SQLWrapper,
+		override sql: SQLWrapper,
 		protected readonly client: NodePgClient,
 		dialect: PgDialect,
 		configOptions: WaddlerConfig,

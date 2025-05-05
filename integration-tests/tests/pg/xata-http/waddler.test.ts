@@ -45,11 +45,8 @@ beforeEach<{ sql: SQL }>((ctx) => {
 });
 
 afterAll(async () => {
-	// @ts-expect-error
 	await dropAllDataTypesTable(sql);
-	// @ts-expect-error
 	await dropAllArrayDataTypesTable(sql);
-	// @ts-expect-error
 	await dropAllNdarrayDataTypesTable(sql);
 });
 
@@ -67,9 +64,7 @@ const encodeBufferForXata = (buffer: Buffer): string => {
 
 // UNSAFE-------------------------------------------------------------------
 test('all types in sql.unsafe test', async () => {
-	// @ts-expect-error
 	await dropAllDataTypesTable(sql);
-	// @ts-expect-error
 	await createAllDataTypesTable(sql);
 
 	const date = new Date('2024-10-31T14:25:29.425');
@@ -163,9 +158,7 @@ test('all types in sql.unsafe test', async () => {
 // sql.values
 // ALL TYPES-------------------------------------------------------------------
 test('all types in sql.values test', async () => {
-	// @ts-expect-error
 	await dropAllDataTypesTable(sql);
-	// @ts-expect-error
 	await createAllDataTypesTable(sql);
 
 	const date = new Date('2024-10-31T14:25:29.425Z');
@@ -233,7 +226,6 @@ test('all types in sql.values test', async () => {
 });
 
 test('all array types in sql.values test', async () => {
-	// @ts-expect-error
 	await createAllArrayDataTypesTable(sql);
 
 	const date = new Date('2024-10-31T14:25:29.425Z');
@@ -327,7 +319,6 @@ test('all array types in sql.values test', async () => {
 });
 
 test('all nd-array types in sql.values test', async () => {
-	// @ts-expect-error
 	await createAllNdarrayDataTypesTable(sql);
 
 	const date = new Date('2024-10-31T14:25:29.425Z');

@@ -82,7 +82,7 @@ export class UnsafePromise<
 		| OpSqliteSQLTemplate<T>
 		| ExpoSqliteSQLTemplate<T>,
 > {
-	constructor(private driver: DriverT) {}
+	constructor(public driver: DriverT) {}
 
 	run(): Omit<UnsafePromise<T, DriverT>, 'run' | 'all'> {
 		this.driver.run();

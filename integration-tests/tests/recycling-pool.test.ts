@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 import { expect, test } from 'vitest';
-import { createRecyclingPool } from '../../waddler/src/recycling-pool';
+import { createRecyclingPool } from 'waddler';
 
 const sleep = (ms: number) => {
 	return new Promise(

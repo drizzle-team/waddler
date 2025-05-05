@@ -7,7 +7,7 @@ export class BetterSqlite3SQLTemplate<T> extends SQLTemplate<T> {
 	private returningData: boolean = true;
 
 	constructor(
-		protected override sql: SQLWrapper,
+		override sql: SQLWrapper,
 		protected readonly client: Database,
 		dialect: SqliteDialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },

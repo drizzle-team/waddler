@@ -5,7 +5,7 @@ import type { GelDialect } from './gel-core/dialect.ts';
 
 export class GelSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
-		protected override sql: SQLWrapper,
+		override sql: SQLWrapper,
 		protected readonly client: Client,
 		dialect: GelDialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },

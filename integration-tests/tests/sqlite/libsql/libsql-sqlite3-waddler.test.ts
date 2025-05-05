@@ -1,7 +1,7 @@
 import { type Client, createClient } from '@libsql/client/sqlite3';
 import { afterAll, beforeAll, beforeEach, test } from 'vitest';
-import type { LibsqlSQL } from '../../../../waddler/src/sqlite/libsql/driver-core.ts';
-import { waddler } from '../../../../waddler/src/sqlite/libsql/sqlite3/index.ts';
+import type { LibsqlSQL } from 'waddler/libsql';
+import { waddler } from 'waddler/libsql/sqlite3';
 import { commonTests } from '../../common.test';
 import { commonSqliteTests } from '../sqlite-core.ts';
 import { libsqlTests } from './common.ts';
@@ -18,7 +18,6 @@ beforeAll(async () => {
 });
 
 beforeEach<{ sql: LibsqlSQL }>((ctx) => {
-	// @ts-expect-error
 	ctx.sql = sql;
 });
 

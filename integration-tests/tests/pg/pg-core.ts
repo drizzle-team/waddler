@@ -160,9 +160,7 @@ export const commonPgTests = () => {
 		test('sql.append test.', (ctx) => {
 			const query = ctx.sql<undefined>`select * from users where id = ${1}`;
 
-			// @ts-expect-error
 			query.append(ctx.sql` or id = ${3}`);
-			// @ts-expect-error
 			query.append(ctx.sql` or id = ${4};`);
 
 			const res = query.toSQL();

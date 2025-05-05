@@ -1,3 +1,11 @@
+export { DuckdbDialect } from './duckdb-core/dialect.ts';
+export { MySQLDialect } from './mysql/mysql-core/dialect.ts';
+export type { MySQLIdentifierObject } from './mysql/mysql-core/dialect.ts';
+export { PgDialect } from './pg/pg-core/dialect.ts';
+export { createRecyclingPool } from './recycling-pool.ts';
+export { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from './sql-template-params.ts';
 export { SQLTemplate } from './sql-template.ts';
-export type { SQL } from './sql.ts';
 export { SQLWrapper } from './sql.ts';
+export type { SQL } from './sql.ts';
+export { SqliteDialect } from './sqlite/sqlite-core/dialect.ts';
+export type { SqliteIdentifierObject } from './sqlite/sqlite-core/dialect.ts';

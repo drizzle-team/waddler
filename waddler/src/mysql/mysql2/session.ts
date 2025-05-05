@@ -9,7 +9,7 @@ import { isPool } from './utils.ts';
 
 export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
-		protected override sql: SQLWrapper,
+		override sql: SQLWrapper,
 		protected readonly client: Pool | Connection,
 		dialect: Dialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },

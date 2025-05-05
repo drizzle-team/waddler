@@ -25,7 +25,7 @@ export abstract class SQLChunk {
 
 export class SQLCommonParam extends SQLChunk {
 	constructor(
-		private readonly value: UnsafeParamType,
+		readonly value: UnsafeParamType,
 	) {
 		super();
 	}
@@ -41,7 +41,7 @@ export class SQLCommonParam extends SQLChunk {
 }
 
 export class SQLString extends SQLChunk {
-	constructor(private readonly value: string) {
+	constructor(readonly value: string) {
 		super();
 	}
 
@@ -51,7 +51,7 @@ export class SQLString extends SQLChunk {
 }
 
 export class SQLIdentifier<Q extends IdentifierObject> extends SQLChunk {
-	constructor(private readonly value: Identifier<Q>) {
+	constructor(readonly value: Identifier<Q>) {
 		super();
 	}
 
@@ -123,10 +123,10 @@ export class SQLIdentifier<Q extends IdentifierObject> extends SQLChunk {
 }
 
 export class SQLValues extends SQLChunk {
-	constructor(private readonly value: Value[][]) {
+	constructor(readonly value: Value[][]) {
 		super();
 	}
-	protected params: UnsafeParamType[] = [];
+	params: UnsafeParamType[] = [];
 
 	generateSQL({ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number }) {
 		if (!Array.isArray(this.value)) {
@@ -178,7 +178,7 @@ export class SQLValues extends SQLChunk {
 }
 
 export class SQLRaw extends SQLChunk {
-	constructor(private readonly value: Raw) {
+	constructor(readonly value: Raw) {
 		super();
 	}
 

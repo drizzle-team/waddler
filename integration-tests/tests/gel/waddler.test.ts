@@ -27,8 +27,7 @@ let gelConnectionParams: {
 let gelConnectionString: string;
 let tlsSecurity: 'insecure';
 
-// TODO: There should be just SQL, but it throws error; fix this in every test file
-let sql: ReturnType<typeof waddler>;
+let sql: SQL;
 beforeAll(async () => {
 	const dockerPayload = await createGelDockerDB();
 	const sleep = 1000;

@@ -5,7 +5,7 @@ import { SQLTemplate } from '../../sql-template.ts';
 
 export class BunSqlSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
-		protected override sql: SQLWrapper,
+		override sql: SQLWrapper,
 		protected readonly client: SQL,
 		dialect: PgDialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },

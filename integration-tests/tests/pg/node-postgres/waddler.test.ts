@@ -41,7 +41,6 @@ beforeAll(async () => {
 			pgConnectionParams = dockerPayload.connectionParams;
 			pgClient = new Client(dockerPayload.connectionParams);
 			await pgClient.connect();
-			// @ts-expect-error
 			sql = waddler({ client: pgClient });
 			connected = true;
 			break;

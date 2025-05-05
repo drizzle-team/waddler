@@ -32,7 +32,6 @@ beforeAll(async () => {
 			client?.close();
 		},
 	});
-	// @ts-expect-error
 	sql = waddler({ client });
 });
 

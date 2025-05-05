@@ -22,7 +22,7 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 	private queryConfig: QueryArrayConfig;
 
 	constructor(
-		protected override sql: SQLWrapper,
+		override sql: SQLWrapper,
 		protected readonly client: VercelPgClient,
 		dialect: PgDialect,
 		configOptions: WaddlerConfig,

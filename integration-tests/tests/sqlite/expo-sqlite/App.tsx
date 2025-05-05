@@ -7,7 +7,6 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { allDataTypesSqlStreamTest, allDataTypesSqlValuesTest, allDataTypesUnsafeTest } from './tests.ts';
 import * as SQLite from 'expo-sqlite';
-// @ts-expect-error
 import { waddler } from 'waddler/expo-sqlite';
 
 const client = SQLite.openDatabaseSync('inMemoryDb', {}, ':memory:');

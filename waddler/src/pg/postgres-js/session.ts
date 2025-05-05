@@ -5,7 +5,7 @@ import type { SQLWrapper } from '../../sql.ts';
 
 export class PostgresSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
-		protected override sql: SQLWrapper,
+		override sql: SQLWrapper,
 		protected readonly client: Sql,
 		dialect: PgDialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },

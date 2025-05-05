@@ -17,7 +17,6 @@ beforeAll(async () => {
 		url: ':memory:',
 		intMode: 'number',
 	});
-	// @ts-expect-error
 	sql = waddler({ client });
 });
 

@@ -8,7 +8,7 @@ export class PlanetscaleServerlessSQLTemplate<T> extends SQLTemplate<T> {
 	private queryConfig = { as: 'array' } as const;
 
 	constructor(
-		protected override sql: SQLWrapper,
+		override sql: SQLWrapper,
 		protected readonly client: Client | Connection, // TODO should I include Transaction here?
 		dialect: MySQLDialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },

@@ -2,9 +2,8 @@ import 'dotenv/config';
 import type { VercelClient } from '@vercel/postgres';
 import { createClient, createPool } from '@vercel/postgres';
 import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
-import { waddler } from '../../../../waddler/src/pg/vercel-postgres/driver.ts';
-import { queryStream } from '../../../../waddler/src/pg/vercel-postgres/pg-query-stream.ts';
-import type { SQL } from '../../../../waddler/src/sql.ts';
+import type { SQL } from 'waddler';
+import { queryStream, waddler } from 'waddler/vercel-postgres';
 import { commonTests } from '../../common.test.ts';
 import {
 	commonPgTests,
@@ -69,9 +68,7 @@ nodePgTests();
 
 // sql.stream
 test('sql.stream test', async () => {
-	// @ts-expect-error
 	await dropAllDataTypesTable(sql);
-	// @ts-expect-error
 	await createAllDataTypesTable(sql);
 
 	const date = new Date('2024-10-31T14:25:29.425Z');

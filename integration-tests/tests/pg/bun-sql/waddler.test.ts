@@ -1,7 +1,7 @@
 import { SQL as BunSql } from 'bun';
 import { afterAll, beforeAll, expect, test } from 'bun:test';
 import type Docker from 'dockerode';
-import { waddler } from '../../../../waddler/src/pg/bun-sql';
+import { waddler } from 'waddler/bun-sql';
 import {
 	createAllArrayDataTypesTable,
 	createAllDataTypesTable,

@@ -9,7 +9,7 @@ export type XataHttpClient = {
 
 export class XataHttpSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
-		protected override sql: SQLWrapper,
+		override sql: SQLWrapper,
 		protected readonly client: XataHttpClient,
 		dialect: PgDialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },

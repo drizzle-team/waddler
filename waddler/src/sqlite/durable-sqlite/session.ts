@@ -8,7 +8,7 @@ export class DurableSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	private returningData: boolean = true;
 
 	constructor(
-		protected override sql: SQLWrapper,
+		override sql: SQLWrapper,
 		protected readonly client: DurableObjectStorage,
 		dialect: SqliteDialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },

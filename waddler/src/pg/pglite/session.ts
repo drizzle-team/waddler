@@ -10,7 +10,7 @@ export class PGliteSQLTemplate<T> extends SQLTemplate<T> {
 	private queryConfig: QueryOptions;
 
 	constructor(
-		protected override sql: SQLWrapper,
+		override sql: SQLWrapper,
 		protected readonly client: PGlite,
 		dialect: Dialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },

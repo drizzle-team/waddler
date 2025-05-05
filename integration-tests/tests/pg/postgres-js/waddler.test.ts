@@ -40,7 +40,6 @@ beforeAll(async () => {
 			pgConnectionParams = dockerPayload.connectionParams;
 			pgClient = postgres(dockerPayload.connectionParams);
 			await pgClient.unsafe(`select 1;`);
-			// @ts-expect-error
 			sql = waddler({ client: pgClient });
 			connected = true;
 			break;

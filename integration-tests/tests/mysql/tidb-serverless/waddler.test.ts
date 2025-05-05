@@ -2,7 +2,7 @@ import 'dotenv/config';
 import { connect } from '@tidbcloud/serverless';
 import { beforeAll, beforeEach, test } from 'vitest';
 import type { SQL } from 'waddler';
-import { waddler } from '../../../../waddler/src/mysql/tidb-serverless';
+import { waddler } from 'waddler/tidb-serverless';
 import { commonTests } from '../../common.test';
 import { commonMysqlAllTypesTests, commonMysqlTests } from '../../mysql/mysql-core';
 

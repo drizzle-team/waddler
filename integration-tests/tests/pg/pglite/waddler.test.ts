@@ -18,7 +18,6 @@ let pgClient: PGlite;
 let sql: SQL;
 beforeAll(async () => {
 	pgClient = new PGlite();
-	// @ts-expect-error
 	sql = waddler({ client: pgClient });
 });
 

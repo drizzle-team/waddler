@@ -1,11 +1,7 @@
 import { describe, expect, test } from 'vitest';
-import type { SQL as DuckdbSQL } from 'waddler/duckdb';
-// TODO should I export this in waddler?
 import type { SQL } from 'waddler';
-import { SQLWrapper } from 'waddler';
-import { PgDialect } from '../../waddler/src/pg/pg-core/dialect.ts';
-import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../waddler/src/sql-template-params.ts';
-import type { SQLParamType } from '../../waddler/src/types.ts';
+import { PgDialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues, SQLWrapper } from 'waddler';
+import type { SQL as DuckdbSQL } from 'waddler/duckdb';
 import type { SqliteSQL } from './sqlite/sqlite-core';
 
 declare module 'vitest' {
@@ -14,7 +10,7 @@ declare module 'vitest' {
 	}
 }
 
-const templateFunction = (strings: TemplateStringsArray, ...params: SQLParamType[]) => {
+const templateFunction = (strings: TemplateStringsArray, ...params: any[]) => {
 	return { strings, params };
 };
 const dialect = new PgDialect();

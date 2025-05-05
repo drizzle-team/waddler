@@ -8,7 +8,6 @@ import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { allDataTypesSqlValuesTest, allDataTypesUnsafeTest } from './tests.ts';
 import { open } from '@op-engineering/op-sqlite';
-// @ts-expect-error
 import { waddler } from 'waddler/op-sqlite';
 
 const client = open({

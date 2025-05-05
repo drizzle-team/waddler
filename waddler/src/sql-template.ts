@@ -5,9 +5,9 @@ import type { Query, SQLWrapper } from './sql.ts';
 
 export abstract class SQLTemplate<T> {
 	constructor(
-		protected sql: SQLWrapper,
-		protected dialect: Dialect,
-		protected configOptions?: WaddlerConfig,
+		public sql: SQLWrapper,
+		public dialect: Dialect,
+		public configOptions?: WaddlerConfig,
 	) {}
 
 	append(value: SQLTemplate<T>) {
