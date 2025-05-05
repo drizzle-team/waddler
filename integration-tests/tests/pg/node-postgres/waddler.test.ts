@@ -3,7 +3,8 @@ import type { Client as ClientT } from 'pg';
 import pg from 'pg';
 import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
 import type { SQL } from 'waddler';
-import { queryStream, waddler } from 'waddler/node-postgres';
+import { queryStream } from 'waddler/extensions/pg-query-stream';
+import { waddler } from 'waddler/node-postgres';
 import { commonTests } from '../../common.test.ts';
 import { createPgDockerDB } from '../../utils.ts';
 import {

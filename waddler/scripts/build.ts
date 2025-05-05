@@ -669,6 +669,8 @@ const targets: Array<{
 	{ entry: 'src/sqlite/expo-sqlite/index.ts', outDir: 'dist/expo-sqlite' },
 
 	{ entry: 'src/index.ts', outDir: 'dist' },
+	{ entry: 'src/extensions/index.ts', outDir: 'dist/extensions' },
+	{ entry: 'src/extensions/pg-query-stream/index.ts', outDir: 'dist/extensions/pg-query-stream' },
 ];
 
 for (const target of targets) {

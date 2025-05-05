@@ -14,6 +14,26 @@
 		"pack": "(cd dist && npm pack --pack-destination ..) && rm -f package.tgz && mv *.tgz package.tgz"
 	},
 	"exports": {
+		"./extensions": {
+			"import": {
+				"types": "./extensions/index.d.ts",
+				"default": "./extensions/index.js"
+			},
+			"require": {
+				"types": "./extensions/index.d.cts",
+				"default": "./extensions/index.cjs"
+			}
+		},
+		"./extensions/pg-query-stream": {
+			"import": {
+				"types": "./extensions/pg-query-stream/index.d.ts",
+				"default": "./extensions/pg-query-stream/index.js"
+			},
+			"require": {
+				"types": "./extensions/pg-query-stream/index.d.cts",
+				"default": "./extensions/pg-query-stream/index.cjs"
+			}
+		},
 		".": {
 			"import": {
 				"types": "./index.d.ts",

@@ -8,9 +8,9 @@ import {
 	types,
 } from '@neondatabase/serverless';
 
-import type { WaddlerConfig } from '~/extensions.ts';
 import type { PgDialect } from '~/pg/pg-core/dialect.ts';
 import type { SQLWrapper } from '~/sql.ts';
+import type { WaddlerConfig } from '../../extensions';
 import { SQLTemplate } from '../../sql-template.ts';
 
 export type NeonClient = Pool | PoolClient | Client;

@@ -1,7 +1,7 @@
 import type { Client as ClientT, Pool as PoolT, PoolClient, QueryArrayConfig, QueryConfig } from 'pg';
 import pg from 'pg';
 import type { SQLWrapper } from '~/sql.ts';
-import type { WaddlerConfig } from '../../extensions.ts';
+import type { WaddlerConfig } from '../../extensions';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { PgDialect } from '../pg-core/dialect.ts';
 import type { NodePgClient } from './driver.ts';

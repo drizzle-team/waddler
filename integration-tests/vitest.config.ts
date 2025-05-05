@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
 	test: {
 		include: [
-			// './tests/pg/node-postgres/*.test.ts',
+			// './tests/pg/postgres-js/*.test.ts',
 			'./tests/**/*.test.ts',
 		],
 		exclude: [

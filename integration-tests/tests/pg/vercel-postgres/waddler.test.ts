@@ -3,7 +3,8 @@ import type { VercelClient } from '@vercel/postgres';
 import { createClient, createPool } from '@vercel/postgres';
 import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
 import type { SQL } from 'waddler';
-import { queryStream, waddler } from 'waddler/vercel-postgres';
+import { queryStream } from 'waddler/extensions/pg-query-stream';
+import { waddler } from 'waddler/vercel-postgres';
 import { commonTests } from '../../common.test.ts';
 import {
 	commonPgTests,

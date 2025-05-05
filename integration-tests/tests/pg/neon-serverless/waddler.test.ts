@@ -11,8 +11,9 @@ import {
 } from '../pg-core.ts';
 
 import type { SQL } from 'waddler';
+import { queryStream } from 'waddler/extensions/pg-query-stream';
 import type { NeonClient } from 'waddler/neon-serverless';
-import { queryStream, waddler } from 'waddler/neon-serverless';
+import { waddler } from 'waddler/neon-serverless';
 
 let pgClient: NeonClient;
 let connectionString: string;

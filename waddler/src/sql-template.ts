@@ -1,4 +1,4 @@
-import type { WaddlerConfig } from './extensions.ts';
+import type { WaddlerConfig } from './extensions/index.ts';
 import type { Dialect } from './sql-template-params.ts';
 import { SQLString } from './sql-template-params.ts';
 import type { Query, SQLWrapper } from './sql.ts';

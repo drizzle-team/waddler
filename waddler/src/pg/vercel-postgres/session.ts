@@ -1,7 +1,7 @@
 import type { QueryArrayConfig, QueryConfig, VercelClient, VercelPoolClient } from '@vercel/postgres';
 import { types, VercelPool } from '@vercel/postgres';
-import type { WaddlerConfig } from '~/extensions.ts';
 import type { SQLWrapper } from '~/sql.ts';
+import type { WaddlerConfig } from '../../extensions';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { PgDialect } from '../pg-core/index.ts';
 

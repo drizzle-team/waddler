@@ -1,6 +1,6 @@
 import type { PoolConfig } from '@neondatabase/serverless';
 import { neonConfig, Pool } from '@neondatabase/serverless';
-import type { WaddlerConfig } from '~/extensions.ts';
+import type { WaddlerConfig } from '~/extensions/index.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';

@@ -72,13 +72,6 @@ test('connection test', async () => {
 
 	client.close();
 
-	// TODO: revise: is it possible to connect without token?
-	// const sql3 = waddler(url);
-	// await sql3`select 3;`.all();
-
-	// const sql4 = waddler({ connection: url });
-	// await sql4`select 4;`.all();
-
 	const sql5 = waddler({ connection: { url, authToken } });
 	await sql5`select 5;`.all();
 });
