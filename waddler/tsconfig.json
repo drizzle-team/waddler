@@ -3,11 +3,12 @@
 	"compilerOptions": {
 		"baseUrl": ".",
 		"paths": {
-			"~/*": ["src/*"]
+			"~/*": ["./src/*"]
 		},
 		"declaration": true,
 		"outDir": "dist",
 		"noEmit": true
 	},
-	"include": ["src/*", "scripts/*", "src/extensions/index.ts"]
+	"include": ["src", "scripts"],
+	"exclude": ["src/dev/**/*"]
 }

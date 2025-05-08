@@ -36,19 +36,10 @@
 		"checkJs": true,
 		"noEmit": true,
 		"allowImportingTsExtensions": true,
-		"outDir": "dist",
-		"baseUrl": ".",
-		"declaration": true,
-		"paths": {
-			"~/*": ["waddler/src/*"]
-		}
+		"declaration": true
 	},
 	"exclude": ["dist", "node_modules"],
 	"include": [
-		"*.ts",
-		"waddler/src/**/*",
-		"integration-tests/tests/**/*",
-		"waddler/scripts/*",
-		"integration-tests/vitest.config.ts"
+		"./**/*.ts"
 	]
 }

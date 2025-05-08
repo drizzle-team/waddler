@@ -7,303 +7,9 @@
 	"scripts": {
 		"start": "npx tsx ./src/dev/test.ts",
 		"start:db": "npx tsx ./src/dev/db-test.ts ",
-		"test": "vitest --config ./vitest.config.ts",
-		"test:bun": "bun test bun",
 		"lint": "concurrently -n eslint,dprint \"eslint --ext ts .\" \"dprint check --list-different\"",
 		"build": "pnpm tsx scripts/build.ts",
 		"pack": "(cd dist && npm pack --pack-destination ..) && rm -f package.tgz && mv *.tgz package.tgz"
-	},
-	"exports": {
-		"./extensions": {
-			"import": {
-				"types": "./extensions/index.d.ts",
-				"default": "./extensions/index.js"
-			},
-			"require": {
-				"types": "./extensions/index.d.cts",
-				"default": "./extensions/index.cjs"
-			}
-		},
-		"./extensions/pg-query-stream": {
-			"import": {
-				"types": "./extensions/pg-query-stream/index.d.ts",
-				"default": "./extensions/pg-query-stream/index.js"
-			},
-			"require": {
-				"types": "./extensions/pg-query-stream/index.d.cts",
-				"default": "./extensions/pg-query-stream/index.cjs"
-			}
-		},
-		".": {
-			"import": {
-				"types": "./index.d.ts",
-				"default": "./index.js"
-			},
-			"require": {
-				"types": "./index.d.cts",
-				"default": "./index.cjs"
-			}
-		},
-		"./duckdb": {
-			"import": {
-				"types": "./duckdb/index.d.ts",
-				"default": "./duckdb/index.js"
-			},
-			"require": {
-				"types": "./duckdb/index.d.cts",
-				"default": "./duckdb/index.cjs"
-			}
-		},
-		"./duckdb-neo": {
-			"import": {
-				"types": "./duckdb-neo/index.d.ts",
-				"default": "./duckdb-neo/index.js"
-			},
-			"require": {
-				"types": "./duckdb-neo/index.d.cts",
-				"default": "./duckdb-neo/index.cjs"
-			}
-		},
-		"./node-postgres": {
-			"import": {
-				"types": "./node-postgres/index.d.ts",
-				"default": "./node-postgres/index.js"
-			},
-			"require": {
-				"types": "./node-postgres/index.d.cts",
-				"default": "./node-postgres/index.cjs"
-			}
-		},
-		"./postgres-js": {
-			"import": {
-				"types": "./postgres-js/index.d.ts",
-				"default": "./postgres-js/index.js"
-			},
-			"require": {
-				"types": "./postgres-js/index.d.cts",
-				"default": "./postgres-js/index.cjs"
-			}
-		},
-		"./pglite": {
-			"import": {
-				"types": "./pglite/index.d.ts",
-				"default": "./pglite/index.js"
-			},
-			"require": {
-				"types": "./pglite/index.d.cts",
-				"default": "./pglite/index.cjs"
-			}
-		},
-		"./neon-http": {
-			"import": {
-				"types": "./neon-http/index.d.ts",
-				"default": "./neon-http/index.js"
-			},
-			"require": {
-				"types": "./neon-http/index.d.cts",
-				"default": "./neon-http/index.cjs"
-			}
-		},
-		"./neon-serverless": {
-			"import": {
-				"types": "./neon-serverless/index.d.ts",
-				"default": "./neon-serverless/index.js"
-			},
-			"require": {
-				"types": "./neon-serverless/index.d.cts",
-				"default": "./neon-serverless/index.cjs"
-			}
-		},
-		"./vercel-postgres": {
-			"import": {
-				"types": "./vercel-postgres/index.d.ts",
-				"default": "./vercel-postgres/index.js"
-			},
-			"require": {
-				"types": "./vercel-postgres/index.d.cts",
-				"default": "./vercel-postgres/index.cjs"
-			}
-		},
-		"./xata-http": {
-			"import": {
-				"types": "./xata-http/index.d.ts",
-				"default": "./xata-http/index.js"
-			},
-			"require": {
-				"types": "./xata-http/index.d.cts",
-				"default": "./xata-http/index.cjs"
-			}
-		},
-		"./bun-sql": {
-			"import": {
-				"types": "./bun-sql/index.d.ts",
-				"default": "./bun-sql/index.js"
-			},
-			"require": {
-				"types": "./bun-sql/index.d.cts",
-				"default": "./bun-sql/index.cjs"
-			}
-		},
-		"./gel": {
-			"import": {
-				"types": "./gel/index.d.ts",
-				"default": "./gel/index.js"
-			},
-			"require": {
-				"types": "./gel/index.d.cts",
-				"default": "./gel/index.cjs"
-			}
-		},
-		"./mysql2": {
-			"import": {
-				"types": "./mysql2/index.d.ts",
-				"default": "./mysql2/index.js"
-			},
-			"require": {
-				"types": "./mysql2/index.d.cts",
-				"default": "./mysql2/index.cjs"
-			}
-		},
-		"./tidb-serverless": {
-			"import": {
-				"types": "./tidb-serverless/index.d.ts",
-				"default": "./tidb-serverless/index.js"
-			},
-			"require": {
-				"types": "./tidb-serverless/index.d.cts",
-				"default": "./tidb-serverless/index.cjs"
-			}
-		},
-		"./planetscale-serverless": {
-			"import": {
-				"types": "./planetscale-serverless/index.d.ts",
-				"default": "./planetscale-serverless/index.js"
-			},
-			"require": {
-				"types": "./planetscale-serverless/index.d.cts",
-				"default": "./planetscale-serverless/index.cjs"
-			}
-		},
-		"./better-sqlite3": {
-			"import": {
-				"types": "./better-sqlite3/index.d.ts",
-				"default": "./better-sqlite3/index.js"
-			},
-			"require": {
-				"types": "./better-sqlite3/index.d.cts",
-				"default": "./better-sqlite3/index.cjs"
-			}
-		},
-		"./bun-sqlite": {
-			"import": {
-				"types": "./bun-sqlite/index.d.ts",
-				"default": "./bun-sqlite/index.js"
-			},
-			"require": {
-				"types": "./bun-sqlite/index.d.cts",
-				"default": "./bun-sqlite/index.cjs"
-			}
-		},
-		"./d1": {
-			"import": {
-				"types": "./d1/index.d.ts",
-				"default": "./d1/index.js"
-			},
-			"require": {
-				"types": "./d1/index.d.cts",
-				"default": "./d1/index.cjs"
-			}
-		},
-		"./libsql": {
-			"import": {
-				"types": "./libsql/index.d.ts",
-				"default": "./libsql/index.js"
-			},
-			"require": {
-				"types": "./libsql/index.d.cts",
-				"default": "./libsql/index.cjs"
-			}
-		},
-		"./libsql/http": {
-			"import": {
-				"types": "./libsql/http/index.d.ts",
-				"default": "./libsql/http/index.js"
-			},
-			"require": {
-				"types": "./libsql/http/index.d.cts",
-				"default": "./libsql/http/index.cjs"
-			}
-		},
-		"./libsql/node": {
-			"import": {
-				"types": "./libsql/node/index.d.ts",
-				"default": "./libsql/node/index.js"
-			},
-			"require": {
-				"types": "./libsql/node/index.d.cts",
-				"default": "./libsql/node/index.cjs"
-			}
-		},
-		"./libsql/sqlite3": {
-			"import": {
-				"types": "./libsql/sqlite3/index.d.ts",
-				"default": "./libsql/sqlite3/index.js"
-			},
-			"require": {
-				"types": "./libsql/sqlite3/index.d.cts",
-				"default": "./libsql/sqlite3/index.cjs"
-			}
-		},
-		"./libsql/web": {
-			"import": {
-				"types": "./libsql/web/index.d.ts",
-				"default": "./libsql/web/index.js"
-			},
-			"require": {
-				"types": "./libsql/web/index.d.cts",
-				"default": "./libsql/web/index.cjs"
-			}
-		},
-		"./libsql/wasm": {
-			"import": {
-				"types": "./libsql/wasm/index.d.ts",
-				"default": "./libsql/wasm/index.js"
-			},
-			"require": {
-				"types": "./libsql/wasm/index.d.cts",
-				"default": "./libsql/wasm/index.cjs"
-			}
-		},
-		"./durable-sqlite": {
-			"import": {
-				"types": "./durable-sqlite/index.d.ts",
-				"default": "./durable-sqlite/index.js"
-			},
-			"require": {
-				"types": "./durable-sqlite/index.d.cts",
-				"default": "./durable-sqlite/index.cjs"
-			}
-		},
-		"./op-sqlite": {
-			"import": {
-				"types": "./op-sqlite/index.d.ts",
-				"default": "./op-sqlite/index.js"
-			},
-			"require": {
-				"types": "./op-sqlite/index.d.cts",
-				"default": "./op-sqlite/index.cjs"
-			}
-		},
-		"./expo-sqlite": {
-			"import": {
-				"types": "./expo-sqlite/index.d.ts",
-				"default": "./expo-sqlite/index.js"
-			},
-			"require": {
-				"types": "./expo-sqlite/index.d.cts",
-				"default": "./expo-sqlite/index.cjs"
-			}
-		}
 	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "^0.16.4",
@@ -335,6 +41,7 @@
 		"bun-types": "^1.2.9",
 		"chai": "^5.2.0",
 		"concurrently": "^8.2.1",
+		"cpy": "^11.1.0",
 		"dockerode": "^4.0.4",
 		"dotenv": "^16.5.0",
 		"dprint": "^0.46.2",
@@ -347,12 +54,14 @@
 		"expo-sqlite": "^15.2.9",
 		"gel": "^2.0.2",
 		"get-port": "^7.1.0",
+		"glob": "^11.0.2",
 		"mysql2": "^3.14.0",
 		"pg": "^8.14.0",
 		"postgres": "^3.4.5",
+		"recast": "^0.23.11",
 		"tsup": "^8.4.0",
 		"tsx": "^4.19.1",
-		"typescript": "^5.5.4",
+		"typescript": "^5.8.3",
 		"vitest": "^3.1.1",
 		"wrangler": "^4.13.0",
 		"zx": "^8.1.9"

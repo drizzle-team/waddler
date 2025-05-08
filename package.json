@@ -1,0 +1,7 @@
+{
+	"name": "waddler-root",
+	"private": true,
+	"scripts": {
+		"build": "cd waddler && pnpm lint && pnpm build"
+	}
+}

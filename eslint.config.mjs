@@ -121,5 +121,5 @@ export default defineConfig([
 			'import/extensions': 'off',
 		},
 	},
-	globalIgnores(['dist', 'node_modules', 'src/dev']),
+	globalIgnores(['node_modules', 'waddler/dist', 'waddler/src/dev', 'waddler/tsup.config.ts']),
 ]);

@@ -3,6 +3,8 @@ node_modules
 db
 dev
 dist
+dist-dts
+dist.new
 package.tgz
 .DS_Store
 seedFromParquet.ts
