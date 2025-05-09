@@ -1,12 +1,24 @@
+import 'dotenv/config';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
 	test: {
 		include: [
-			// './tests/pg/postgres-js/*.test.ts',
 			'./tests/**/*.test.ts',
 		],
 		exclude: [
+			...(process.env['RUN_EXTERNAL_DB_TESTS']
+				? []
+				: [
+					'./tests/pg/neon-http/waddler.test.ts',
+					'./tests/pg/neon-serverless/waddler.test.ts',
+					'./tests/pg/vercel-postgres/waddler.test.ts',
+					'./tests/pg/xata-http/waddler.test.ts',
+					'./tests/sqlite/libsql/libsql-http-waddler.test.ts',
+					'./tests/sqlite/libsql/libsql-node-waddler.test.ts',
+					'./tests/mysql/planetscale-serverless/waddler.test.ts',
+					'./tests/mysql/tidb-serverless/waddler.test.ts',
+				]),
 			'./tests/sqlite/bun-sqlite/**/*.test.ts',
 			'./tests/pg/bun-sql/**/*.test.ts',
 		],

@@ -38,7 +38,7 @@
 		"allowImportingTsExtensions": true,
 		"declaration": true
 	},
-	"exclude": ["dist", "node_modules"],
+	"exclude": ["node_modules"],
 	"include": [
 		"./**/*.ts"
 	]

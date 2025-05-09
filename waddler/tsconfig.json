@@ -10,5 +10,5 @@
 		"noEmit": true
 	},
 	"include": ["src", "scripts"],
-	"exclude": ["src/dev/**/*"]
+	"exclude": ["src/dev/**/*", "dist"]
 }
