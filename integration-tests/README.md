@@ -58,6 +58,8 @@ You can reuse the same connection string you added for `NEON_HTTP_CONNECTION_STR
 
 #### `PLANETSCALE_CONNECTION_STRING`
 
+1. Go to https://app.planetscale.com/, select your database.
+
 ##
 
 #### `RUN_EXTERNAL_DB_TESTS`
