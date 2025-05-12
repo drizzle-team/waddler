@@ -18,6 +18,7 @@ export default defineConfig({
 					'./tests/sqlite/libsql/libsql-node-waddler.test.ts',
 					'./tests/mysql/planetscale-serverless/waddler.test.ts',
 					'./tests/mysql/tidb-serverless/waddler.test.ts',
+					'tests/sqlite/libsql/libsql-waddler.test.ts',
 				]),
 			'./tests/sqlite/bun-sqlite/**/*.test.ts',
 			'./tests/pg/bun-sql/**/*.test.ts',
