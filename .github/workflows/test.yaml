@@ -42,6 +42,8 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+        env:
+          NODE_ENV: development
 
       - name: Build
         run: pnpm build
