@@ -287,11 +287,11 @@ export const commonMysqlAllTypesTests = (driver: 'mysql2' | 'planetscale-serverl
 				'qwerty',
 				'qwerty',
 				true,
-				new Date('2024-10-31T14:25:29.425Z'), // '2024-10-31',
-				new Date('2024-10-31T14:25:29.425Z'),
-				'14:25:29',
-				2024,
-				new Date('2024-10-31T14:25:29.425Z'),
+				'2024-10-31', // date
+				new Date('2024-10-31T14:25:29.425'), // datetime
+				'14:25:29', // time
+				2024, // year
+				new Date('2024-10-31T14:25:29.425'), // timestamp
 				JSON.stringify({
 					name: 'alex',
 					age: 26,
@@ -332,10 +332,10 @@ export const commonMysqlAllTypesTests = (driver: 'mysql2' | 'planetscale-serverl
 					text: 'qwerty',
 					boolean: 1,
 					date: '2024-10-31', // date: new Date('2024-10-30T22:00:00.000Z'), // '2024-10-31',
-					datetime: '2024-10-31 14:25:29', // new Date('2024-10-31T16:25:29'),
+					datetime: '2024-10-31 12:25:29', // new Date('2024-10-31T14:25:29'),
 					time: '14:25:29',
 					year: 2024,
-					timestamp: '2024-10-31 14:25:29', // new Date('2024-10-31T16:25:29'),
+					timestamp: '2024-10-31 12:25:29', // new Date('2024-10-31T14:25:29'),
 					json: {
 						name: 'alex',
 						age: 26,
@@ -368,11 +368,11 @@ export const commonMysqlAllTypesTests = (driver: 'mysql2' | 'planetscale-serverl
 					varchar: 'qwerty',
 					text: 'qwerty',
 					boolean: 1,
-					date: new Date('2024-10-30T22:00:00.000Z'), // '2024-10-31',
-					datetime: new Date('2024-10-31T16:25:29'),
+					date: new Date('2024-10-31T00:00:00.000'), // '2024-10-31',
+					datetime: new Date('2024-10-31T14:25:29'),
 					time: '14:25:29',
 					year: 2024,
-					timestamp: new Date('2024-10-31T16:25:29'),
+					timestamp: new Date('2024-10-31T14:25:29'),
 					json: {
 						name: 'alex',
 						age: 26,
@@ -418,11 +418,11 @@ export const commonMysqlAllTypesTests = (driver: 'mysql2' | 'planetscale-serverl
 				'qwerty',
 				'qwerty',
 				true,
-				new Date('2024-10-31T22:00:00.000Z'), // '2024-10-31',
-				new Date('2024-10-31T12:25:29Z'),
+				'2024-10-31', // '2024-10-31',
+				new Date('2024-10-31T14:25:29'),
 				'14:25:29',
 				2024,
-				new Date('2024-10-31T14:25:29.425Z'),
+				new Date('2024-10-31T14:25:29.425'),
 				{
 					name: 'alex',
 					age: 26,
@@ -455,10 +455,10 @@ export const commonMysqlAllTypesTests = (driver: 'mysql2' | 'planetscale-serverl
 					'qwerty',
 					1,
 					'2024-10-31', // new Date('2024-10-31T22:00:00.000Z'), // '2024-10-31',
-					'2024-10-31 12:25:29', // new Date('2024-10-31T12:25:29Z'),
+					'2024-10-31 12:25:29', // new Date('2024-10-31T14:25:29'),
 					'14:25:29',
 					2024,
-					'2024-10-31 14:25:29', // new Date('2024-10-31T14:25:29Z'),
+					'2024-10-31 12:25:29', // new Date('2024-10-31T14:25:29Z'),
 					{
 						name: 'alex',
 						age: 26,
@@ -491,11 +491,11 @@ export const commonMysqlAllTypesTests = (driver: 'mysql2' | 'planetscale-serverl
 					'qwerty',
 					'qwerty',
 					1,
-					new Date('2024-10-31T22:00:00.000Z'), // '2024-10-31',
-					new Date('2024-10-31T12:25:29Z'),
+					new Date('2024-10-31T00:00:00.000'), // '2024-10-31',
+					new Date('2024-10-31T14:25:29'),
 					'14:25:29',
 					2024,
-					new Date('2024-10-31T14:25:29Z'),
+					new Date('2024-10-31T14:25:29'),
 					{
 						name: 'alex',
 						age: 26,

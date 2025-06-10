@@ -66,8 +66,6 @@ jobs:
 
           PLANETSCALE_CONNECTION_STRING: ${{secrets.PLANETSCALE_CONNECTION_STRING}}
 
-          RUN_EXTERNAL_DB_TESTS: ${{secrets.RUN_EXTERNAL_DB_TESTS}}
-
         working-directory: integration-tests
         run: |
           if [[ ${{ github.event_name }} == "push" || "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]]; then

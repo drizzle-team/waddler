@@ -58,7 +58,6 @@ test('all types in sql.unsafe test', async () => {
 	await dropAllDataTypesTable(sql);
 	await createAllDataTypesTable(sql);
 
-	const date = new Date('2024-10-31T14:25:29.425Z');
 	const values = [
 		1,
 		10,
@@ -76,7 +75,7 @@ test('all types in sql.unsafe test', async () => {
 		{ name: 'alex', age: 26, bookIds: [1, 2, 3], vacationRate: 2.5, aliases: ['sasha', 'sanya'], isMarried: true },
 		{ name: 'alex', age: 26, bookIds: [1, 2, 3], vacationRate: 2.5, aliases: ['sasha', 'sanya'], isMarried: true },
 		'14:25:29.425',
-		date,
+		new Date('2024-10-31T14:25:29.425Z'),
 		'2024-10-31',
 		'1 day',
 		'(1,2)',
@@ -95,8 +94,6 @@ test('all types in sql.unsafe test', async () => {
 
 	const res = await sql.unsafe(`select * from all_data_types;`);
 
-	const dateWithoutTime = new Date(date);
-	dateWithoutTime.setUTCHours(0, 0, 0, 0);
 	const expectedRes = {
 		integer: 1,
 		smallint: 10,
@@ -128,8 +125,8 @@ test('all types in sql.unsafe test', async () => {
 			isMarried: true,
 		},
 		time: '14:25:29.425',
-		timestamp_date: new Date('2024-10-31T12:25:29.425Z'),
-		date: dateWithoutTime,
+		timestamp_date: new Date('2024-10-31T14:25:29.425'),
+		date: new Date('2024-10-31T00:00:00.000Z'),
 		interval: '1 day',
 		point: '(1,2)', // [1, 2]
 		line: '{1,2,3}', // [1, 2, 3]
@@ -152,7 +149,6 @@ test('all types in sql.values, sql.raw in select test', async () => {
 	await dropAllDataTypesTable(sql);
 	await createAllDataTypesTable(sql);
 
-	const date = new Date('2024-10-31T14:25:29.425Z');
 	const allDataTypesValues = [
 		1,
 		10,
@@ -170,7 +166,7 @@ test('all types in sql.values, sql.raw in select test', async () => {
 		{ name: 'alex', age: 26, bookIds: [1, 2, 3], vacationRate: 2.5, aliases: ['sasha', 'sanya'], isMarried: true },
 		{ name: 'alex', age: 26, bookIds: [1, 2, 3], vacationRate: 2.5, aliases: ['sasha', 'sanya'], isMarried: true },
 		'14:25:29.425',
-		date,
+		new Date('2024-10-31T14:25:29.425Z'),
 		'2024-10-31',
 		'1 day',
 		'(1,2)',
@@ -198,7 +194,7 @@ test('all types in sql.values, sql.raw in select test', async () => {
 		{ name: 'alex', age: 26, bookIds: [1, 2, 3], vacationRate: 2.5, aliases: ['sasha', 'sanya'], isMarried: true },
 		{ name: 'alex', age: 26, bookIds: [1, 2, 3], vacationRate: 2.5, aliases: ['sasha', 'sanya'], isMarried: true },
 		'14:25:29.425',
-		new Date('2024-10-31T12:25:29.425Z'),
+		new Date('2024-10-31T14:25:29.425'),
 		new Date('2024-10-31T00:00:00.000Z'),
 		'1 day',
 		'(1,2)', // [1, 2],
