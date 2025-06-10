@@ -20,6 +20,12 @@ importers:
       '@eslint/js':
         specifier: ^9.23.0
         version: 9.25.1
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^8.28.0
+        version: 8.31.1(@typescript-eslint/parser@8.31.1(eslint@9.25.1)(typescript@5.8.3))(eslint@9.25.1)(typescript@5.8.3)
+      '@typescript-eslint/parser':
+        specifier: ^8.31.1
+        version: 8.31.1(eslint@9.25.1)(typescript@5.8.3)
       concurrently:
         specifier: ^8.2.1
         version: 8.2.2
@@ -267,9 +273,6 @@ importers:
       '@types/pg':
         specifier: ^8.11.11
         version: 8.11.14
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^8.28.0
-        version: 8.31.1(@typescript-eslint/parser@8.31.1(eslint@9.25.1)(typescript@5.8.3))(eslint@9.25.1)(typescript@5.8.3)
       '@vercel/postgres':
         specifier: ^0.10.0
         version: 0.10.0
