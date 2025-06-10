@@ -2,6 +2,23 @@
 	"name": "waddler-root",
 	"private": true,
 	"scripts": {
-		"build": "cd waddler && pnpm lint && pnpm build"
+		"build": "cd waddler && pnpm lint && pnpm build",
+		"test": "cd integration-tests && pnpm test"
+	},
+	"devDependencies": {
+		"@arethetypeswrong/cli": "0.18.1",
+		"@eslint/compat": "^1.2.7",
+		"@eslint/eslintrc": "^3.3.1",
+		"@eslint/js": "^9.23.0",
+		"concurrently": "^8.2.1",
+		"dprint": "^0.46.2",
+		"eslint": "^9.23.0",
+		"eslint-plugin-import": "^2.31.0",
+		"eslint-plugin-no-instanceof": "^1.0.1",
+		"eslint-plugin-unicorn": "^56.0.1",
+		"eslint-plugin-unused-imports": "^4.1.4",
+		"tsup": "^8.4.0",
+		"tsx": "^4.19.1",
+		"typescript": "^5.8.3"
 	}
 }

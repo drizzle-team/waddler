@@ -6,7 +6,50 @@ settings:
 
 importers:
 
-  .: {}
+  .:
+    devDependencies:
+      '@arethetypeswrong/cli':
+        specifier: 0.18.1
+        version: 0.18.1
+      '@eslint/compat':
+        specifier: ^1.2.7
+        version: 1.2.9(eslint@9.25.1)
+      '@eslint/eslintrc':
+        specifier: ^3.3.1
+        version: 3.3.1
+      '@eslint/js':
+        specifier: ^9.23.0
+        version: 9.25.1
+      concurrently:
+        specifier: ^8.2.1
+        version: 8.2.2
+      dprint:
+        specifier: ^0.46.2
+        version: 0.46.3
+      eslint:
+        specifier: ^9.23.0
+        version: 9.25.1
+      eslint-plugin-import:
+        specifier: ^2.31.0
+        version: 2.31.0(@typescript-eslint/parser@8.31.1(eslint@9.25.1)(typescript@5.8.3))(eslint@9.25.1)
+      eslint-plugin-no-instanceof:
+        specifier: ^1.0.1
+        version: 1.0.1
+      eslint-plugin-unicorn:
+        specifier: ^56.0.1
+        version: 56.0.1(eslint@9.25.1)
+      eslint-plugin-unused-imports:
+        specifier: ^4.1.4
+        version: 4.1.4(@typescript-eslint/eslint-plugin@8.31.1(@typescript-eslint/parser@8.31.1(eslint@9.25.1)(typescript@5.8.3))(eslint@9.25.1)(typescript@5.8.3))(eslint@9.25.1)
+      tsup:
+        specifier: ^8.4.0
+        version: 8.4.0(@microsoft/api-extractor@7.52.7(@types/node@22.15.3))(postcss@8.5.3)(tsx@4.19.4)(typescript@5.8.3)(yaml@2.7.1)
+      tsx:
+        specifier: ^4.19.1
+        version: 4.19.4
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
 
   integration-tests:
     dependencies:
@@ -173,9 +216,6 @@ importers:
         specifier: ^4.8.0
         version: 4.9.6(pg@8.15.6)
     devDependencies:
-      '@arethetypeswrong/cli':
-        specifier: 0.18.1
-        version: 0.18.1
       '@cloudflare/workers-types':
         specifier: ^4.20250430.0
         version: 4.20250502.0
@@ -185,15 +225,6 @@ importers:
       '@electric-sql/pglite':
         specifier: ^0.2.17
         version: 0.2.17
-      '@eslint/compat':
-        specifier: ^1.2.7
-        version: 1.2.9(eslint@9.25.1)
-      '@eslint/eslintrc':
-        specifier: ^3.3.1
-        version: 3.3.1
-      '@eslint/js':
-        specifier: ^9.23.0
-        version: 9.25.1
       '@libsql/client':
         specifier: ^0.15.4
         version: 0.15.4(bufferutil@4.0.9)
@@ -257,9 +288,6 @@ importers:
       chai:
         specifier: ^5.2.0
         version: 5.2.0
-      concurrently:
-        specifier: ^8.2.1
-        version: 8.2.2
       cpy:
         specifier: ^11.1.0
         version: 11.1.0
@@ -269,27 +297,9 @@ importers:
       dotenv:
         specifier: ^16.5.0
         version: 16.5.0
-      dprint:
-        specifier: ^0.46.2
-        version: 0.46.3
       duckdb:
         specifier: ^1.2.1
         version: 1.2.1(encoding@0.1.13)
-      eslint:
-        specifier: ^9.23.0
-        version: 9.25.1
-      eslint-plugin-import:
-        specifier: ^2.31.0
-        version: 2.31.0(@typescript-eslint/parser@8.31.1(eslint@9.25.1)(typescript@5.8.3))(eslint@9.25.1)
-      eslint-plugin-no-instanceof:
-        specifier: ^1.0.1
-        version: 1.0.1
-      eslint-plugin-unicorn:
-        specifier: ^56.0.1
-        version: 56.0.1(eslint@9.25.1)
-      eslint-plugin-unused-imports:
-        specifier: ^4.1.4
-        version: 4.1.4(@typescript-eslint/eslint-plugin@8.31.1(@typescript-eslint/parser@8.31.1(eslint@9.25.1)(typescript@5.8.3))(eslint@9.25.1)(typescript@5.8.3))(eslint@9.25.1)
       expo-sqlite:
         specifier: ^15.2.9
         version: 15.2.9(expo@53.0.5(@babel/core@7.27.1)(bufferutil@4.0.9)(react-native@0.79.2(@babel/core@7.27.1)(bufferutil@4.0.9)(react@19.1.0))(react@19.1.0))(react-native@0.79.2(@babel/core@7.27.1)(bufferutil@4.0.9)(react@19.1.0))(react@19.1.0)
@@ -314,18 +324,6 @@ importers:
       recast:
         specifier: ^0.23.11
         version: 0.23.11
-      tsup:
-        specifier: ^8.4.0
-        version: 8.4.0(@microsoft/api-extractor@7.52.7(@types/node@22.15.3))(postcss@8.5.3)(tsx@4.19.4)(typescript@5.8.3)(yaml@2.7.1)
-      tsx:
-        specifier: ^4.19.1
-        version: 4.19.4
-      typescript:
-        specifier: ^5.8.3
-        version: 5.8.3
-      vitest:
-        specifier: ^3.1.1
-        version: 3.1.2(@types/node@22.15.3)(lightningcss@1.27.0)(terser@5.39.0)(tsx@4.19.4)(yaml@2.7.1)
       wrangler:
         specifier: ^4.13.0
         version: 4.14.1(@cloudflare/workers-types@4.20250502.0)(bufferutil@4.0.9)
@@ -3921,7 +3919,6 @@ packages:
 
   libsql@0.5.8:
     resolution: {integrity: sha512-+OopMI1wM/NvAJTHf3O3+beHd1YfKLnSVsOGBl3/7UBDZ4ydVadkbBk5Hjjs9d3ALC5rBaftMY59AvwyC8MzPw==}
-    cpu: [x64, arm64, wasm32]
     os: [darwin, linux, win32]
 
   lighthouse-logger@1.4.2:
