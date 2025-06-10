@@ -97,7 +97,7 @@ test('sql.stream test', async () => {
 	await dropAllDataTypesTable(sql);
 	await createAllDataTypesTable(sql);
 
-	const date = new Date('2024-10-31T14:25:29.425Z');
+	const date = new Date('2024-10-31T14:25:29.425');
 	const allDataTypesValues = [
 		1,
 		10,
@@ -158,7 +158,7 @@ test('sql.stream test', async () => {
 		},
 		time: '14:25:29.425',
 		timestamp_date: date,
-		date: new Date('2024-10-30T22:00:00.000Z'),
+		date: new Date('2024-10-31T00:00:00.000'),
 		interval: '1 day',
 		point: { x: 1, y: 2 }, // [1, 2]
 		line: '{1,2,3}', // [1, 2, 3]

@@ -150,4 +150,4 @@ jobs:
       - name: Run @arethetypeswrong/cli
         if: steps.checks.outputs.has_new_release == 'true'
         working-directory: waddler
-        run: bunx attw package.tgz
+        run: bunx attw package.tgz --profile node16
