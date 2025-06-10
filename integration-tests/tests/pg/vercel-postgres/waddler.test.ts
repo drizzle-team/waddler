@@ -49,6 +49,9 @@ commonTests();
 commonPgTests();
 
 test('connection test', async () => {
+	const sql0 = waddler();
+	await sql0`select 0;`;
+
 	// client connection test
 	const client = createClient({ connectionString: pgConnectionStringClient });
 	await client.connect();

@@ -1,0 +1,151 @@
+name: Release (feature branch)
+
+on:
+  push:
+    branches-ignore:
+      - main
+  pull_request: {}
+
+jobs:
+  test:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-22.04
+    steps:
+      # This action checks-out your repository under $GITHUB_WORKSPACE, so your workflow can access it.
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.19"
+          registry-url: "https://registry.npmjs.org"
+
+      - uses: pnpm/action-setup@v3
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: latest
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build
+        run: pnpm build
+
+      - name: Run tests
+        env:
+          NEON_HTTP_CONNECTION_STRING: ${{secrets.NEON_HTTP_CONNECTION_STRING}}
+          NEON_SERVERLESS_CONNECTION_STRING: ${{secrets.NEON_SERVERLESS_CONNECTION_STRING}}
+
+          VERCEL_POOL_CONNECTION_STRING: ${{secrets.VERCEL_POOL_CONNECTION_STRING}}
+          VERCEL_CLIENT_CONNECTION_STRING: ${{secrets.VERCEL_CLIENT_CONNECTION_STRING}}
+
+          XATA_API_KEY: ${{secrets.XATA_API_KEY}}
+          XATA_BRANCH: ${{secrets.XATA_BRANCH}}
+
+          LIBSQL_REMOTE_URL: ${{secrets.LIBSQL_REMOTE_URL}}
+          LIBSQL_REMOTE_TOKEN: ${{secrets.LIBSQL_REMOTE_TOKEN}}
+
+          TIDB_CONNECTION_STRING: ${{secrets.TIDB_CONNECTION_STRING}}
+
+          PLANETSCALE_CONNECTION_STRING: ${{secrets.PLANETSCALE_CONNECTION_STRING}}
+
+          RUN_EXTERNAL_DB_TESTS: ${{secrets.RUN_EXTERNAL_DB_TESTS}}
+
+        working-directory: integration-tests
+        run: |
+          if [[ ${{ github.event_name }} == "push" || "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]]; then
+            export RUN_EXTERNAL_DB_TESTS=1
+          fi
+
+          pnpm test
+
+  attw:
+    # only run on all pushes or pull requests from forks
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name != github.repository
+    runs-on: ubuntu-22.04
+    steps:
+      # This action checks-out your repository under $GITHUB_WORKSPACE, so your workflow can access it.
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20.19"
+          registry-url: "https://registry.npmjs.org"
+
+      - uses: pnpm/action-setup@v3
+        name: Install pnpm
+        id: pnpm-install
+        with:
+          version: latest
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+
+      - uses: actions/cache@v4
+        name: Setup pnpm cache
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Check preconditions
+        id: checks
+        shell: bash
+        working-directory: waddler
+        run: |
+          old_version="$(jq -r .version package.json)"
+          version="$old_version-$(git rev-parse --short HEAD)"
+          npm version $version
+          tag="${{ github.ref_name }}"
+          is_version_published="$(npm view waddler versions --json | jq -r '.[] | select(. == "'$version'") | . == "'$version'"')"
+
+          if [[ "$is_version_published" == "true" ]]; then
+            echo "\`waddler$version\` already published, adding tag \`$tag\`" >> $GITHUB_STEP_SUMMARY
+            npm dist-tag add waddler@$version $tag
+          else
+            {
+              echo "version=$version"
+              echo "tag=$tag"
+              echo "has_new_release=true"
+            } >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build
+        if: steps.checks.outputs.has_new_release == 'true'
+        run: pnpm build
+
+      - name: Pack
+        if: steps.checks.outputs.has_new_release == 'true'
+        working-directory: waddler
+        run: npm run pack
+
+      - name: Run @arethetypeswrong/cli
+        if: steps.checks.outputs.has_new_release == 'true'
+        working-directory: waddler
+        run: bunx attw package.tgz

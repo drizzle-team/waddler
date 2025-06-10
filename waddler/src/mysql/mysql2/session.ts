@@ -33,12 +33,13 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 
 			return queryResult[0] as T[];
 		} catch (error) {
+			const queryStr = `\nquery: '${this.queryConfig.sql}'\n`;
 			const newError = error instanceof AggregateError
-				? new Error(error.errors.map((e) => e.message).join('\n'))
-				: new Error((error as Error).message);
+				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
+				: new Error(queryStr + (error as Error).message);
 
 			newError.cause = (error as Error).cause;
-			newError.stack = (error as Error).stack;
+			newError.stack = (error as Error).stack ? queryStr + (error as Error).stack : (error as Error).stack;
 
 			throw newError;
 		}

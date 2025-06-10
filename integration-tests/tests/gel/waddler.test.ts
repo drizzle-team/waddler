@@ -2,7 +2,7 @@ import type Docker from 'dockerode';
 import type { Client } from 'gel';
 import createClient, { DateDuration, Duration, LocalDate, LocalDateTime, LocalTime, RelativeDuration } from 'gel';
 import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
-import type { SQL } from 'waddler';
+import type { GelSQL } from 'waddler/gel';
 import { waddler } from 'waddler/gel';
 import { commonTests } from '../common.test.ts';
 import { createGelDockerDB } from '../utils.ts';
@@ -27,7 +27,7 @@ let gelConnectionParams: {
 let gelConnectionString: string;
 let tlsSecurity: 'insecure';
 
-let sql: SQL;
+let sql: GelSQL;
 beforeAll(async () => {
 	const dockerPayload = await createGelDockerDB();
 	const sleep = 1000;
@@ -66,7 +66,7 @@ afterAll(async () => {
 	await gelContainer?.stop().catch(console.error);
 });
 
-beforeEach<{ sql: SQL }>((ctx) => {
+beforeEach<{ sql: GelSQL }>((ctx) => {
 	ctx.sql = sql;
 });
 
@@ -92,8 +92,8 @@ test('connection test', async () => {
 
 // UNSAFE-------------------------------------------------------------------
 test('all types in sql.unsafe test', async () => {
-	await dropAllDataTypesTable(gelConnectionString, tlsSecurity).catch(() => {});
-	await createAllDataTypesTable(gelConnectionString, tlsSecurity);
+	await dropAllDataTypesTable(sql).catch(() => {});
+	await createAllDataTypesTable(sql);
 
 	const values = [
 		'qwerty',
@@ -124,6 +124,9 @@ test('all types in sql.unsafe test', async () => {
 		Buffer.from('qwerty'),
 	];
 
+	// TODO: revise: do I need to add options to waddler like: allowUserSpecifiedId, disallowUserSpecifiedId
+	// "await client.execute(`CONFIGURE SESSION SET allow_user_specified_id := true;`);"
+	// I think(not sure) doing so will affect numbering of positional parameters, causing the first parameter to start at $0 instead of $1 as it does now.
 	await sql.unsafe(
 		`insert into "all_data_types" ("stringColumn","boolColumn","int16Column","int32Column","int64Column","float32Column","float64Column","bigintColumn","decimalColumn","uuidColumn","jsonColumn","datetimeColumn","local_datetimeColumn","local_dateColumn","local_timeColumn","durationColumn","relative_durationColumn","dateDurationColumn","bytesColumn","defaultValue") values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, default);`,
 		values,
@@ -180,8 +183,8 @@ test('all types in sql.unsafe test', async () => {
 // sql.values
 // ALL TYPES-------------------------------------------------------------------
 test('all types in sql.values, sql.raw in select test', async () => {
-	await dropAllDataTypesTable(gelConnectionString, tlsSecurity).catch(() => {});
-	await createAllDataTypesTable(gelConnectionString, tlsSecurity);
+	await dropAllDataTypesTable(sql).catch(() => {});
+	await createAllDataTypesTable(sql);
 
 	const allDataTypesValues = [
 		'qwerty',
@@ -279,7 +282,7 @@ test('all types in sql.values, sql.raw in select test', async () => {
 });
 
 test('all array types in sql.values test', async () => {
-	await createAllArrayDataTypesTable(gelConnectionString, tlsSecurity);
+	await createAllArrayDataTypesTable(sql);
 
 	const allArrayDataTypesValues = [
 		['qwerty'],

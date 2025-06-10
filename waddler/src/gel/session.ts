@@ -4,6 +4,7 @@ import { SQLTemplate } from '../sql-template.ts';
 import type { GelDialect } from './gel-core/dialect.ts';
 
 export class GelSQLTemplate<T> extends SQLTemplate<T> {
+	private isQuerySQL: boolean = true;
 	constructor(
 		override sql: SQLWrapper,
 		protected readonly client: Client,
@@ -13,9 +14,29 @@ export class GelSQLTemplate<T> extends SQLTemplate<T> {
 		super(sql, dialect);
 	}
 
+	query(): Omit<GelSQLTemplate<T>, 'query' | 'querySQL'> {
+		this.isQuerySQL = false;
+		return this;
+	}
+
+	querySQL(): Omit<GelSQLTemplate<T>, 'query' | 'querySQL'> {
+		this.isQuerySQL = true;
+		return this;
+	}
+
 	async execute() {
 		const { query, params } = this.sql.getQuery();
 		try {
+			if (!this.isQuerySQL) {
+				if (this.options.rowMode === 'array') {
+					const res = await this.client.withSQLRowMode('array').query(query, params.length ? params : undefined);
+					return res as T[];
+				} else {
+					const res = await this.client.query(query, params.length ? params : undefined);
+					return res as T[];
+				}
+			}
+
 			if (this.options.rowMode === 'array') {
 				const rows = await this.client.withSQLRowMode('array').querySQL(query, params.length ? params : undefined);
 				return rows as T[];
@@ -24,13 +45,14 @@ export class GelSQLTemplate<T> extends SQLTemplate<T> {
 			const rows = await this.client.querySQL(query, params.length ? params : undefined);
 			return rows as T[];
 		} catch (error) {
-			console.log(query);
+			// TODO revise: somehow newError does not display query in console.
+			const queryStr = `\nquery: '${query}'\n`;
 			const newError = error instanceof AggregateError
-				? new Error(error.errors.map((e) => e.message).join('\n'))
-				: new Error((error as Error).message);
+				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
+				: new Error(queryStr + (error as Error).message);
 
 			newError.cause = (error as Error).cause;
-			newError.stack = (error as Error).stack;
+			newError.stack = (error as Error).stack ? queryStr + (error as Error).stack : (error as Error).stack;
 
 			throw newError;
 		}

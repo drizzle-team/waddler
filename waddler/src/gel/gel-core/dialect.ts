@@ -1,5 +1,6 @@
 import { Dialect, SQLDefault } from '../../sql-template-params.ts';
 import type { IdentifierObject, Value } from '../../types.ts';
+import type { GelSQLTemplate } from '../session.ts';
 
 export class GelDialect extends Dialect {
 	escapeParam(lastParamIdx: number): string {
@@ -75,5 +76,38 @@ export class GelDialect extends Dialect {
 
 		params.push(value);
 		return this.escapeParam(lastParamIdx + params.length);
+	}
+}
+
+export class UnsafePromise<
+	T,
+	DriverT extends GelSQLTemplate<T>,
+> {
+	constructor(public driver: DriverT) {}
+
+	query(): Omit<UnsafePromise<T, DriverT>, 'query' | 'querySQL'> {
+		this.driver.query();
+		return this;
+	}
+
+	querySQL(): Omit<UnsafePromise<T, DriverT>, 'query' | 'querySQL'> {
+		this.driver.querySQL();
+		return this;
+	}
+
+	// Allow it to be awaited (like a Promise)
+	then<TResult1 = T[], TResult2 = never>(
+		onfulfilled?:
+			| ((value: T[]) => TResult1 | PromiseLike<TResult1>)
+			| null
+			| undefined,
+		onrejected?:
+			| ((reason: any) => TResult2 | PromiseLike<TResult2>)
+			| null
+			| undefined,
+	): Promise<TResult1 | TResult2> {
+		// Here you could handle the query execution logic (replace with your own)
+		const result = this.driver.execute();
+		return Promise.resolve(result).then(onfulfilled, onrejected);
 	}
 }

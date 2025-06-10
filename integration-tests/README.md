@@ -30,6 +30,12 @@ You can reuse the same connection string you added for `NEON_HTTP_CONNECTION_STR
 
 ##
 
+#### `POSTGRES_URL`
+
+You can reuse the same connection string as `VERCEL_POOL_CONNECTION_STRING`.
+
+##
+
 #### `XATA_DATABASE_URL`, `XATA_API_KEY`, `XATA_BRANCH`
 
 1. Go to https://app.xata.io/ and select the database you want to use for testing.
@@ -75,6 +81,6 @@ If you want to run tests for any of the following drivers:
 - `planetscale-serverless`
 - `tidb-serverless`
 
-then set the `RUN_EXTERNAL_DB_TESTS` environment variable to any value (e.g. `true`).
+then set the `RUN_EXTERNAL_DB_TESTS` environment variable to any value (e.g. `1`).
 
 If you don’t want to run external DB tests, you can omit this variable.

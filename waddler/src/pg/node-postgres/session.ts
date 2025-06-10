@@ -51,9 +51,11 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 
 			return queryResult.rows;
 		} catch (error) {
+			const queryStr = `\nquery: '${this.queryConfig.text}'\n`;
+
 			const newError = error instanceof AggregateError
-				? new Error(error.errors.map((e) => e.message).join('\n'))
-				: new Error((error as Error).message);
+				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
+				: new Error(queryStr + (error as Error).message);
 			throw newError;
 		}
 	}
@@ -61,6 +63,7 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 	// TODO: revise: maybe I should override chunked method because we can use QueryStream with option 'batchSize' in QueryStreamConfig
 	async *stream() {
 		let conn: ClientT | PoolT | PoolClient | undefined;
+		const { query, params } = this.sql.getQuery();
 		// wrapping node-postgres driver error in new js error to add stack trace to it
 		try {
 			conn = this.client instanceof Pool
@@ -75,7 +78,6 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 				);
 			}
 
-			const { query, params } = this.sql.getQuery();
 			const queryStream = new queryStreamObj.constructor(query, params, { types: this.queryConfig.types });
 
 			const stream = conn.query(queryStream);
@@ -92,9 +94,11 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 				(conn as PoolClient)?.release();
 			}
 
+			const queryStr = `\nquery: '${query}'\n`;
+
 			const newError = error instanceof AggregateError
-				? new Error(error.errors.map((e) => e.message).join('\n'))
-				: new Error((error as Error).message);
+				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
+				: new Error(queryStr + (error as Error).message);
 			throw newError;
 		}
 	}
