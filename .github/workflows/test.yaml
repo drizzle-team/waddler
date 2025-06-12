@@ -41,9 +41,10 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: |
-          pnpm install
-          pnpm rebuild duckdb better-sqlite3
+        run: pnpm install
+
+      - name: Rebuild duckdb, better-sqlite3
+        run: cd integration-tests && pnpm rebuild duckdb better-sqlite3
 
       - name: Build
         run: pnpm build
