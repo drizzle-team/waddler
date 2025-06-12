@@ -29,11 +29,11 @@ test('sql.values test. ', () => {
 
 test('sql.values test. number, boolean, string, bigint, null, Date, SQLDefault as values', () => {
 	const res = sql`insert into users (id, is_active, name, bigint_, null_) values ${
-		sql.values([[1, true, 'Oleksii', BigInt(1), null, new Date('10.04.2025'), sql.default]])
+		sql.values([[1, true, 'Oleksii', BigInt(1), null, new Date('2025-10-04T00:00:00.000Z'), sql.default]])
 	};`.toSQL();
 	expect(res).toStrictEqual({
 		query:
-			"insert into users (id, is_active, name, bigint_, null_) values (1, true, 'Oleksii', 1, null, '2025-10-03T21:00:00.000Z', default);",
+			"insert into users (id, is_active, name, bigint_, null_) values (1, true, 'Oleksii', 1, null, '2025-10-04T00:00:00.000Z', default);",
 		params: [],
 	});
 });
