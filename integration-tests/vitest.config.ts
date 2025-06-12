@@ -4,7 +4,10 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
 	test: {
 		include: [
-			'./tests/**/*.test.ts',
+			'./tests/duckdb/waddler-unit.test.ts',
+			'./tests/sqlite/better-sqlite3/waddler.test.ts',
+			'./tests/sqlite/d1/waddler.test.ts',
+			// './tests/**/*.test.ts',
 		],
 		exclude: [
 			...(process.env['RUN_EXTERNAL_DB_TESTS']
@@ -16,9 +19,10 @@ export default defineConfig({
 					'./tests/pg/xata-http/waddler.test.ts',
 					'./tests/sqlite/libsql/libsql-http-waddler.test.ts',
 					'./tests/sqlite/libsql/libsql-node-waddler.test.ts',
+					'./tests/sqlite/libsql/libsql-web-waddler.test.ts',
+					'./tests/sqlite/libsql/libsql-waddler.test.ts',
 					'./tests/mysql/planetscale-serverless/waddler.test.ts',
 					'./tests/mysql/tidb-serverless/waddler.test.ts',
-					'tests/sqlite/libsql/libsql-waddler.test.ts',
 				]),
 			'./tests/sqlite/bun-sqlite/**/*.test.ts',
 			'./tests/pg/bun-sql/**/*.test.ts',

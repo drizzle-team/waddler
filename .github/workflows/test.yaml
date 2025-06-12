@@ -41,9 +41,9 @@ jobs:
             ${{ runner.os }}-pnpm-store-
 
       - name: Install dependencies
-        run: pnpm install
-        env:
-          NODE_ENV: development
+        run: |
+          pnpm install
+          pnpm rebuild duckdb better-sqlite3
 
       - name: Build
         run: pnpm build
@@ -65,8 +65,6 @@ jobs:
           TIDB_CONNECTION_STRING: ${{secrets.TIDB_CONNECTION_STRING}}
 
           PLANETSCALE_CONNECTION_STRING: ${{secrets.PLANETSCALE_CONNECTION_STRING}}
-
-          NILEDB_URL: ${{secrets.NILEDB_URL}}
 
         working-directory: integration-tests
         run: |
