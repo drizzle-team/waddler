@@ -4,10 +4,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
 	test: {
 		include: [
-			'./tests/duckdb/waddler-unit.test.ts',
-			'./tests/sqlite/better-sqlite3/waddler.test.ts',
-			'./tests/sqlite/d1/waddler.test.ts',
-			// './tests/**/*.test.ts',
+			'./tests/**/*.test.ts',
 		],
 		exclude: [
 			...(process.env['RUN_EXTERNAL_DB_TESTS']
