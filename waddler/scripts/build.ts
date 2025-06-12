@@ -24,6 +24,7 @@ const entries: Array<string> = [
 	'src/sqlite/libsql/sqlite3/index.ts',
 	'src/sqlite/libsql/wasm/index.ts',
 	'src/sqlite/libsql/web/index.ts',
+	'src/sqlite/libsql/ws/index.ts',
 	'src/sqlite/durable-sqlite/index.ts',
 	'src/sqlite/op-sqlite/index.ts',
 	'src/sqlite/expo-sqlite/index.ts',

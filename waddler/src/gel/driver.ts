@@ -5,30 +5,13 @@ import type { SQL } from '../sql.ts';
 import { SQLWrapper } from '../sql.ts';
 import type { Identifier, IdentifierObject, Raw, SQLParamType, UnsafeParamType, Values } from '../types.ts';
 import { isConfig } from '../utils.ts';
-import { GelDialect, UnsafePromise } from './gel-core/dialect.ts';
+import { GelDialect } from './gel-core/dialect.ts';
 import { GelSQLTemplate } from './session.ts';
-
-export interface GelSQL extends Omit<SQL, 'unsafe'> {
-	<T = any>(
-		strings: TemplateStringsArray,
-		...params: SQLParamType[]
-	): GelSQLTemplate<T>;
-	unsafe<RowMode extends 'array' | 'object'>(
-		query: string,
-		params?: UnsafeParamType[],
-		options?: { rowMode: RowMode },
-	): UnsafePromise<
-		RowMode extends 'array' ? any[] : {
-			[columnName: string]: any;
-		},
-		GelSQLTemplate<any>
-	>;
-}
 
 const createSqlTemplate = (
 	client: Client,
 	dialect: GelDialect,
-): GelSQL => {
+): SQL => {
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): GelSQLTemplate<T> => {
 		const sql = new SQLWrapper();
 		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
@@ -45,7 +28,7 @@ const createSqlTemplate = (
 		raw: (value: Raw) => {
 			return new SQLRaw(value);
 		},
-		unsafe: (
+		unsafe: async (
 			query: string,
 			params?: UnsafeParamType[],
 			options?: { rowMode: 'array' | 'object' },
@@ -57,8 +40,7 @@ const createSqlTemplate = (
 			sql.with({ rawParams: { query, params } });
 
 			const unsafeDriver = new GelSQLTemplate(sql, client, dialect, options);
-			const unsafePromise = new UnsafePromise(unsafeDriver);
-			return unsafePromise;
+			return await unsafeDriver.execute();
 		},
 		default: new SQLDefault(),
 	});

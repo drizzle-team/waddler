@@ -1,6 +1,7 @@
 import type { SQL } from 'bun';
 import type { PgDialect } from '~/pg/pg-core/dialect.ts';
 import type { SQLWrapper } from '~/sql.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 
 export class BunSqlSQLTemplate<T> extends SQLTemplate<T> {
@@ -26,12 +27,7 @@ export class BunSqlSQLTemplate<T> extends SQLTemplate<T> {
 			const queryResult = await this.client.unsafe(query, params);
 			return queryResult as T[];
 		} catch (error) {
-			const queryStr = `\nquery: '${query}'\n`;
-
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 

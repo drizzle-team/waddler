@@ -1,6 +1,7 @@
 import type { Connection as CallbackConnection } from 'mysql2';
 import type { Connection, Pool, PoolConnection, QueryOptions } from 'mysql2/promise';
 import type { SQLWrapper } from '~/sql.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
 import type { Dialect } from '../../sql-template-params.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 import { isPool } from './utils.ts';
@@ -33,24 +34,15 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 
 			return queryResult[0] as T[];
 		} catch (error) {
-			const queryStr = `\nquery: '${this.queryConfig.sql}'\n`;
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-
-			newError.cause = (error as Error).cause;
-			newError.stack = (error as Error).stack ? queryStr + (error as Error).stack : (error as Error).stack;
-
-			throw newError;
+			throw new WaddlerQueryError(this.queryConfig.sql, params, error as Error);
 		}
 	}
 
 	async *stream() {
 		let conn: CallbackConnection | undefined;
+		const { params } = this.sql.getQuery();
 		// wrapping mysql2 driver error in new js error to add stack trace to it
 		try {
-			const { params } = this.sql.getQuery();
-
 			const conn = ((isPool(this.client) ? await this.client.getConnection() : this.client) as object as {
 				connection: CallbackConnection;
 			}).connection;
@@ -71,14 +63,7 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 				(conn as object as PoolConnection)?.release();
 			}
 
-			const newError = error instanceof AggregateError
-				? new Error(error.errors.map((e) => e.message).join('\n'))
-				: new Error((error as Error).message);
-
-			newError.cause = (error as Error).cause;
-			newError.stack = (error as Error).stack;
-
-			throw newError;
+			throw new WaddlerQueryError(this.queryConfig.sql, params, error as Error);
 		}
 	}
 }

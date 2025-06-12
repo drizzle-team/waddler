@@ -1,5 +1,6 @@
 import type { DB } from '@op-engineering/op-sqlite';
 import type { SQLWrapper } from '~/sql.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { SqliteDialect } from '../sqlite-core/dialect.ts';
 
@@ -38,12 +39,7 @@ export class OpSqliteSQLTemplate<T> extends SQLTemplate<T> {
 			const queryResult = await this.client.execute(query, params);
 			return queryResult.rows as T[];
 		} catch (error) {
-			const queryStr = `\nquery: '${query}'\n`;
-
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 

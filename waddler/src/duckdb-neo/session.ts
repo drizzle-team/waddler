@@ -1,4 +1,5 @@
 import type { DuckDBVector } from '@duckdb/node-api';
+import { WaddlerQueryError } from '../errors/index.ts';
 import type { RecyclingPool } from '../recycling-pool.ts';
 import type { Dialect } from '../sql-template-params.ts';
 import { SQLTemplate } from '../sql-template.ts';
@@ -17,9 +18,6 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		// Implement your actual DB execution logic here
-		// This could be a fetch or another async operation
-		// gets connection from pool, runs query, release connection
 		const { query, params } = this.sql.getQuery();
 		let result;
 
@@ -33,9 +31,9 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 			const duckDbResult = await prepared.run().finally();
 			result = await transformResultToObjects(duckDbResult) as T[];
 		} catch (error) {
+			// TODO: this error handler does not work right, fix it
 			await this.pool.release(connObj);
-			const newError = new Error((error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 
 		await this.pool.release(connObj);
@@ -70,8 +68,7 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 			}
 		} catch (error) {
 			await this.pool.release(connObj);
-			const newError = new Error((error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 
 		await this.pool.release(connObj);

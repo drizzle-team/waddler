@@ -1,5 +1,6 @@
 import type { Client, Connection } from '@planetscale/database';
 import type { SQLWrapper } from '~/sql.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { MySQLDialect } from '../mysql-core/dialect.ts';
 
@@ -27,14 +28,7 @@ export class PlanetscaleServerlessSQLTemplate<T> extends SQLTemplate<T> {
 			const res = await this.client.execute(query, params, this.rawQueryConfig);
 			return res.rows as T[];
 		} catch (error) {
-			const newError = error instanceof AggregateError
-				? new Error(error.errors.map((e) => e.message).join('\n'))
-				: new Error((error as Error).message);
-
-			newError.cause = (error as Error).cause;
-			newError.stack = (error as Error).stack;
-
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 

@@ -1,6 +1,7 @@
 import type { Database } from 'bun:sqlite';
 import type { SQLWrapper } from '~/sql.ts';
 import type { SqliteDialect } from '~/sqlite/sqlite-core/dialect.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 
 export class BunSqliteSQLTemplate<T> extends SQLTemplate<T> {
@@ -41,12 +42,7 @@ export class BunSqliteSQLTemplate<T> extends SQLTemplate<T> {
 				return stmt.run(...params as any[]) as any;
 			}
 		} catch (error) {
-			const queryStr = `\nquery: '${query}'\n`;
-
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 
@@ -68,12 +64,7 @@ export class BunSqliteSQLTemplate<T> extends SQLTemplate<T> {
 				}
 			}
 		} catch (error) {
-			const queryStr = `\nquery: '${query}'\n`;
-
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 }

@@ -11,6 +11,7 @@ import {
 	createAllArrayDataTypesTable,
 	createAllDataTypesTable,
 	createAllNdarrayDataTypesTable,
+	createMoodEnumType,
 	defaultValue,
 	dropAllDataTypesTable,
 } from '../pg-core.ts';
@@ -38,9 +39,12 @@ beforeAll(async () => {
 	do {
 		try {
 			pgConnectionParams = dockerPayload.connectionParams;
-			pgClient = postgres(dockerPayload.connectionParams);
-			await pgClient.unsafe(`select 1;`);
-			sql = waddler({ client: pgClient });
+			const testPgClient = postgres(dockerPayload.connectionParams);
+			const testSql = waddler({ client: testPgClient });
+			await testSql.unsafe(`select 1;`);
+			await createMoodEnumType(testSql);
+
+			await testPgClient.end();
 			connected = true;
 			break;
 		} catch (e) {
@@ -55,6 +59,10 @@ beforeAll(async () => {
 		await pgContainer?.stop().catch(console.error);
 		throw lastError;
 	}
+
+	pgClient = postgres(dockerPayload.connectionParams);
+	sql = waddler({ client: pgClient });
+	// await createMoodEnumType(sql);
 });
 
 afterAll(async () => {
@@ -299,6 +307,14 @@ test('all types in sql.values, sql.raw in select test', async () => {
 	expect(res1[0]!['case_column']).toEqual('column=default');
 });
 
+// enum array error:
+// Because each time I used the dropAllDataTypesTable function, I dropped the mood_enum type and then recreated it in createAllDataTypesTable,
+// the mood_enum type’s OID changed.
+// Also, it seems that postgres-js fetches types only on the first database connection (i.e., at the first query).
+// Because that query runs before the enum exists, postgres-js doesn’t register a parser for `mood_enum[]`, resulting in unparsed string output.
+// Now, I create `mood_enum` before all tests using one connection, close that connection, and then open a new connection for the tests.
+//
+
 test('all array types in sql.values test', async () => {
 	await createAllArrayDataTypesTable(sql);
 
@@ -346,7 +362,7 @@ test('all array types in sql.values test', async () => {
 		['1 day'], // `{"1 day"}`,
 		['(1,2)'], // [[1, 2]], [{ x: 1, y: 2 }],
 		['{1.1,2,3}', '{4.4,5,6}'], // [[1.1, 2, 3], [4.4, 5, 6]], // ['{1.1,2,3}', '{4.4,5,6}'], //'{"{1.1,2,3}","{4.4,5,6}"}',
-		'{ok,happy,"no,\'\\"`rm"}', // ['ok', 'happy', `no,'"\`rm`],
+		['ok', 'happy', `no,'"\`rm`], // '{ok,happy,"no,\'\\"`rm"}', //
 		['550e8400-e29b-41d4-a716-446655440000'],
 	];
 
@@ -357,8 +373,12 @@ test('all array types in sql.values test', async () => {
 	await query;
 
 	const res = await sql.unsafe(`select * from all_array_data_types;`, [], { rowMode: 'array' });
+	// if (!Array.isArray(res[0]![18])) {
+	// 	console.log(sql);
+	// }
 
 	expect(res[0]).toStrictEqual(expectedRes);
+	// await dropAllArrayDataTypesTable(sql);
 });
 
 test('all nd-array types in sql.values test', async () => {
@@ -398,7 +418,7 @@ test('all nd-array types in sql.values test', async () => {
 		[['1 day'], ['1 day']], // `{{"1 day"},{"1 day"}}`,
 		[['(1,2)'], ['(1,2)']], // [[[1, 2]], [[1, 2]]], // [[{ x: 1, y: 2 }], [{ x: 1, y: 2 }]],
 		[['{1.1,2,3}', '{4.4,5,6}'], ['{1.1,2,3}', '{4.4,5,6}']], // [[[1.1, 2, 3], [4.4, 5, 6]], [[1.1, 2, 3], [4.4, 5, 6]]], // '{{"{1.1,2,3}","{4.4,5,6}"},{"{1.1,2,3}","{4.4,5,6}"}}',
-		'{{ok,happy,"no,\'\\"`rm"},{ok,happy,"no,\'\\"`rm"}}', // [['ok', 'happy', `no,'"\`rm`], ['ok', 'happy', `no,'"\`rm`]],
+		[['ok', 'happy', `no,'"\`rm`], ['ok', 'happy', `no,'"\`rm`]], // '{{ok,happy,"no,\'\\"`rm"},{ok,happy,"no,\'\\"`rm"}}',
 		[['550e8400-e29b-41d4-a716-446655440000'], ['550e8400-e29b-41d4-a716-446655440000']],
 	];
 
@@ -407,6 +427,7 @@ test('all nd-array types in sql.values test', async () => {
 	const res = await sql.unsafe(`select * from all_nd_array_data_types;`, [], { rowMode: 'array' });
 
 	expect(res[0]).toStrictEqual(expectedRes1);
+	// await dropAllNdarrayDataTypesTable(sql);
 });
 
 // sql.stream: not implemented yet

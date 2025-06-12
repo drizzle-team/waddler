@@ -1,5 +1,6 @@
 import type { Database } from 'better-sqlite3';
 import type { SQLWrapper } from '~/sql.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { SqliteDialect } from '../sqlite-core/dialect.ts';
 
@@ -41,12 +42,7 @@ export class BetterSqlite3SQLTemplate<T> extends SQLTemplate<T> {
 				return stmt.run(...params) as any;
 			}
 		} catch (error) {
-			const queryStr = `\nquery: '${query}'\n`;
-
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 
@@ -63,12 +59,7 @@ export class BetterSqlite3SQLTemplate<T> extends SQLTemplate<T> {
 				yield row as T;
 			}
 		} catch (error) {
-			const queryStr = `\nquery: '${query}'\n`;
-
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 }

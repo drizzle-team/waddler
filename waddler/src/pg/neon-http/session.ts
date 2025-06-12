@@ -1,6 +1,7 @@
 import { type HTTPQueryOptions, type NeonQueryFunction, types } from '@neondatabase/serverless';
 import type { Dialect } from '~/sql-template-params.ts';
 import type { SQLWrapper } from '~/sql.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 
 export type NeonHttpClient = NeonQueryFunction<any, any>;
@@ -58,12 +59,7 @@ export class NeonHttpSQLTemplate<T> extends SQLTemplate<T> {
 				return queryResult.rows as T[];
 			}
 		} catch (error) {
-			const queryStr = `\nquery: '${query}'\n`;
-
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 

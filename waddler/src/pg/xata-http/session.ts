@@ -1,5 +1,6 @@
 import type { SQLPluginResult } from '@xata.io/client';
 import type { SQLWrapper } from '~/sql.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { PgDialect } from '../pg-core/index.ts';
 
@@ -29,10 +30,7 @@ export class XataHttpSQLTemplate<T> extends SQLTemplate<T> {
 			const queryResult = await this.client.sql({ statement: query, params, responseType: 'json' });
 			return queryResult.records as T[];
 		} catch (error) {
-			const newError = error instanceof AggregateError
-				? new Error(error.errors.map((e) => e.message).join('\n'))
-				: new Error((error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 

@@ -1,6 +1,7 @@
 import type { QueryArrayConfig, QueryConfig, VercelClient, VercelPoolClient } from '@vercel/postgres';
 import { types, VercelPool } from '@vercel/postgres';
 import type { SQLWrapper } from '~/sql.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
 import type { WaddlerConfig } from '../../extensions';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { PgDialect } from '../pg-core/index.ts';
@@ -51,16 +52,14 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 
 			return queryResult.rows;
 		} catch (error) {
-			const newError = error instanceof AggregateError
-				? new Error(error.errors.map((e) => e.message).join('\n'))
-				: new Error((error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(this.queryConfig.text, params, error as Error);
 		}
 	}
 
 	// TODO: revise: maybe I should override chunked method because we can use QueryStream with option 'batchSize' in QueryStreamConfig
 	async *stream() {
 		let conn: VercelPoolClient | VercelClient | undefined;
+		let query: string = '', params: any[] = [];
 		// wrapping vercel-postgres driver error in new js error to add stack trace to it
 		try {
 			conn = this.client instanceof VercelPool
@@ -75,7 +74,7 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 				);
 			}
 
-			const { query, params } = this.sql.getQuery();
+			({ query, params } = this.sql.getQuery());
 			const queryStream = new queryStreamObj.constructor(query, params, { types: this.queryConfig.types });
 
 			const stream = conn.query(queryStream);
@@ -92,10 +91,7 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 				(conn as VercelPoolClient)?.release();
 			}
 
-			const newError = error instanceof AggregateError
-				? new Error(error.errors.map((e) => e.message).join('\n'))
-				: new Error((error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 }

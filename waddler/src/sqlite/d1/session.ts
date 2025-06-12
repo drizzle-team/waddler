@@ -2,6 +2,7 @@
 
 import type { SQLWrapper } from '~/sql.ts';
 import type { SqliteDialect } from '~/sqlite/sqlite-core/dialect.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 
 export class D1SQLTemplate<T> extends SQLTemplate<T> {
@@ -42,15 +43,7 @@ export class D1SQLTemplate<T> extends SQLTemplate<T> {
 				return (await stmt.bind(...params).run()) as any;
 			}
 		} catch (error) {
-			const queryStr = `\nquery: '${query}'\n`;
-
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-			newError.cause = (error as Error).cause;
-			newError.stack = (error as Error).stack;
-
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 

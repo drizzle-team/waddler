@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import type { SQLWrapper } from '~/sql.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { SqliteDialect } from '../sqlite-core/dialect.ts';
 
@@ -43,12 +44,7 @@ export class ExpoSqliteSQLTemplate<T> extends SQLTemplate<T> {
 				return stmt.executeSync(params as any[]).getAllSync() as T[];
 			}
 		} catch (error) {
-			const queryStr = `\nquery: '${query}'\n`;
-
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		} finally {
 			await stmt.finalizeAsync();
 		}
@@ -56,10 +52,10 @@ export class ExpoSqliteSQLTemplate<T> extends SQLTemplate<T> {
 
 	async *stream() {
 		const { query, params } = this.sql.getQuery();
+		const stmt = this.client.prepareSync(query);
 
 		// wrapping expo-sqlite driver error in new js error to add stack trace to it
 		try {
-			const stmt = this.client.prepareSync(query);
 			const stream = await (this.options.rowMode === 'array'
 				? stmt.executeForRawResultAsync(params)
 				: stmt.executeAsync(params));
@@ -70,12 +66,9 @@ export class ExpoSqliteSQLTemplate<T> extends SQLTemplate<T> {
 				yield row as T;
 			}
 		} catch (error) {
-			const queryStr = `\nquery: '${query}'\n`;
-
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
+		} finally {
+			await stmt.finalizeAsync();
 		}
 	}
 }

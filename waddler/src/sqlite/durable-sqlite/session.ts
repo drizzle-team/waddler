@@ -2,6 +2,7 @@
 
 import type { SQLWrapper } from '~/sql.ts';
 import type { SqliteDialect } from '~/sqlite/sqlite-core/dialect.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 
 export class DurableSqliteSQLTemplate<T> extends SQLTemplate<T> {
@@ -48,14 +49,7 @@ export class DurableSqliteSQLTemplate<T> extends SQLTemplate<T> {
 				return params.length > 0 ? this.client.sql.exec(query, ...params) : this.client.sql.exec(query);
 			}
 		} catch (error) {
-			const queryStr = `\nquery: '${query}'\n`;
-
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-			newError.cause = (error as Error).cause;
-			newError.stack = (error as Error).stack;
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 
@@ -85,16 +79,7 @@ export class DurableSqliteSQLTemplate<T> extends SQLTemplate<T> {
 				yield row as T;
 			}
 		} catch (error) {
-			const queryStr = `\nquery: '${query}'\n`;
-
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-			// TODO add cause and stack in every session try-catch
-			newError.cause = (error as Error).cause;
-			newError.stack = (error as Error).stack;
-
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 }

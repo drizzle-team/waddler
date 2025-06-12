@@ -4,6 +4,7 @@ import { SQLTemplate } from '../../sql-template.ts';
 import type { SQLWrapper } from '../../sql.ts';
 
 import { types } from '@electric-sql/pglite';
+import { WaddlerQueryError } from '../../errors/index.ts';
 
 export class PGliteSQLTemplate<T> extends SQLTemplate<T> {
 	private rawQueryConfig: QueryOptions;
@@ -46,10 +47,7 @@ export class PGliteSQLTemplate<T> extends SQLTemplate<T> {
 
 			return queryResult.rows as T[];
 		} catch (error) {
-			const newError = error instanceof AggregateError
-				? new Error(error.errors.map((e) => e.message).join('\n'))
-				: new Error((error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 

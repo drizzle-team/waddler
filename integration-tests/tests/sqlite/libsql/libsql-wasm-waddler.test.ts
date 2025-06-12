@@ -5,7 +5,7 @@ import { type Client, createClient } from '@libsql/client-wasm';
 import { afterAll, beforeAll, beforeEach, test } from 'vitest';
 import type { LibsqlSQL } from 'waddler/libsql';
 import { waddler } from 'waddler/libsql/wasm';
-import { commonTests } from '../../common.test';
+import { commonTests } from '../../common.test.ts';
 import { commonSqliteTests } from '../sqlite-core.ts';
 import { libsqlTests } from './common.ts';
 
@@ -49,6 +49,8 @@ test('connection test', async () => {
 
 	const sql5 = waddler({ connection: { url: ':memory:' } });
 	await sql5`select 5;`.all();
+
+	// uses sqlite3 client so you can't use remote db with libsql-wasm
 });
 
 libsqlTests('wasm');

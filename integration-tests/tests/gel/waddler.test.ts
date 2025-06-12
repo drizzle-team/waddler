@@ -2,7 +2,6 @@ import type Docker from 'dockerode';
 import type { Client } from 'gel';
 import createClient, { DateDuration, Duration, LocalDate, LocalDateTime, LocalTime, RelativeDuration } from 'gel';
 import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
-import type { GelSQL } from 'waddler/gel';
 import { waddler } from 'waddler/gel';
 import { commonTests } from '../common.test.ts';
 import { createGelDockerDB } from '../utils.ts';
@@ -13,6 +12,7 @@ import {
 	dropAllDataTypesTable,
 } from './gel-core.ts';
 import 'zx/globals';
+import type { SQL } from 'waddler';
 import { commonPgTests } from '../pg/pg-core.ts';
 
 let gelContainer: Docker.Container;
@@ -25,9 +25,9 @@ let gelConnectionParams: {
 	database: string;
 };
 let gelConnectionString: string;
-let tlsSecurity: 'insecure';
+const tlsSecurity = 'insecure' as const;
 
-let sql: GelSQL;
+let sql: SQL;
 beforeAll(async () => {
 	const dockerPayload = await createGelDockerDB();
 	const sleep = 1000;
@@ -40,7 +40,6 @@ beforeAll(async () => {
 		try {
 			gelConnectionString = dockerPayload.connectionString;
 			gelConnectionParams = dockerPayload.connectionParams;
-			tlsSecurity = 'insecure';
 			gelClient = createClient({ ...dockerPayload.connectionParams, tlsSecurity });
 
 			// await gelClient.querySQL(`select 1;`);
@@ -66,7 +65,7 @@ afterAll(async () => {
 	await gelContainer?.stop().catch(console.error);
 });
 
-beforeEach<{ sql: GelSQL }>((ctx) => {
+beforeEach<{ sql: SQL }>((ctx) => {
 	ctx.sql = sql;
 });
 
@@ -92,8 +91,8 @@ test('connection test', async () => {
 
 // UNSAFE-------------------------------------------------------------------
 test('all types in sql.unsafe test', async () => {
-	await dropAllDataTypesTable(sql).catch(() => {});
-	await createAllDataTypesTable(sql);
+	await dropAllDataTypesTable(gelConnectionString, tlsSecurity).catch(() => {});
+	await createAllDataTypesTable(gelConnectionString, tlsSecurity);
 
 	const values = [
 		'qwerty',
@@ -183,8 +182,8 @@ test('all types in sql.unsafe test', async () => {
 // sql.values
 // ALL TYPES-------------------------------------------------------------------
 test('all types in sql.values, sql.raw in select test', async () => {
-	await dropAllDataTypesTable(sql).catch(() => {});
-	await createAllDataTypesTable(sql);
+	await dropAllDataTypesTable(gelConnectionString, tlsSecurity).catch(() => {});
+	await createAllDataTypesTable(gelConnectionString, tlsSecurity);
 
 	const allDataTypesValues = [
 		'qwerty',
@@ -282,7 +281,7 @@ test('all types in sql.values, sql.raw in select test', async () => {
 });
 
 test('all array types in sql.values test', async () => {
-	await createAllArrayDataTypesTable(sql);
+	await createAllArrayDataTypesTable(gelConnectionString, tlsSecurity);
 
 	const allArrayDataTypesValues = [
 		['qwerty'],

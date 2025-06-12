@@ -1,5 +1,6 @@
 import type { RowList, Sql } from 'postgres';
 import type { PgDialect } from '~/pg/pg-core/dialect.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { SQLWrapper } from '../../sql.ts';
 
@@ -24,10 +25,7 @@ export class PostgresSQLTemplate<T> extends SQLTemplate<T> {
 			// TODO check if cast to RowList<T[]> is valid
 			return queryResult as RowList<T[]> as T[];
 		} catch (error) {
-			const newError = error instanceof AggregateError
-				? new Error(error.errors.map((e) => e.message).join('\n'))
-				: new Error((error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 

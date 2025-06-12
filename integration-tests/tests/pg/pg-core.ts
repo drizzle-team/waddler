@@ -3,13 +3,14 @@ import type { SQL } from 'waddler';
 
 export const defaultValue = 3;
 
-const createMoodEnumType = async (sql: SQL) => {
+export const createMoodEnumType = async (sql: SQL) => {
 	await sql.unsafe(
 		`CREATE TYPE "public"."mood_enum" AS ENUM('sad', 'ok', 'happy', 'no,''"\`rm', 'mo''",\`}{od', 'mo,\`od');`,
 	).catch(() => {});
+	// analog to "create type if exists"; attempting to create a type that already exists will cause an error.
 };
 
-const dropMoodEnumType = async (sql: SQL) => {
+export const dropMoodEnumType = async (sql: SQL) => {
 	await sql.unsafe(
 		`DROP TYPE "public"."mood_enum";`,
 	).catch(() => {});
@@ -48,7 +49,7 @@ export const createAllDataTypesTable = async (sql: SQL) => {
 
 export const dropAllDataTypesTable = async (sql: SQL) => {
 	await sql.unsafe('drop table if exists all_data_types;');
-	await dropMoodEnumType(sql);
+	// await dropMoodEnumType(sql);
 };
 
 export const createAllArrayDataTypesTable = async (sql: SQL) => {
@@ -80,13 +81,13 @@ export const createAllArrayDataTypesTable = async (sql: SQL) => {
 
 export const dropAllArrayDataTypesTable = async (sql: SQL) => {
 	await sql.unsafe('drop table if exists all_array_data_types;');
-	await dropMoodEnumType(sql);
+	// await dropMoodEnumType(sql);
 };
 
 export const createAllNdarrayDataTypesTable = async (sql: SQL) => {
 	await createMoodEnumType(sql);
 
-	await sql.unsafe(`CREATE TABLE IF NOT EXISTS "public"."all_nd_array_data_types" (
+	await sql.unsafe(`CREATE TABLE if not exists "public"."all_nd_array_data_types" (
    "integer_array_2d" integer[][],
    "json_array_2d" json[][],
    "jsonb_array_2d" jsonb[][],
@@ -103,7 +104,7 @@ export const createAllNdarrayDataTypesTable = async (sql: SQL) => {
 
 export const dropAllNdarrayDataTypesTable = async (sql: SQL) => {
 	await sql.unsafe('drop table if exists all_nd_array_data_types;');
-	await dropMoodEnumType(sql);
+	// await dropMoodEnumType(sql);
 };
 
 export const commonPgTests = () => {

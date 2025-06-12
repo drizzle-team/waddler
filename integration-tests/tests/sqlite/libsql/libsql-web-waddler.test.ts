@@ -5,7 +5,7 @@ import retry from 'async-retry';
 import { afterAll, beforeAll, beforeEach, test } from 'vitest';
 import type { LibsqlSQL } from 'waddler/libsql';
 import { waddler } from 'waddler/libsql/web';
-import { commonTests } from '../../common.test';
+import { commonTests } from '../../common.test.ts';
 import { commonSqliteTests } from '../sqlite-core.ts';
 import { libsqlTests } from './common.ts';
 

@@ -10,6 +10,7 @@ import {
 
 import type { PgDialect } from '~/pg/pg-core/dialect.ts';
 import type { SQLWrapper } from '~/sql.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
 import type { WaddlerConfig } from '../../extensions';
 import { SQLTemplate } from '../../sql-template.ts';
 
@@ -69,12 +70,7 @@ export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
 				return queryResult.rows as T[];
 			}
 		} catch (error) {
-			const queryStr = `\nquery: '${query}'\n`;
-
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 
@@ -93,9 +89,13 @@ export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
 			// rowMode: 'array',
 		});
 
-		const stream = this.client.query(queryStream);
-		for await (const row of stream) {
-			yield row;
+		try {
+			const stream = this.client.query(queryStream);
+			for await (const row of stream) {
+				yield row;
+			}
+		} catch (error) {
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 }

@@ -3,9 +3,8 @@ import { type Client, createClient } from '@libsql/client/ws';
 import retry from 'async-retry';
 import { afterAll, beforeAll, beforeEach, test } from 'vitest';
 import type { LibsqlSQL } from 'waddler/libsql';
-// @ts-expect-error
 import { waddler } from 'waddler/libsql/ws';
-import { commonTests } from '../../common.test';
+import { commonTests } from '../../common.test.ts';
 import { commonSqliteTests } from '../sqlite-core.ts';
 import { libsqlTests } from './common.ts';
 

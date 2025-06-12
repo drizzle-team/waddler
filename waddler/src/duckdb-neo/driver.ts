@@ -1,6 +1,7 @@
 import type { DuckDBResult } from '@duckdb/node-api';
 import { DuckDBInstance } from '@duckdb/node-api';
 import { DuckdbDialect } from '../duckdb-core/dialect.ts';
+import { WaddlerQueryError } from '../errors/index.ts';
 import type { Factory } from '../pool-ts/types.ts';
 import { RecyclingPool } from '../recycling-pool.ts';
 import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
@@ -60,8 +61,7 @@ const unsafeFunc = async (
 		duckDbResult = await prepared.run();
 	} catch (error) {
 		await pool.release(connObj);
-		const newError = new Error((error as Error).message);
-		throw newError;
+		throw new WaddlerQueryError(query, params, error as Error);
 	}
 
 	if (rowMode === 'default') {

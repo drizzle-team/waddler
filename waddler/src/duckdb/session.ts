@@ -1,4 +1,5 @@
 import duckdb from 'duckdb';
+import { WaddlerQueryError } from '~/errors/index.ts';
 import type { RecyclingPool } from '../recycling-pool.ts';
 import type { Dialect } from '../sql-template-params.ts';
 import { SQLTemplate } from '../sql-template.ts';
@@ -130,8 +131,7 @@ export class DuckdbSQLTemplate<T> extends SQLTemplate<T> {
 			result = transformResult(duckdbResult, columnInfo) as T[];
 		} catch (error) {
 			await this.pool.release(db);
-			const newError = new Error((error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 
 		await this.pool.release(db);

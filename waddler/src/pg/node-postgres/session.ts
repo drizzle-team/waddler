@@ -1,6 +1,7 @@
 import type { Client as ClientT, Pool as PoolT, PoolClient, QueryArrayConfig, QueryConfig } from 'pg';
 import pg from 'pg';
 import type { SQLWrapper } from '~/sql.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
 import type { WaddlerConfig } from '../../extensions';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { PgDialect } from '../pg-core/dialect.ts';
@@ -51,12 +52,7 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 
 			return queryResult.rows;
 		} catch (error) {
-			const queryStr = `\nquery: '${this.queryConfig.text}'\n`;
-
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(this.queryConfig.text, params, error as Error);
 		}
 	}
 
@@ -94,12 +90,7 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 				(conn as PoolClient)?.release();
 			}
 
-			const queryStr = `\nquery: '${query}'\n`;
-
-			const newError = error instanceof AggregateError
-				? new Error(queryStr + error.errors.map((e) => e.message).join('\n'))
-				: new Error(queryStr + (error as Error).message);
-			throw newError;
+			throw new WaddlerQueryError(query, params, error as Error);
 		}
 	}
 }
