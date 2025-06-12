@@ -5,6 +5,9 @@
 		"build": "cd waddler && pnpm lint && pnpm build",
 		"test": "cd integration-tests && pnpm test"
 	},
+	"pnpm": {
+		"onlyBuiltDependencies": ["duckdb", "better-sqlite3"]
+	},
 	"devDependencies": {
 		"@arethetypeswrong/cli": "0.18.1",
 		"@eslint/compat": "^1.2.7",

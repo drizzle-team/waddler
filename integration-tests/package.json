@@ -7,9 +7,6 @@
 		"test": "vitest --config ./vitest.config.ts",
 		"test:bun": "bun test bun"
 	},
-	"pnpm": {
-		"onlyBuiltDependencies": ["duckdb", "better-sqlite3"]
-	},
 	"dependencies": {
 		"@arethetypeswrong/cli": "0.16.4",
 		"@cloudflare/workers-types": "4.20250430.0",
