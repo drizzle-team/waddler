@@ -4,8 +4,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
 	test: {
 		include: [
-			'./tests/pg/postgres-js/*.test.ts',
-			// './tests/**/*.test.ts',
+			'./tests/**/*.test.ts',
 		],
 		exclude: [
 			...(process.env['RUN_EXTERNAL_DB_TESTS']
