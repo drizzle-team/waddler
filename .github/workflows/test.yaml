@@ -66,6 +66,8 @@ jobs:
 
           PLANETSCALE_CONNECTION_STRING: ${{secrets.PLANETSCALE_CONNECTION_STRING}}
 
+          NILEDB_URL: ${{secrets.NILEDB_URL}}
+
         working-directory: integration-tests
         run: |
           if [[ ${{ github.event_name }} == "push" || "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]]; then
