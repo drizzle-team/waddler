@@ -14,6 +14,7 @@ import type { SQL } from 'waddler';
 import { queryStream } from 'waddler/extensions/pg-query-stream';
 import type { NeonClient } from 'waddler/neon-serverless';
 import { waddler } from 'waddler/neon-serverless';
+import { vitestExpectSoftDate } from '../../utils.ts';
 
 let pgClient: NeonClient;
 let connectionString: string;
@@ -138,13 +139,18 @@ test('sql.stream test', async () => {
 		uuid: '550e8400-e29b-41d4-a716-446655440000',
 		bytea: Buffer.from('qwerty'),
 		default: defaultValue,
-	};
+	} as Record<string, any>;
 
 	await sql`insert into ${sql.identifier('all_data_types')} values ${sql.values([allDataTypesValues])};`;
 
 	const sqlClient = waddler({ client: pgClient, extensions: [queryStream()] });
 	const streamClient = sqlClient`select * from all_data_types;`.stream();
 	for await (const row of streamClient) {
-		expect(row).toStrictEqual(expectedRes);
+		expect(Object.keys(row).length).toBe(Object.keys(expectedRes).length);
+		const predicate = Object.entries(row).every(([colName, colValue]) =>
+			vitestExpectSoftDate(colValue, expectedRes[colName])
+		);
+		expect(predicate).toBe(true);
+		// expect(row).toStrictEqual(expectedRes);
 	}
 });

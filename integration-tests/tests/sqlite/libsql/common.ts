@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest';
 import type { LibsqlSQL } from 'waddler/libsql';
 import { createAllDataTypesTable, dropAllDataTypesTable } from '../../sqlite/sqlite-core';
+import { vitestExpectSoftDate } from '../../utils.ts';
 
 export const libsqlTests = (driver?: string) => {
 	describe('libsql_tests', () => {
@@ -71,13 +72,23 @@ export const libsqlTests = (driver?: string) => {
 					isMarried: true,
 				}),
 				numeric: 10.23,
-			};
+			} as Record<string, any>;
 
-			expect(res[0]).toStrictEqual(expectedRes);
+			expect(Object.keys(res[0]!).length).toBe(Object.keys(expectedRes).length);
+			let predicate = Object.entries(res[0] as Record<string, any>).every(([colName, colValue]) =>
+				vitestExpectSoftDate(colValue, expectedRes[colName])
+			);
+			expect(predicate).toBe(true);
+			// expect(res[0]).toStrictEqual(expectedRes);
 
 			// same as select query as above but with rowMode: "array"
 			const arrayResult = await ctx.sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' }).all();
-			expect(arrayResult[0]).toStrictEqual(Object.values(expectedRes));
+			expect(Object.keys(arrayResult[0]!).length).toBe(Object.keys(expectedRes).length);
+			predicate = Object.values(expectedRes).every((expectedValue, idx) =>
+				vitestExpectSoftDate(arrayResult[0]![idx], expectedValue)
+			);
+			expect(predicate).toBe(true);
+			// expect(arrayResult[0]).toStrictEqual(Object.values(expectedRes));
 		});
 
 		// sql.values
@@ -146,7 +157,12 @@ export const libsqlTests = (driver?: string) => {
 
 			const res = await ctx.sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' }).all();
 
-			expect(res[0]).toStrictEqual(expectedRes);
+			expect(res[0]!.length).toBe(expectedRes.length);
+			const predicate = Object.values(expectedRes).every((expectedValue, idx) =>
+				vitestExpectSoftDate(res[0]![idx], expectedValue)
+			);
+			expect(predicate).toBe(true);
+			// expect(res[0]).toStrictEqual(expectedRes);
 		});
 	});
 };

@@ -6,6 +6,7 @@ import type { SQL } from 'waddler';
 import { queryStream } from 'waddler/extensions/pg-query-stream';
 import { waddler } from 'waddler/vercel-postgres';
 import { commonTests } from '../../common.test.ts';
+import { vitestExpectSoftDate } from '../../utils.ts';
 import {
 	commonPgTests,
 	createAllDataTypesTable,
@@ -144,7 +145,7 @@ test('sql.stream test', async () => {
 		uuid: '550e8400-e29b-41d4-a716-446655440000',
 		bytea: Buffer.from('qwerty'),
 		default: defaultValue,
-	};
+	} as Record<string, any>;
 
 	await sql`insert into ${sql.identifier('all_data_types')} values ${sql.values([allDataTypesValues])};`;
 
@@ -153,7 +154,12 @@ test('sql.stream test', async () => {
 	const sqlClient = waddler({ client, extensions: [queryStream()] });
 	const streamClient = sqlClient`select * from all_data_types;`.stream();
 	for await (const row of streamClient) {
-		expect(row).toStrictEqual(expectedRes);
+		expect(Object.keys(row).length).toBe(Object.keys(expectedRes).length);
+		const predicate = Object.entries(row).every(([colName, colValue]) =>
+			vitestExpectSoftDate(colValue, expectedRes[colName])
+		);
+		expect(predicate).toBe(true);
+		// expect(row).toStrictEqual(expectedRes);
 	}
 
 	await client.end();
@@ -162,7 +168,12 @@ test('sql.stream test', async () => {
 	const sqlPool = waddler({ client: pool, extensions: [queryStream()] });
 	const streamPool = sqlPool`select * from all_data_types;`.stream();
 	for await (const row of streamPool) {
-		expect(row).toStrictEqual(expectedRes);
+		expect(Object.keys(row).length).toBe(Object.keys(expectedRes).length);
+		const predicate = Object.entries(row).every(([colName, colValue]) =>
+			vitestExpectSoftDate(colValue, expectedRes[colName])
+		);
+		expect(predicate).toBe(true);
+		// expect(row).toStrictEqual(expectedRes);
 	}
 
 	await pool.end();

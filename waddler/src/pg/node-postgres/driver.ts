@@ -102,6 +102,6 @@ export function waddler<TClient extends NodePgClient>(
 	// TODO Change error message
 	throw new Error(
 		'Invalid parameter for waddler.'
-			+ '\nMust be a string, pg.Client, pg.Pool, { connection: string | pg.PoolConfig }, { client: pg.Client | pg.Pool }, pg.ClientConfig or pg.PoolConfig',
+			+ '\nMust be a string, { connection: string | pg.PoolConfig }, { client: pg.Client | pg.Pool }, pg.ClientConfig or pg.PoolConfig',
 	);
 }

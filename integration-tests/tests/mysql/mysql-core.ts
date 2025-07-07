@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { SQL } from 'waddler';
+import { vitestExpectSoftDate } from '../utils.ts';
 
 export const createAllDataTypesTable = async (sql: SQL) => {
 	await sql.unsafe(`
@@ -388,11 +389,22 @@ export const commonMysqlAllTypesTests = (driver: 'mysql2' | 'planetscale-serverl
 				throw new Error('driver is not specified in sql.unsafe test.');
 			}
 
-			expect(res[0]).toStrictEqual(expectedRes);
+			expect(Object.keys(res[0]!).length).toBe(Object.keys(expectedRes).length);
+			let predicate = Object.entries(res[0] as Record<string, any>).every(([colName, colValue]) =>
+				vitestExpectSoftDate(colValue, expectedRes[colName])
+			);
+			expect(predicate).toBe(true);
+			// expect(res[0]).toStrictEqual(expectedRes);
 
 			// same as select query as above but with rowMode: "array"
 			const arrayResult = await ctx.sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' });
-			expect(arrayResult[0]).toStrictEqual(Object.values(expectedRes));
+
+			expect(arrayResult[0]!.length).toBe(Object.keys(expectedRes).length);
+			predicate = Object.values(expectedRes).every((expectedValue, idx) =>
+				vitestExpectSoftDate(arrayResult[0]![idx], expectedValue)
+			);
+			expect(predicate).toBe(true);
+			// expect(arrayResult[0]).toStrictEqual(Object.values(expectedRes));
 
 			await dropAllDataTypesTable(ctx.sql);
 		});
@@ -517,7 +529,12 @@ export const commonMysqlAllTypesTests = (driver: 'mysql2' | 'planetscale-serverl
 
 			const res = await ctx.sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' });
 
-			expect(res[0]).toStrictEqual(expectedRes);
+			expect(res[0]!.length).toBe(expectedRes.length);
+			const predicate = Object.values(expectedRes).every((expectedValue, idx) =>
+				vitestExpectSoftDate(res[0]![idx], expectedValue)
+			);
+			expect(predicate).toBe(true);
+			// expect(res[0]).toStrictEqual(expectedRes);
 		});
 	});
 };

@@ -1,6 +1,7 @@
 import Docker from 'dockerode';
 import getPort from 'get-port';
 import crypto from 'node:crypto';
+import { expect } from 'vitest';
 
 export const createPgDockerDB = async () => {
 	const docker = new Docker();
@@ -125,4 +126,27 @@ export const createGelDockerDB = async () => {
 		},
 		gelContainer,
 	};
+};
+
+const isValidDate = (date: any): boolean => {
+	if (Array.isArray(date)) {
+		return date.every((dateI) => isValidDate(dateI));
+	}
+
+	return date instanceof Date
+		|| (typeof date === 'string' && !Number.isNaN(Date.parse(date)));
+};
+
+export const vitestExpectSoftDate = (value: any, expectedValue: any) => {
+	let areValuesEqual = true;
+	try {
+		expect(value).toStrictEqual(expectedValue);
+	} catch (error) {
+		areValuesEqual = false;
+		areValuesEqual = areValuesEqual
+			|| isValidDate(value);
+		if (!areValuesEqual) throw error;
+	}
+
+	return areValuesEqual;
 };

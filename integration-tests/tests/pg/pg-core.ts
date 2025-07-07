@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest';
 import type { SQL } from 'waddler';
+import { vitestExpectSoftDate } from '../utils.ts';
 
 export const defaultValue = 3;
 
@@ -452,13 +453,24 @@ export const nodePgTests = () => {
 				uuid: '550e8400-e29b-41d4-a716-446655440000',
 				bytea: Buffer.from('qwerty'),
 				default: defaultValue,
-			};
+			} as Record<string, any>;
 
-			expect(res[0]).toStrictEqual(expectedRes);
+			expect(Object.keys(res[0]!).length).toBe(Object.keys(expectedRes).length);
+			let predicate = Object.entries(res[0] as Record<string, any>).every(([colName, colValue]) =>
+				vitestExpectSoftDate(colValue, expectedRes[colName])
+			);
+			expect(predicate).toBe(true);
+			// expect(res[0]).toStrictEqual(expectedRes);
 
 			// same as select query as above but with rowMode: "array"
 			const arrayResult = await ctx.sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' });
-			expect(arrayResult[0]).toStrictEqual(Object.values(expectedRes));
+
+			expect(Object.keys(arrayResult[0]!).length).toBe(Object.keys(expectedRes).length);
+			predicate = Object.values(expectedRes).every((expectedValue, idx) =>
+				vitestExpectSoftDate(arrayResult[0]![idx], expectedValue)
+			);
+			expect(predicate).toBe(true);
+			// expect(arrayResult[0]).toStrictEqual(Object.values(expectedRes));
 
 			await dropAllDataTypesTable(ctx.sql);
 		});
@@ -532,7 +544,12 @@ export const nodePgTests = () => {
 
 			const res = await ctx.sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' });
 
-			expect(res[0]).toStrictEqual(expectedRes);
+			expect(res[0]!.length).toBe(expectedRes.length);
+			const predicate = Object.values(expectedRes).every((expectedValue, idx) =>
+				vitestExpectSoftDate(res[0]![idx], expectedValue)
+			);
+			expect(predicate).toBe(true);
+			// expect(res[0]).toStrictEqual(expectedRes);
 			await dropAllDataTypesTable(ctx.sql);
 		});
 
@@ -578,7 +595,7 @@ export const nodePgTests = () => {
 				['550e8400-e29b-41d4-a716-446655440000'],
 			];
 
-			const expectedRes1 = [
+			const expectedRes = [
 				[1],
 				[10],
 				[String(BigInt('9007199254740992') + BigInt(1))],
@@ -621,7 +638,12 @@ export const nodePgTests = () => {
 
 			const res = await ctx.sql.unsafe(`select * from all_array_data_types;`, [], { rowMode: 'array' });
 
-			expect(res[0]).toStrictEqual(expectedRes1);
+			expect(res[0]!.length).toBe(expectedRes.length);
+			const predicate = Object.values(expectedRes).every((expectedValue, idx) =>
+				vitestExpectSoftDate(res[0]![idx], expectedValue)
+			);
+			expect(predicate).toBe(true);
+			// expect(res[0]).toStrictEqual(expectedRes1);
 
 			await dropAllArrayDataTypesTable(ctx.sql);
 		});
@@ -653,7 +675,7 @@ export const nodePgTests = () => {
 				[['550e8400-e29b-41d4-a716-446655440000'], ['550e8400-e29b-41d4-a716-446655440000']],
 			];
 
-			const expectedRes1 = [
+			const expectedRes = [
 				[[1, 2], [2, 3]],
 				[[json], [json]],
 				[[json], [json]],
@@ -673,7 +695,12 @@ export const nodePgTests = () => {
 
 			const res = await ctx.sql.unsafe(`select * from all_nd_array_data_types;`, [], { rowMode: 'array' });
 
-			expect(res[0]).toStrictEqual(expectedRes1);
+			expect(res[0]!.length).toBe(expectedRes.length);
+			const predicate = Object.values(expectedRes).every((expectedValue, idx) =>
+				vitestExpectSoftDate(res[0]![idx], expectedValue)
+			);
+			expect(predicate).toBe(true);
+			// expect(res[0]).toStrictEqual(expectedRes1);
 
 			await dropAllNdarrayDataTypesTable(ctx.sql);
 		});

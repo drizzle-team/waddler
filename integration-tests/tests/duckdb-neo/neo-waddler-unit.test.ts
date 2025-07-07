@@ -16,6 +16,8 @@ beforeEach<{ sql: SQL }>((ctx) => {
 commonTests();
 commonPgTests();
 
+// TODO add test for streaming
+
 // UNSAFE-------------------------------------------------------------------
 test('all types test', async () => {
 	await sql.unsafe(`create table all_types (

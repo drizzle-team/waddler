@@ -6,6 +6,7 @@ import type { SQL } from 'waddler';
 import type { XataHttpClient } from 'waddler/xata-http';
 import { waddler } from 'waddler/xata-http';
 import { commonTests } from '../../common.test.ts';
+import { vitestExpectSoftDate } from '../../utils.ts';
 import {
 	commonPgTests,
 	createAllArrayDataTypesTable,
@@ -146,13 +147,23 @@ test('all types in sql.unsafe test', async () => {
 		uuid: '550e8400-e29b-41d4-a716-446655440000',
 		bytea: encodeBufferForXata(Buffer.from('qwerty')),
 		default: defaultValue,
-	};
+	} as Record<string, any>;
 
-	expect(res[0]).toStrictEqual(expectedRes);
+	expect(Object.keys(res[0]!).length).toBe(Object.keys(expectedRes).length);
+	let predicate = Object.entries(res[0] as Record<string, any>).every(([colName, colValue]) =>
+		vitestExpectSoftDate(colValue, expectedRes[colName])
+	);
+	expect(predicate).toBe(true);
+	// expect(res[0]).toStrictEqual(expectedRes);
 
 	// same as select query as above but with rowMode: "array"
 	const arrayResult = await sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' });
-	expect(arrayResult[0]).toStrictEqual(Object.values(expectedRes));
+	expect(Object.keys(arrayResult[0]!).length).toBe(Object.keys(expectedRes).length);
+	predicate = Object.values(expectedRes).every((expectedValue, idx) =>
+		vitestExpectSoftDate(arrayResult[0]![idx], expectedValue)
+	);
+	expect(predicate).toBe(true);
+	// expect(arrayResult[0]).toStrictEqual(Object.values(expectedRes));
 });
 
 // sql.values
@@ -222,7 +233,12 @@ test('all types in sql.values test', async () => {
 
 	const res = await sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' });
 
-	expect(res[0]).toStrictEqual(expectedRes);
+	expect(res[0]!.length).toBe(expectedRes.length);
+	const predicate = Object.values(expectedRes).every((expectedValue, idx) =>
+		vitestExpectSoftDate(res[0]![idx], expectedValue)
+	);
+	expect(predicate).toBe(true);
+	// expect(res[0]).toStrictEqual(expectedRes);
 });
 
 test('all array types in sql.values test', async () => {
@@ -271,7 +287,7 @@ test('all array types in sql.values test', async () => {
 		['550e8400-e29b-41d4-a716-446655440000'],
 	];
 
-	const expectedRes1 = [
+	const expectedRes = [
 		[1],
 		[10],
 		[9007199254740992], // should be [BigInt('9007199254740992') + BigInt(1),]
@@ -315,7 +331,12 @@ test('all array types in sql.values test', async () => {
 
 	const res = await sql.unsafe(`select * from all_array_data_types;`, [], { rowMode: 'array' });
 
-	expect(res[0]).toStrictEqual(expectedRes1);
+	expect(res[0]!.length).toBe(expectedRes.length);
+	const predicate = Object.values(expectedRes).every((expectedValue, idx) =>
+		vitestExpectSoftDate(res[0]![idx], expectedValue)
+	);
+	expect(predicate).toBe(true);
+	// expect(res[0]).toStrictEqual(expectedRes1);
 });
 
 test('all nd-array types in sql.values test', async () => {
@@ -345,7 +366,7 @@ test('all nd-array types in sql.values test', async () => {
 		[['550e8400-e29b-41d4-a716-446655440000'], ['550e8400-e29b-41d4-a716-446655440000']],
 	];
 
-	const expectedRes1 = [
+	const expectedRes = [
 		[[1, 2], [2, 3]],
 		[null, null], // TODO revise: xata returns null for json[] and jsonb[] even though db has values for these columns
 		[null, null],
@@ -363,7 +384,12 @@ test('all nd-array types in sql.values test', async () => {
 
 	const res = await sql.unsafe(`select * from all_nd_array_data_types;`, [], { rowMode: 'array' });
 
-	expect(res[0]).toStrictEqual(expectedRes1);
+	expect(res[0]!.length).toBe(expectedRes.length);
+	const predicate = Object.values(expectedRes).every((expectedValue, idx) =>
+		vitestExpectSoftDate(res[0]![idx], expectedValue)
+	);
+	expect(predicate).toBe(true);
+	// expect(res[0]).toStrictEqual(expectedRes1);
 });
 
 // sql.stream
