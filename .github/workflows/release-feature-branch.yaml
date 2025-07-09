@@ -152,90 +152,90 @@ jobs:
       - test
       - attw
     strategy:
-    runs-on: ubuntu-22.04
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
-
-      - uses: pnpm/action-setup@v3
-        name: Install pnpm
-        id: pnpm-install
-        with:
-          version: latest
-          run_install: false
-
-      - name: Get pnpm store directory
-        id: pnpm-cache
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
-
-      - uses: actions/cache@v4
-        name: Setup pnpm cache
-        with:
-          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Check preconditions
-        id: checks
-        shell: bash
-        working-directory: waddler
-        run: |
-          old_version="$(jq -r .version package.json)"
-          version="$old_version-$(git rev-parse --short HEAD)"
-          npm version $version
-          tag="${{ github.ref_name }}"
-          is_version_published="$(npm view waddler versions --json | jq -r '.[] | select(. == "'$version'") | . == "'$version'"')"
-
-          if [[ "$is_version_published" == "true" ]]; then
-            echo "\`waddler$version\` already published, adding tag \`$tag\`" >> $GITHUB_STEP_SUMMARY
-            npm dist-tag add waddler@$version $tag
-          else
-            {
-              echo "version=$version"
-              echo "tag=$tag"
-              echo "has_new_release=true"
-            } >> $GITHUB_OUTPUT
-          fi
-
-      - name: Build
-        if: steps.checks.outputs.has_new_release == 'true'
-        run: pnpm build
-
-      - name: Pack
-        if: steps.checks.outputs.has_new_release == 'true'
-        working-directory: waddler
-        shell: bash
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
-        run: npm run pack
-
-      - name: Publish
-        if: github.event_name == 'push' && steps.checks.outputs.has_new_release == 'true'
-        run: |
-          tag="${{ steps.checks.outputs.tag }}"
-          version="${{ steps.checks.outputs.version }}"
-
-          echo "Publishing waddler@$tag using version $version"
-          npm run publish -- --tag $tag
-
-          echo "npm: \`waddler@$tag | waddler@$version\`" >> $GITHUB_STEP_SUMMARY
-
-          # Post release message to Discord
-          # curl -X POST -H "Content-Type: application/json" -d "{\"embeds\": [{\"title\": \"New \`waddler\` release! 🎉\", \"url\": \"https://www.npmjs.com/package/waddler/v/$version\", \"color\": \"12907856\", \"fields\": [{\"name\": \"Version\", \"value\": \"\`$version\`\"}, {\"name\": \"Tag\", \"value\": \"\`$tag\`\"}]}]}" ${{ secrets.DISCORD_DEV_RELEASE_WEBHOOK_URL }}
-        working-directory: waddler
-        shell: bash
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+      runs-on: ubuntu-22.04
+      permissions:
+        contents: read
+        id-token: write
+      steps:
+        - uses: actions/checkout@v4
+  
+        - uses: actions/setup-node@v4
+          with:
+            node-version: '22'
+            registry-url: 'https://registry.npmjs.org'
+  
+        - uses: pnpm/action-setup@v3
+          name: Install pnpm
+          id: pnpm-install
+          with:
+            version: latest
+            run_install: false
+  
+        - name: Get pnpm store directory
+          id: pnpm-cache
+          shell: bash
+          run: |
+            echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_OUTPUT
+  
+        - uses: actions/cache@v4
+          name: Setup pnpm cache
+          with:
+            path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+            key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+            restore-keys: |
+              ${{ runner.os }}-pnpm-store-
+  
+        - name: Install dependencies
+          run: pnpm install
+  
+        - name: Check preconditions
+          id: checks
+          shell: bash
+          working-directory: waddler
+          run: |
+            old_version="$(jq -r .version package.json)"
+            version="$old_version-$(git rev-parse --short HEAD)"
+            npm version $version
+            tag="${{ github.ref_name }}"
+            is_version_published="$(npm view waddler versions --json | jq -r '.[] | select(. == "'$version'") | . == "'$version'"')"
+  
+            if [[ "$is_version_published" == "true" ]]; then
+              echo "\`waddler$version\` already published, adding tag \`$tag\`" >> $GITHUB_STEP_SUMMARY
+              npm dist-tag add waddler@$version $tag
+            else
+              {
+                echo "version=$version"
+                echo "tag=$tag"
+                echo "has_new_release=true"
+              } >> $GITHUB_OUTPUT
+            fi
+  
+        - name: Build
+          if: steps.checks.outputs.has_new_release == 'true'
+          run: pnpm build
+  
+        - name: Pack
+          if: steps.checks.outputs.has_new_release == 'true'
+          working-directory: waddler
+          shell: bash
+          env:
+            NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
+          run: npm run pack
+  
+        - name: Publish
+          if: github.event_name == 'push' && steps.checks.outputs.has_new_release == 'true'
+          run: |
+            tag="${{ steps.checks.outputs.tag }}"
+            version="${{ steps.checks.outputs.version }}"
+  
+            echo "Publishing waddler@$tag using version $version"
+            npm run publish -- --tag $tag
+  
+            echo "npm: \`waddler@$tag | waddler@$version\`" >> $GITHUB_STEP_SUMMARY
+  
+            # Post release message to Discord
+            # curl -X POST -H "Content-Type: application/json" -d "{\"embeds\": [{\"title\": \"New \`waddler\` release! 🎉\", \"url\": \"https://www.npmjs.com/package/waddler/v/$version\", \"color\": \"12907856\", \"fields\": [{\"name\": \"Version\", \"value\": \"\`$version\`\"}, {\"name\": \"Tag\", \"value\": \"\`$tag\`\"}]}]}" ${{ secrets.DISCORD_DEV_RELEASE_WEBHOOK_URL }}
+          working-directory: waddler
+          shell: bash
+          env:
+            NODE_AUTH_TOKEN: ${{ secrets.NPM_ACCESS_TOKEN }}
