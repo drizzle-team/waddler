@@ -1,6 +1,6 @@
 {
 	"name": "waddler",
-	"version": "0.0.12",
+	"version": "0.1.0",
 	"type": "module",
 	"repository": "https://github.com/drizzle-team/waddler",
 	"license": "MIT",

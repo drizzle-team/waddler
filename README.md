@@ -3,17 +3,26 @@
   <a href="https://waddler.drizzle.team/docs/overview">Documentation</a> •
   <a href="https://x.com/drizzleorm">Twitter</a> • by [Drizzle Team](https://drizzle.team)  
   
-Waddler is a thin SQL client on top of official DuckDB NodeJS driver with modern API inspired by `postgresjs` and based on ES6 Tagged Template Strings.
+Waddler - is a thin SQL client on top of official DuckDB NodeJS driver with modern API inspired by [`postgresjs`](https://github.com/porsager/postgres) and based on ES6 Tagged Template Strings.
 
-Waddler has a baked in database pooling which unlocks full potential of hosted DuckDB services like MotherDuck. It does create multiple database instances under the hood and lets you concurrently fetch data from the remote MotherDuck database.
+> You don't need to learn an api for db clients; just use the `sql` template tag for everything
+
+Waddler is our vision of a modern, all-in-one client for any database dialect.
+It doesn't perform any specific mappings to or from a database, doesn't handle complex query building, and doesn't parse queries.
+Waddler simply unifies communication with your database using any client you 
+choose - whether it's a simple TCP connection or an HTTP-based DB client.
+
+We support all the dialects and drivers that [Drizzle](https://orm.drizzle.team/docs/get-started) supports
+
+You can check a full list of clients you can use - [here](/docs/get-started)
 
 ```ts
-import { waddler } from "waddler";
+import { waddler } from "waddler/node-postgres";
+import { waddler } from "waddler/mysql2";
+import { waddler } from "waddler/libsql";
 
-const sql = waddler({ dbUrl: ":memory:" });
-const sql = waddler({ dbUrl: "file.db" });
-const sql = waddler({ dbUrl: "md?:" }); // mother duck url
-const sql = waddler({ dbUrl: "md?:", min: 1, max: 8 }); // automatic database pooling
+const sql = waddler({ dbUrl: process.env.DB_URL });
+const sql = waddler();
 
 // promisified SQL template API
 const result = await sql`select * from users`;
