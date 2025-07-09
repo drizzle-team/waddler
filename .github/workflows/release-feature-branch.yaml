@@ -65,7 +65,7 @@ jobs:
 
         working-directory: integration-tests
         run: |
-          if [[ ${{ github.event_name }} == "push" || "${{ github.event.pull_request.head.repo.full_name }}" == "${{ github.repository }}" ]]; then
+          if [[ ${{ github.event_name }} != "push" && "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]]; then
             export RUN_EXTERNAL_DB_TESTS=1
           fi
 
