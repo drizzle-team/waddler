@@ -1,6 +1,6 @@
 {
 	"name": "waddler",
-	"version": "0.0.12",
+	"version": "0.1.0",
 	"type": "module",
 	"repository": "https://github.com/drizzle-team/waddler",
 	"license": "MIT",
@@ -9,7 +9,8 @@
 		"start:db": "npx tsx ./src/dev/db-test.ts ",
 		"lint": "concurrently -n eslint,dprint \"eslint --ext ts .\" \"dprint check --list-different\"",
 		"build": "pnpm tsx scripts/build.ts",
-		"pack": "(cd dist && npm pack --pack-destination ..) && rm -f package.tgz && mv *.tgz package.tgz"
+		"pack": "(cd dist && npm pack --pack-destination ..) && rm -f package.tgz && mv *.tgz package.tgz",
+		"publish": "npm publish package.tgz"
 	},
 	"devDependencies": {
 		"@clickhouse/client": "^1.11.2",
