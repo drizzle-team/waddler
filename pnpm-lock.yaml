@@ -62,6 +62,9 @@ importers:
       '@arethetypeswrong/cli':
         specifier: 0.16.4
         version: 0.16.4
+      '@clickhouse/client':
+        specifier: ^1.11.2
+        version: 1.11.2
       '@cloudflare/workers-types':
         specifier: 4.20250430.0
         version: 4.20250430.0
@@ -222,6 +225,9 @@ importers:
         specifier: ^4.8.0
         version: 4.10.0(pg@8.14.0)
     devDependencies:
+      '@clickhouse/client':
+        specifier: ^1.11.2
+        version: 1.11.2
       '@cloudflare/workers-types':
         specifier: ^4.20250430.0
         version: 4.20250430.0
@@ -861,6 +867,13 @@ packages:
 
   '@braidai/lang@1.1.1':
     resolution: {integrity: sha512-5uM+no3i3DafVgkoW7ayPhEGHNNBZCSj5TrGDQt0ayEKQda5f3lAXlmQg0MR5E0gKgmTzUUEtSWHsEC3h9jUcg==}
+
+  '@clickhouse/client-common@1.11.2':
+    resolution: {integrity: sha512-H4ECHqaipzMgiZKqpb1Z4N3Ofq+lVTCn8I59XsSynqrsfR4jWZD3PipXVvIzMpDmTMvrlJWrOwAdm0DMNiMQbA==}
+
+  '@clickhouse/client@1.11.2':
+    resolution: {integrity: sha512-ZE7Q1qxsDNXCkGPf1zqmhpZpwAKxKT+1s4Z432J1Mb2Gm26Y4tG/sJoug81AfAJTt6s7taO2vzNBAKfSR3SStg==}
+    engines: {node: '>=16'}
 
   '@cloudflare/kv-asset-handler@0.4.0':
     resolution: {integrity: sha512-+tv3z+SPp+gqTIcImN9o0hqE9xyfQjI1XD9pL6NuKjua9B1y7mNYv0S9cP+QEbA4ppVgGZEmKOvHX5G5Ei1CVA==}
@@ -6698,6 +6711,12 @@ snapshots:
   '@balena/dockerignore@1.0.2': {}
 
   '@braidai/lang@1.1.1': {}
+
+  '@clickhouse/client-common@1.11.2': {}
+
+  '@clickhouse/client@1.11.2':
+    dependencies:
+      '@clickhouse/client-common': 1.11.2
 
   '@cloudflare/kv-asset-handler@0.4.0':
     dependencies:

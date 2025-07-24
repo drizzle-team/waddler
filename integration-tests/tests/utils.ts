@@ -128,6 +128,44 @@ export const createGelDockerDB = async () => {
 	};
 };
 
+export const createClickHouseDockerDB = async () => {
+	const docker = new Docker();
+	const port = await getPort();
+	const image = 'clickhouse/clickhouse-server:latest';
+
+	const pullStream = await docker.pull(image);
+	await new Promise((resolve, reject) =>
+		docker.modem.followProgress(pullStream, (err) => err ? reject(err) : resolve(err))
+	);
+
+	const password = 'password', database = 'default';
+	const clickHouseContainer = await docker.createContainer({
+		Image: image,
+		Env: [`CLICKHOUSE_PASSWORD=${password}`, `CLICKHOUSE_DATABASE=${database}`],
+		name: `drizzle-integration-tests-${crypto.randomUUID()}`,
+		HostConfig: {
+			AutoRemove: true,
+			PortBindings: {
+				'8123/tcp': [{ HostPort: `${port}` }],
+			},
+		},
+	});
+
+	await clickHouseContainer.start();
+
+	return {
+		clickHouseContainer,
+		connectionParams: {
+			url: `http://localhost:${port}`,
+			host: 'localhost',
+			port,
+			user: 'default',
+			password,
+			database,
+		},
+	};
+};
+
 const isValidDate = (date: any): boolean => {
 	if (Array.isArray(date)) {
 		return date.every((dateI) => isValidDate(dateI));

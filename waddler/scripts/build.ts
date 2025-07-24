@@ -28,6 +28,7 @@ const entries: Array<string> = [
 	'src/sqlite/durable-sqlite/index.ts',
 	'src/sqlite/op-sqlite/index.ts',
 	'src/sqlite/expo-sqlite/index.ts',
+	'src/clickhouse/index.ts',
 
 	'src/index.ts',
 	'src/extensions/index.ts',
@@ -61,7 +62,7 @@ const updateAndCopyPackageJson = async () => {
 				const requireEntry = `./${entry}.cjs`;
 				const exportsEntry = entry === 'index'
 					? '.'
-					: ['extensions', 'gel', 'duckdb'].some((key) => entry.includes(key))
+					: ['extensions', 'gel', 'duckdb', 'clickhouse'].some((key) => entry.includes(key))
 					? './' + entry.split('/').slice(0, -1).join('/')
 					: './' + entry.split('/').slice(1, -1).join('/');
 

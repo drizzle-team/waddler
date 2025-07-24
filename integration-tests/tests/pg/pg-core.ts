@@ -700,7 +700,6 @@ export const nodePgTests = () => {
 				vitestExpectSoftDate(res[0]![idx], expectedValue)
 			);
 			expect(predicate).toBe(true);
-			// expect(res[0]).toStrictEqual(expectedRes1);
 
 			await dropAllNdarrayDataTypesTable(ctx.sql);
 		});

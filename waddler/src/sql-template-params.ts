@@ -11,6 +11,8 @@ export abstract class Dialect implements BuildQueryConfig {
 		value: V;
 		lastParamIdx: number;
 		params: UnsafeParamType[];
+		types: string[];
+		colIdx?: number;
 	}): string;
 }
 
@@ -123,7 +125,7 @@ export class SQLIdentifier<Q extends IdentifierObject> extends SQLChunk {
 }
 
 export class SQLValues extends SQLChunk {
-	constructor(readonly value: Value[][]) {
+	constructor(readonly value: Value[][], readonly types: string[] = []) {
 		super();
 	}
 	params: UnsafeParamType[] = [];
@@ -161,7 +163,9 @@ export class SQLValues extends SQLChunk {
 
 			return `(${
 				rowValues
-					.map((value) => dialect.valueToSQL({ value, lastParamIdx, params: this.params }))
+					.map((value, index) =>
+						dialect.valueToSQL({ value, lastParamIdx, params: this.params, types: this.types, colIdx: index })
+					)
 					.join(', ')
 			})`;
 		}
