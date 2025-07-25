@@ -184,37 +184,37 @@ export const commonClickHouseTests = () => {
 		test('base test with number param', (ctx) => {
 			const res = ctx.sql`select ${1};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select {val1:String};`, params: [1] });
+			expect(res).toStrictEqual({ query: `select {val1:String};`, params: [['val1', 1]] });
 		});
 
 		test('base test with bigint param', (ctx) => {
 			const res = ctx.sql`select ${BigInt(10)};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select {val1:String};`, params: [10n] });
+			expect(res).toStrictEqual({ query: `select {val1:String};`, params: [['val1', 10n]] });
 		});
 
 		test('base test with string param', (ctx) => {
 			const res = ctx.sql`select ${'hello world.'};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select {val1:String};`, params: ['hello world.'] });
+			expect(res).toStrictEqual({ query: `select {val1:String};`, params: [['val1', 'hello world.']] });
 		});
 
 		test('base test with boolean param', (ctx) => {
 			const res = ctx.sql`select ${true};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select {val1:String};`, params: [true] });
+			expect(res).toStrictEqual({ query: `select {val1:String};`, params: [['val1', true]] });
 		});
 
 		test('base test with Date param', (ctx) => {
 			const res = ctx.sql`select ${new Date('10.04.2025')};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select {val1:String};`, params: [new Date('10.04.2025')] });
+			expect(res).toStrictEqual({ query: `select {val1:String};`, params: [['val1', new Date('10.04.2025')]] });
 		});
 
 		test('base test with null param', (ctx) => {
 			const res = ctx.sql`select ${null};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select {val1:String};`, params: [null] });
+			expect(res).toStrictEqual({ query: `select {val1:String};`, params: [['val1', null]] });
 		});
 
 		// sql.append
@@ -227,7 +227,7 @@ export const commonClickHouseTests = () => {
 			const res = query.toSQL();
 			expect(res).toStrictEqual({
 				query: 'select * from users where id = {val1:String} or id = {val2:String} or id = {val3:String};',
-				params: [1, 3, 4],
+				params: [['val1', 1], ['val2', 3], ['val3', 4]],
 			});
 		});
 

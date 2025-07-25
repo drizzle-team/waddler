@@ -1077,3 +1077,55 @@ test('sql.stream test', async () => {
 		expect(predicate).toBe(true);
 	}
 });
+
+test('query database test from documentation', async () => {
+	await sql.unsafe(`create table users(
+    id    Int32,
+    name  String,
+    age   Int32,
+    email String
+)
+engine = MergeTree
+order by id;
+  `).command();
+
+	const user = [
+		'John',
+		30,
+		'john@example.com',
+	];
+	await sql`insert into ${sql.identifier('users')} values ${sql.values([[sql.default, ...user]])};`.command();
+	// console.log('New user created!');
+	const _users = await sql`select * from ${sql.identifier('users')};`.query();
+	// console.log('Getting all users from the database:', users);
+	/*
+  const users: {
+    id: number;
+    name: string;
+    age: number;
+    email: string;
+  }[]
+  */
+	await sql`alter table ${sql.identifier('users')} update age = ${31} where email = ${user[2]};`.command();
+	// console.log('User info updated!');
+
+	const stream = sql`select * from ${sql.identifier('users')};`.query().stream();
+
+	// console.log('Streaming users one at a time from the database.');
+	for await (const _user of stream) {
+		// console.log(user);
+		/*
+    const user: {
+      id: number;
+      name: string;
+      age: number;
+      email: string;
+    }
+    */
+	}
+
+	await sql`alter table ${sql.identifier('users')} delete where email = ${user[2]};`.command();
+	// console.log('User deleted!');
+
+	await sql.unsafe(`drop table users;`).command();
+});

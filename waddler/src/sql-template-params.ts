@@ -3,6 +3,9 @@ import type { Identifier, IdentifierObject, Raw, UnsafeParamType, Value } from '
 
 export abstract class Dialect implements BuildQueryConfig {
 	abstract escapeParam(lastParamIdx: number): string;
+	formParam(param: any, _lastParamIdx: number): any {
+		return param;
+	}
 	abstract escapeIdentifier(identifier: string): string;
 	abstract checkIdentifierObject(object: IdentifierObject): void;
 
@@ -37,7 +40,7 @@ export class SQLCommonParam extends SQLChunk {
 	) {
 		return {
 			sql: dialect.escapeParam(lastParamIdx + 1),
-			params: [this.value],
+			params: [dialect.formParam(this.value, lastParamIdx + 1)],
 		};
 	}
 }

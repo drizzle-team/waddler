@@ -30,6 +30,7 @@ export interface Query {
 export interface BuildQueryConfig {
 	escapeIdentifier(identifier: string): string;
 	escapeParam(lastParamIdx: number): string;
+	formParam(param: any, lastParamIdx: number): any;
 	checkIdentifierObject(object: IdentifierObject): void;
 	valueToSQL(
 		{ value, lastParamIdx, params }: {

@@ -9,6 +9,10 @@ export class ClickHouseDialect extends Dialect {
 		return `{val${lastParamIdx}:${typeToCast || 'String'}}`;
 	}
 
+	override formParam(param: any, lastParamIdx: number) {
+		return [`val${lastParamIdx}`, param];
+	}
+
 	escapeIdentifier(identifier: string): string {
 		return `\`${identifier}\``;
 	}
