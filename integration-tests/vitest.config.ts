@@ -4,8 +4,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
 	test: {
 		include: [
-			// './tests/**/*.test.ts',
-			'./tests/clickhouse/*.test.ts',
+			'./tests/**/*.test.ts',
 		],
 		exclude: [
 			...(process.env['RUN_EXTERNAL_DB_TESTS']

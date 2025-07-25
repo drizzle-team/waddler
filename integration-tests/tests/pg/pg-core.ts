@@ -462,7 +462,7 @@ export const nodePgTests = () => {
 			expect(predicate).toBe(true);
 			// expect(res[0]).toStrictEqual(expectedRes);
 
-			// same as select query as above but with rowMode: "array"
+			// same as select query above but with rowMode: "array"
 			const arrayResult = await ctx.sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' });
 
 			expect(Object.keys(arrayResult[0]!).length).toBe(Object.keys(expectedRes).length);

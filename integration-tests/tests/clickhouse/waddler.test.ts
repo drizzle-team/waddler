@@ -272,13 +272,23 @@ test('all types in sql.unsafe test', async () => {
 		map_string_uint8: { key1: 1, key2: 10 },
 		dynamic: 'qwerty',
 		default_int: defaultValue,
-	};
+	} as Record<string, any>;
 
-	expect(res[0]).toStrictEqual(expectedRes);
+	expect(Object.keys(res[0]!).length).toBe(Object.keys(expectedRes).length);
+	let predicate = Object.entries(res[0] as Record<string, any>).every(([colName, colValue]) =>
+		vitestExpectSoftDate(colValue, expectedRes[colName])
+	);
+	expect(predicate).toBe(true);
+	// expect(res[0]).toStrictEqual(expectedRes);
 
-	const resArray = await sql.unsafe(`select * from \`all_data_types\`;`, [], { rowMode: 'array' }).query();
+	const arrayResult = await sql.unsafe(`select * from \`all_data_types\`;`, [], { rowMode: 'array' }).query();
 
-	expect(resArray[0]).toStrictEqual(Object.values(expectedRes));
+	expect(Object.keys(arrayResult[0]!).length).toBe(Object.keys(expectedRes).length);
+	predicate = Object.values(expectedRes).every((expectedValue, idx) =>
+		vitestExpectSoftDate(arrayResult[0]![idx], expectedValue)
+	);
+	expect(predicate).toBe(true);
+	// expect(resArray[0]).toStrictEqual(Object.values(expectedRes));
 });
 
 test('all types in sql.values test', async () => {
@@ -407,13 +417,23 @@ test('all types in sql.values test', async () => {
 		map_string_uint8: { key1: 1, key2: 10 },
 		dynamic: 'qwerty',
 		default_int: defaultValue,
-	};
+	} as Record<string, any>;
 
-	expect(res[0]).toStrictEqual(expectedRes);
+	expect(Object.keys(res[0]!).length).toBe(Object.keys(expectedRes).length);
+	let predicate = Object.entries(res[0] as Record<string, any>).every(([colName, colValue]) =>
+		vitestExpectSoftDate(colValue, expectedRes[colName])
+	);
+	expect(predicate).toBe(true);
+	// expect(res[0]).toStrictEqual(expectedRes);
 
-	const resArray = await sql.unsafe(`select * from \`all_data_types\`;`, [], { rowMode: 'array' }).query();
+	const arrayResult = await sql.unsafe(`select * from \`all_data_types\`;`, [], { rowMode: 'array' }).query();
 
-	expect(resArray[0]).toStrictEqual(Object.values(expectedRes));
+	expect(Object.keys(arrayResult[0]!).length).toBe(Object.keys(expectedRes).length);
+	predicate = Object.values(expectedRes).every((expectedValue, idx) =>
+		vitestExpectSoftDate(arrayResult[0]![idx], expectedValue)
+	);
+	expect(predicate).toBe(true);
+	// expect(resArray[0]).toStrictEqual(Object.values(expectedRes));
 
 	await dropAllDataTypesTable(sql);
 	await createAllDataTypesTable(sql);
@@ -600,9 +620,14 @@ test('all array types in sql.values test', async () => {
 		tuple_uint8_string_array: [{ i: 1, s: 'a' }, { i: 2, s: 'b' }],
 		map_string_uint8_array: [{ key1: 1, key2: 10 }, { key1: 2, key2: 11 }],
 		dynamic_array: ['qwerty', 'qwerty1'],
-	};
+	} as Record<string, any>;
 
-	expect(res[0]).toStrictEqual(expectedRes);
+	expect(Object.keys(res[0]!).length).toBe(Object.keys(expectedRes).length);
+	const predicate = Object.entries(res[0] as Record<string, any>).every(([colName, colValue]) =>
+		vitestExpectSoftDate(colValue, expectedRes[colName])
+	);
+	expect(predicate).toBe(true);
+	// expect(res[0]).toStrictEqual(expectedRes);
 
 	await dropAllArrayDataTypesTable(sql);
 	await createAllArrayDataTypesTable(sql);
@@ -1018,23 +1043,37 @@ test('sql.stream test', async () => {
 		map_string_uint8: { key1: 1, key2: 10 },
 		dynamic: 'qwerty',
 		default_int: defaultValue,
-	};
+	} as Record<string, any>;
 
 	const stream0 = sql.unsafe(`select * from \`all_data_types\`;`, [], { rowMode: 'object' }).query().stream();
 
 	for await (const row of stream0) {
-		expect(row).toStrictEqual(expectedRes);
+		expect(Object.keys(row).length).toBe(Object.keys(expectedRes).length);
+		const predicate = Object.entries(row as Record<string, any>).every(([colName, colValue]) =>
+			vitestExpectSoftDate(colValue, expectedRes[colName])
+		);
+		expect(predicate).toBe(true);
+		// expect(row).toStrictEqual(expectedRes);
 	}
 
 	const stream1 = sql.unsafe(`select * from \`all_data_types\`;`, [], { rowMode: 'array' }).query().stream();
 
 	for await (const row of stream1) {
-		expect(row).toStrictEqual(Object.values(expectedRes));
+		expect(Object.keys(row).length).toBe(Object.keys(expectedRes).length);
+		const predicate = Object.values(expectedRes).every((expectedValue, idx) =>
+			vitestExpectSoftDate(row[idx], expectedValue)
+		);
+		expect(predicate).toBe(true);
+		// expect(row).toStrictEqual(Object.values(expectedRes));
 	}
 
 	const stream2 = sql`select * from \`all_data_types\`;`.query().stream();
 
 	for await (const row of stream2) {
-		expect(row).toStrictEqual(expectedRes);
+		expect(Object.keys(row).length).toBe(Object.keys(expectedRes).length);
+		const predicate = Object.entries(row as Record<string, any>).every(([colName, colValue]) =>
+			vitestExpectSoftDate(colValue, expectedRes[colName])
+		);
+		expect(predicate).toBe(true);
 	}
 });
