@@ -1,4 +1,4 @@
-import { type ClickHouseClient, createClient } from '@clickhouse/client';
+import { type ClickHouseClient, createClient, TupleParam } from '@clickhouse/client';
 import type Docker from 'dockerode';
 import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
 import type { ClickHouseSQL } from 'waddler/clickhouse';
@@ -6,6 +6,7 @@ import { waddler } from 'waddler/clickhouse';
 import { commonTests } from '../common.test.ts';
 import { createClickHouseDockerDB, vitestExpectSoftDate } from '../utils.ts';
 import {
+	commonClickHouseTests,
 	createAllArrayDataTypesTable,
 	createAllDataTypesTable,
 	createAllNdarrayDataTypesTable,
@@ -95,8 +96,7 @@ test('connection test', async () => {
 });
 
 commonTests();
-// TODO: add commonClickHouseTests()
-// commonMysqlTests();
+commonClickHouseTests();
 
 // ALL TYPES with sql.unsafe and sql.values-------------------------------------------------------------------
 test('all types in sql.unsafe test', async () => {
@@ -313,14 +313,14 @@ test('all types in sql.values test', async () => {
 		new Date('2024-10-31T14:25:29.123'), // datetime64
 		'hello', // enum('hello', 'world')
 		'61f0c404-5cb3-11e7-907b-a6006ad3dba0', // uuid
-		JSON.stringify({
+		{
 			name: 'alex',
 			age: 26,
 			bookIds: [1, 2, 3],
 			vacationRate: 2.5,
 			aliases: ['sasha', 'sanya'],
 			isMarried: true,
-		}), // json
+		}, // json
 		'116.253.40.133', // ipv4
 		'2a02:aa08:e000:3100::2', // ipv6
 		true, // bool
@@ -334,14 +334,13 @@ test('all types in sql.values test', async () => {
 		'[[(0,0),(10,0),(10,10),(0,10)],[(1,1),(2,2),(3,3)]]', // MultiLineString
 		'[[(20,20),(50,20),(50,50),(20,50)],[(30,30),(50,50),(50,30)]]', // Polygon
 		'[[[(0,0),(10,0),(10,10),(0,10)]],[[(20,20),(50,20),(50,50),(20,50)],[(30,30),(50,50),(50,30)]]]', // MultiPolygon
-		"(0, 'a')", // Tuple(i UInt8, s String) ;
-		{ key1: 1, key2: 10 }, // Map(String, UInt8)
+		new TupleParam([0, 'a']), // "(0, 'a')", // Tuple(i UInt8, s String) ;
+		new Map([['key1', 1], ['key2', 10]]), // { key1: 1, key2: 10 }, // Map(String, UInt8)
 		sql.raw("'qwerty'"), // Dynamic
 		sql.default,
 	];
 
 	let types: string[] = [];
-	types[27] = 'JSON';
 	await sql`insert into \`all_data_types\` values ${sql.values([allDataTypesValues], types)};`
 		.command();
 
@@ -460,7 +459,7 @@ test('all types in sql.values test', async () => {
 		'MultiLineString',
 		'Polygon',
 		'MultiPolygon',
-		'String', // TODO revise: cannot insert tuple with type case 'Tuple(UInt8,String)'
+		'Tuple(UInt8,String)',
 		'Map(String, UInt8)',
 	];
 
@@ -474,6 +473,14 @@ test('all types in sql.values test', async () => {
 test('all array types in sql.values test', async () => {
 	await createAllArrayDataTypesTable(sql);
 
+	const json = {
+		name: 'alex',
+		age: 26,
+		bookIds: [1, 2, 3],
+		vacationRate: 2.5,
+		aliases: ['sasha', 'sanya'],
+		isMarried: true,
+	};
 	const allArrayDataTypesValues = [
 		[-1, 2, 127], // Array(Int8)
 		[-4, 5, 32767], // Array(Int16)
@@ -502,24 +509,7 @@ test('all array types in sql.values test', async () => {
 		['2024-10-30 14:25:29.123', '2024-11-30 14:25:29.123'], // Array(DateTime64)
 		['hello', 'world'], // Array(Enum('hello', 'world'))
 		['61f0c404-5cb3-11e7-907b-a6006ad3dba0', '61f0c404-5cb3-11e7-907b-a6006ad3dba0'], // Array(UUID)
-		[
-			JSON.stringify({
-				name: 'alex',
-				age: 26,
-				bookIds: [1, 2, 3],
-				vacationRate: 2.5,
-				aliases: ['sasha', 'sanya'],
-				isMarried: true,
-			}),
-			JSON.stringify({
-				name: 'alex',
-				age: 26,
-				bookIds: [1, 2, 3],
-				vacationRate: 2.5,
-				aliases: ['sasha', 'sanya'],
-				isMarried: true,
-			}),
-		], // Array(JSON)
+		[json, json], // Array(JSON)
 		['116.253.40.133', '116.253.40.134'], // Array(IPv4)
 		['2a02:aa08:e000:3100::2', '2a02:aa08:e000:3100::1'], // Array(IPv6)
 		[true, false], // Array(BOOL)
@@ -532,20 +522,12 @@ test('all array types in sql.values test', async () => {
 		'[[[(0,0),(10,0),(10,10),(0,10)],[(1,1),(2,2),(3,3)]]]', // Array(MultiLineString)
 		'[[[(20,20),(50,20),(50,50),(20,50)],[(30,30),(50,50),(50,30)]]]', // Array(Polygon)
 		'[[[[(0,0),(10,0),(10,10),(0,10)]],[[(20,20),(50,20),(50,50),(20,50)],[(30,30),(50,50),(50,30)]]]]', // Array(MultiPolygon)
-		"[(0, 'a')]", // Array(Tuple(i UInt8, s String))
-		[{ key1: 1, key2: 10 }, { key1: 2, key2: 11 }], // Array(Map(String, UInt8))
-		['qwerty'], // Array(Dynamic)
+		[new TupleParam([1, 'a']), new TupleParam([2, 'b'])], // Array(Tuple(i UInt8, s String))
+		[new Map([['key1', 1], ['key2', 10]]), new Map([['key1', 2], ['key2', 11]])], // Array(Map(String, UInt8))
+		['qwerty', 'qwerty1'], // Array(Dynamic)
 	];
 
 	let types: string[] = [];
-	// types[3] = 'Array(Int64)';
-	// types[9] = 'Array(UInt64)';
-	// types[12] = 'Array(Float32)';
-	// types[21] = 'Array(Date)';
-	// types[22] = 'Array(Date32)';
-	// types[23] = 'Array(DateTime)';
-	// types[24] = 'Array(DateTime64)';
-	types[27] = 'Array(JSON)';
 
 	const query = sql`insert into \`all_array_data_types\` values ${sql.values([allArrayDataTypesValues], types)};`
 		.command();
@@ -593,21 +575,7 @@ test('all array types in sql.values test', async () => {
 			'61f0c404-5cb3-11e7-907b-a6006ad3dba0',
 			'61f0c404-5cb3-11e7-907b-a6006ad3dba0',
 		],
-		json_array: [{
-			name: 'alex',
-			age: 26,
-			bookIds: [1, 2, 3],
-			vacationRate: 2.5,
-			aliases: ['sasha', 'sanya'],
-			isMarried: true,
-		}, {
-			name: 'alex',
-			age: 26,
-			bookIds: [1, 2, 3],
-			vacationRate: 2.5,
-			aliases: ['sasha', 'sanya'],
-			isMarried: true,
-		}],
+		json_array: [json, json],
 		ipv4_array: ['116.253.40.133', '116.253.40.134'],
 		ipv6_array: ['2a02:aa08:e000:3100::2', '2a02:aa08:e000:3100::1'],
 		boolean_array: [true, false],
@@ -629,13 +597,12 @@ test('all array types in sql.values test', async () => {
 			[[20, 20], [50, 20], [50, 50], [20, 50]],
 			[[30, 30], [50, 50], [50, 30]],
 		]]],
-		tuple_uint8_string_array: [{ i: 0, s: 'a' }],
+		tuple_uint8_string_array: [{ i: 1, s: 'a' }, { i: 2, s: 'b' }],
 		map_string_uint8_array: [{ key1: 1, key2: 10 }, { key1: 2, key2: 11 }],
-		dynamic_array: ['qwerty'],
+		dynamic_array: ['qwerty', 'qwerty1'],
 	};
 
 	expect(res[0]).toStrictEqual(expectedRes);
-	// TODO specify type cast for each type and ensure that data can be inserted
 
 	await dropAllArrayDataTypesTable(sql);
 	await createAllArrayDataTypesTable(sql);
@@ -681,7 +648,7 @@ test('all array types in sql.values test', async () => {
 		'Array(MultiLineString)',
 		'Array(Polygon)',
 		'Array(MultiPolygon)',
-		'String', // TODO revise: cannot insert array with type cast Array(Tuple(UInt8,String))
+		'Array(Tuple(UInt8,String))',
 		'Array(Map(String, UInt8))',
 	];
 
@@ -743,7 +710,7 @@ test('all nd-array types in sql.values test', async () => {
 			'61f0c404-5cb3-11e7-907b-a6006ad3dba0',
 			'61f0c404-5cb3-11e7-907b-a6006ad3dba0',
 		]], // Array(Array(UUID))
-		[[JSON.stringify(json), JSON.stringify(json)], [JSON.stringify(json), JSON.stringify(json)]], // Array(Array(JSON))
+		[[json, json], [json, json]], // Array(Array(JSON))
 		[['116.253.40.133', '116.253.40.134'], ['116.253.40.133', '116.253.40.134']], // Array(Array(IPv4))
 		[['2a02:aa08:e000:3100::2', '2a02:aa08:e000:3100::1'], ['2a02:aa08:e000:3100::2', '2a02:aa08:e000:3100::1']], // Array(Array(IPv6))
 		[[true, false], [true, false]], // Array(Array(BOOL))
@@ -756,13 +723,15 @@ test('all nd-array types in sql.values test', async () => {
 		'[[[[(0,0),(10,0),(10,10),(0,10)],[(1,1),(2,2),(3,3)]]],[[[(0,0),(10,0),(10,10),(0,10)],[(1,1),(2,2),(3,3)]]]]', // Array(Array(MultiLineString))
 		'[[[[(20,20),(50,20),(50,50),(20,50)],[(30,30),(50,50),(50,30)]]],[[[(20,20),(50,20),(50,50),(20,50)],[(30,30),(50,50),(50,30)]]]]', // Array(Array(Polygon))
 		'[[[[[(0,0),(10,0),(10,10),(0,10)]],[[(20,20),(50,20),(50,50),(20,50)],[(30,30),(50,50),(50,30)]]]],[[[[(0,0),(10,0),(10,10),(0,10)]],[[(20,20),(50,20),(50,50),(20,50)],[(30,30),(50,50),(50,30)]]]]]', // Array(Array(MultiPolygon))
-		"[[(0, 'a')],[(0, 'a')]]", // Array(Array(Tuple(i UInt8, s String)))
-		[[{ key1: 1, key2: 10 }, { key1: 2, key2: 11 }], [{ key1: 1, key2: 10 }, { key1: 2, key2: 11 }]], // Array(Array(Map(String, UInt8)))
-		[['qwerty'], ['qwerty']], // Array(Array(Dynamic))
+		[[new TupleParam([1, 'a']), new TupleParam([2, 'b'])], [new TupleParam([1, 'a']), new TupleParam([2, 'b'])]], // Array(Array(Tuple(i UInt8, s String)))
+		[[new Map([['key1', 1], ['key2', 10]]), new Map([['key1', 2], ['key2', 11]])], [
+			new Map([['key1', 1], ['key2', 10]]),
+			new Map([['key1', 2], ['key2', 11]]),
+		]], // Array(Array(Map(String, UInt8)))
+		[['qwerty', 'qwerty1'], ['qwerty', 'qwerty1']], // Array(Array(Dynamic))
 	];
 
-	const types: string[] = [];
-	types[27] = 'Array(Array(JSON))';
+	let types: string[] = [];
 
 	const expectedRes = [
 		[[-1, 2, 127], [-1, 2, 127]], // int8_array_2d
@@ -849,9 +818,9 @@ test('all nd-array types in sql.values test', async () => {
 			[[20, 20], [50, 20], [50, 50], [20, 50]],
 			[[30, 30], [50, 50], [50, 30]],
 		]]]], // multi_polygon_array_2d
-		[[{ i: 0, s: 'a' }], [{ i: 0, s: 'a' }]], // tuple_uint8_string_array_2d
+		[[{ i: 1, s: 'a' }, { i: 2, s: 'b' }], [{ i: 1, s: 'a' }, { i: 2, s: 'b' }]], // tuple_uint8_string_array_2d
 		[[{ key1: 1, key2: 10 }, { key1: 2, key2: 11 }], [{ key1: 1, key2: 10 }, { key1: 2, key2: 11 }]], // map_string_uint8_array_2d
-		[['qwerty'], ['qwerty']], // dynamic_array_2d
+		[['qwerty', 'qwerty1'], ['qwerty', 'qwerty1']], // dynamic_array_2d
 	];
 
 	await sql`insert into ${sql.identifier('all_nd_array_data_types')} values ${
@@ -868,6 +837,59 @@ test('all nd-array types in sql.values test', async () => {
 	expect(predicate).toBe(true);
 
 	await dropAllNdarrayDataTypesTable(sql);
+	await createAllNdarrayDataTypesTable(sql);
+
+	types = [
+		'Array(Array(Int8))',
+		'Array(Array(Int16))',
+		'Array(Array(Int32))',
+		'Array(Array(Int64))',
+		'Array(Array(Int128))',
+		'Array(Array(Int256))',
+		'Array(Array(UInt8))',
+		'Array(Array(UInt16))',
+		'Array(Array(UInt32))',
+		'Array(Array(UInt64))',
+		'Array(Array(UInt128))',
+		'Array(Array(UInt256))',
+		'Array(Array(Float32))',
+		'Array(Array(Float64))',
+		'Array(Array(BFloat16))',
+		'Array(Array(Decimal32(7)))',
+		'Array(Array(Decimal64(15)))',
+		'Array(Array(Decimal128(34)))',
+		'Array(Array(Decimal256(71)))',
+		'Array(Array(String))',
+		'Array(Array(FixedString(10)))',
+		'Array(Array(Date))',
+		'Array(Array(Date32))',
+		'Array(Array(DateTime))',
+		'Array(Array(DateTime64))',
+		`Array(Array(Enum('hello', 'world')))`,
+		'Array(Array(UUID))',
+		'Array(Array(JSON))',
+		'Array(Array(IPv4))',
+		'Array(Array(IPv6))',
+		'Array(Array(BOOL))',
+		'String', // TODO: revise: cannot insert array with type case 'Array(Array(Variant(UInt8, String)))',
+		'Array(Array(LowCardinality(String)))',
+		'Array(Array(Nullable(String)))',
+		'Array(Array(Point))',
+		'Array(Array(Ring))',
+		'Array(Array(LineString))',
+		'Array(Array(MultiLineString))',
+		'Array(Array(Polygon))',
+		'Array(Array(MultiPolygon))',
+		'Array(Array(Tuple(UInt8,String)))',
+		'Array(Array(Map(String, UInt8)))',
+	];
+
+	await sql`insert into ${sql.identifier('all_nd_array_data_types')} values ${
+		sql.values([allArrayDataTypesValues], types)
+	};`
+		.command();
+
+	await sql.unsafe(`select * from \`all_nd_array_data_types\`;`, [], { rowMode: 'object' }).query();
 });
 
 test('sql.stream test', async () => {
@@ -923,8 +945,8 @@ test('sql.stream test', async () => {
 		'[[(0,0),(10,0),(10,10),(0,10)],[(1,1),(2,2),(3,3)]]', // MultiLineString
 		'[[(20,20),(50,20),(50,50),(20,50)],[(30,30),(50,50),(50,30)]]', // Polygon
 		'[[[(0,0),(10,0),(10,10),(0,10)]],[[(20,20),(50,20),(50,50),(20,50)],[(30,30),(50,50),(50,30)]]]', // MultiPolygon
-		"(0, 'a')", // Tuple(i UInt8, s String) ;
-		{ key1: 1, key2: 10 }, // Map(String, UInt8)
+		new TupleParam([0, 'a']), // "(0, 'a')", // Tuple(i UInt8, s String) ;
+		new Map([['key1', 1], ['key2', 10]]), // Map(String, UInt8)
 		sql.raw("'qwerty'"), // Dynamic
 		sql.default,
 	];

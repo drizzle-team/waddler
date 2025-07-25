@@ -1,7 +1,8 @@
+import { TupleParam } from '@clickhouse/client';
 import type { ClickHouseSQLTemplate } from '../clickhouse/session.ts';
 import { Dialect, SQLDefault, SQLRaw } from '../sql-template-params.ts';
 import type { IdentifierObject, Value } from '../types.ts';
-import { makeClickHouseArray } from './utils.ts';
+import { getArrayDepth, makeClickHouseArray } from './utils.ts';
 
 export class ClickHouseDialect extends Dialect {
 	escapeParam(lastParamIdx: number, typeToCast?: string): string {
@@ -84,9 +85,16 @@ export class ClickHouseDialect extends Dialect {
 		}
 
 		if (Array.isArray(value)) {
-			const mappedValue = makeClickHouseArray(value, types[colIdx]);
+			const { mappedArray: mappedValue, baseTypeToCast } = makeClickHouseArray(value, types[colIdx]);
+			let arrayTypeToCast: string | undefined;
+			if (baseTypeToCast !== undefined) {
+				const arrayDepth = getArrayDepth(value);
+				arrayTypeToCast = baseTypeToCast;
+				for (let i = 0; i < arrayDepth; i++) arrayTypeToCast = `Array(${arrayTypeToCast})`;
+			}
+
 			params.push([`val${lastParamIdx + params.length + 1}`, mappedValue] as any);
-			return this.escapeParam(lastParamIdx + params.length, types[colIdx]);
+			return this.escapeParam(lastParamIdx + params.length, types[colIdx] ?? arrayTypeToCast);
 		}
 
 		if (
@@ -100,14 +108,16 @@ export class ClickHouseDialect extends Dialect {
 			return this.escapeParam(lastParamIdx + params.length, types[colIdx]);
 		}
 
-		if (typeof value === 'object') {
-			if (types[colIdx]?.includes('JSON')) {
-				params.push([`val${lastParamIdx + params.length + 1}`, JSON.stringify(value)] as any);
-				return this.escapeParam(lastParamIdx + params.length, types[colIdx] ?? 'JSON');
-			}
-			// should be Map, JSON will throw an error
+		if (value instanceof Map || value instanceof TupleParam) {
+			// Map, Tuple type
 			params.push([`val${lastParamIdx + params.length + 1}`, value] as any);
 			return this.escapeParam(lastParamIdx + params.length, types[colIdx]);
+		}
+
+		if (typeof value === 'object') {
+			// should be JSON type
+			params.push([`val${lastParamIdx + params.length + 1}`, JSON.stringify(value)] as any);
+			return this.escapeParam(lastParamIdx + params.length, types[colIdx] ?? 'JSON');
 		}
 
 		if (value === undefined) {
