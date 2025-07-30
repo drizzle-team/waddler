@@ -10,7 +10,7 @@ export type SqliteSQL = BetterSqlite3SQL | BunSqliteSQL | D1SQL | LibsqlSQL | Du
 
 export const createAllDataTypesTable = async (sql: SqliteSQL) => {
 	await sql`
-		    CREATE TABLE "all_data_types" (
+		    CREATE TABLE if not exists "all_data_types" (
 			"integer_number" integer,
 			"integer_bigint" integer,
 			"real" real,

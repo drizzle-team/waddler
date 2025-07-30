@@ -42,7 +42,7 @@ beforeAll(async () => {
 			gelConnectionParams = dockerPayload.connectionParams;
 			gelClient = createClient({ ...dockerPayload.connectionParams, tlsSecurity });
 
-			// await gelClient.querySQL(`select 1;`);
+			await gelClient.querySQL(`select 1;`);
 			sql = waddler({ client: gelClient });
 			connected = true;
 			break;

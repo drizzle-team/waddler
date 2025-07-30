@@ -11,12 +11,12 @@ export class PGliteSQLTemplate<T> extends SQLTemplate<T> {
 	private queryConfig: QueryOptions;
 
 	constructor(
-		override sql: SQLWrapper,
+		override sqlWrapper: SQLWrapper,
 		protected readonly client: PGlite,
 		dialect: Dialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sql, dialect);
+		super(sqlWrapper, dialect);
 
 		this.rawQueryConfig = {
 			rowMode: 'object',
@@ -39,7 +39,7 @@ export class PGliteSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sql.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery();
 		try {
 			const queryResult = await (this.options.rowMode === 'array'
 				? this.client.query(query, params, this.queryConfig)

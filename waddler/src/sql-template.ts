@@ -1,34 +1,21 @@
 import type { WaddlerConfig } from './extensions/index.ts';
-import type { Dialect } from './sql-template-params.ts';
-import { SQLString } from './sql-template-params.ts';
+import type { Dialect, SQLQuery } from './sql-template-params.ts';
 import type { Query, SQLWrapper } from './sql.ts';
 
 export abstract class SQLTemplate<T> {
 	constructor(
-		public sql: SQLWrapper,
+		public sqlWrapper: SQLWrapper,
 		public dialect: Dialect,
 		public configOptions?: WaddlerConfig,
 	) {}
 
-	append(value: SQLTemplate<T>) {
-		const thisLastChunk = this.sql.queryChunks.at(-1), valueFirstChunk = value.sql.queryChunks.at(0);
-		if (thisLastChunk instanceof SQLString && valueFirstChunk instanceof SQLString) {
-			const middleChunk = new SQLString(
-				`${thisLastChunk.generateSQL().sql}${valueFirstChunk.generateSQL().sql}`,
-			);
-			this.sql.queryChunks = [...this.sql.queryChunks.slice(0, -1), middleChunk, ...value.sql.queryChunks.slice(1)];
-			this.sql.recalculateQuery(this.dialect);
-			return;
-		}
-		this.sql.queryChunks = [...this.sql.queryChunks, ...value.sql.queryChunks];
-
-		// should accept queryChunks that will be recalculated, I'll leave it as mutating object for now,
-		// but I don't want to do it this way
-		this.sql.recalculateQuery(this.dialect);
+	append(other: SQLTemplate<T> | SQLQuery) {
+		this.sqlWrapper.append(other.sqlWrapper);
+		this.sqlWrapper.recalculateQuery(this.dialect);
 	}
 
 	toSQL(): Query {
-		return this.sql.getQuery();
+		return this.sqlWrapper.getQuery();
 	}
 
 	// Allow it to be awaited (like a Promise)

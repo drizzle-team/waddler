@@ -8,12 +8,12 @@ export class ClickHouseSQLTemplate<T> extends SQLTemplate<T> {
 	public returningData: boolean = true;
 
 	constructor(
-		override sql: SQLWrapper,
+		override sqlWrapper: SQLWrapper,
 		protected readonly client: ClickHouseClient,
 		dialect: ClickHouseDialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sql, dialect);
+		super(sqlWrapper, dialect);
 	}
 
 	command(): Omit<ClickHouseSQLTemplate<T>, 'command' | 'query'> {
@@ -27,7 +27,7 @@ export class ClickHouseSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sql.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery();
 		const queryParams = Object.fromEntries(params);
 		try {
 			if (this.returningData) {
@@ -52,7 +52,7 @@ export class ClickHouseSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async *stream() {
-		const { query, params } = this.sql.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery();
 		const queryParams = Object.fromEntries(params);
 		// wrapping clickhouse driver error in new js error to add stack trace to it
 		try {

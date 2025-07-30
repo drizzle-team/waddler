@@ -9,12 +9,12 @@ export class DurableSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	private returningData: boolean = true;
 
 	constructor(
-		override sql: SQLWrapper,
+		override sqlWrapper: SQLWrapper,
 		protected readonly client: DurableObjectStorage,
 		dialect: SqliteDialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sql, dialect);
+		super(sqlWrapper, dialect);
 	}
 
 	all(): Omit<DurableSqliteSQLTemplate<T>, 'all' | 'run'> {
@@ -28,7 +28,7 @@ export class DurableSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sql.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery();
 
 		// wrapping durable-sqlite driver error in new js error to add stack trace to it
 		try {
@@ -54,7 +54,7 @@ export class DurableSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async *stream() {
-		const { query, params } = this.sql.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery();
 
 		// wrapping durable-sqlite driver error in new js error to add stack trace to it
 		try {

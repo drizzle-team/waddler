@@ -1,8 +1,8 @@
-import type { BuildQueryConfig } from './sql';
+import type { BuildQueryConfig, SQLWrapper } from './sql';
 import type { Identifier, IdentifierObject, Raw, UnsafeParamType, Value } from './types';
 
 export abstract class Dialect implements BuildQueryConfig {
-	abstract escapeParam(lastParamIdx: number): string;
+	abstract escapeParam(lastParamIdx: number, typeToCast: string): string;
 	formParam(param: any, _lastParamIdx: number): any {
 		return param;
 	}
@@ -28,9 +28,30 @@ export abstract class SQLChunk {
 	): { sql: string; params?: any[] };
 }
 
+export class SQLQuery extends SQLChunk {
+	constructor(readonly sqlWrapper: SQLWrapper, readonly dialect: Dialect) {
+		super();
+	}
+
+	override generateSQL(): { sql: string; params?: any[] } {
+		this.sqlWrapper.prepareQuery(this.dialect);
+		const { query, params } = this.sqlWrapper.getQuery();
+		return { sql: query, params };
+	}
+
+	append(other: SQLQuery) {
+		this.sqlWrapper.append(other.sqlWrapper);
+	}
+
+	toSQL() {
+		return this.generateSQL();
+	}
+}
+
 export class SQLCommonParam extends SQLChunk {
 	constructor(
 		readonly value: UnsafeParamType,
+		readonly type: string = 'String',
 	) {
 		super();
 	}
@@ -39,7 +60,7 @@ export class SQLCommonParam extends SQLChunk {
 		{ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number },
 	) {
 		return {
-			sql: dialect.escapeParam(lastParamIdx + 1),
+			sql: dialect.escapeParam(lastParamIdx + 1, this.type),
 			params: [dialect.formParam(this.value, lastParamIdx + 1)],
 		};
 	}

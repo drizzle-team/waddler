@@ -30,16 +30,16 @@ const queryConfig: HTTPQueryOptions<true, true> = {
 
 export class NeonHttpSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
-		override sql: SQLWrapper,
+		override sqlWrapper: SQLWrapper,
 		protected readonly client: NeonHttpClient,
 		dialect: Dialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sql, dialect);
+		super(sqlWrapper, dialect);
 	}
 
 	async execute() {
-		const { query, params } = this.sql.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery();
 
 		// wrapping neon-http driver error in new js error to add stack trace to it
 		try {

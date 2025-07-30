@@ -8,12 +8,12 @@ export class OpSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	private returningData: boolean = true;
 
 	constructor(
-		override sql: SQLWrapper,
+		override sqlWrapper: SQLWrapper,
 		protected readonly client: DB,
 		dialect: SqliteDialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sql, dialect);
+		super(sqlWrapper, dialect);
 	}
 
 	all(): Omit<OpSqliteSQLTemplate<T>, 'all' | 'run'> {
@@ -27,7 +27,7 @@ export class OpSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sql.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery();
 
 		// TODO: do I really need branching to all and run here?
 		// wrapping op-sqlite driver error in new js error to add stack trace to it

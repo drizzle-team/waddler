@@ -9,12 +9,12 @@ export class LibsqlSQLTemplate<T> extends SQLTemplate<T> {
 	returningData: boolean = true;
 
 	constructor(
-		public override sql: SQLWrapper,
+		public override sqlWrapper: SQLWrapper,
 		public readonly client: Client,
 		dialect: SqliteDialect,
 		public options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sql, dialect);
+		super(sqlWrapper, dialect);
 	}
 
 	all(): Omit<LibsqlSQLTemplate<T>, 'all' | 'run'> {
@@ -28,7 +28,7 @@ export class LibsqlSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sql.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery();
 
 		// wrapping libsql driver error in new js error to add stack trace to it
 		try {

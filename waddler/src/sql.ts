@@ -4,11 +4,12 @@ import {
 	SQLCommonParam,
 	SQLDefault,
 	SQLIdentifier,
+	SQLQuery,
 	SQLRaw,
 	SQLString,
 	SQLValues,
 } from './sql-template-params.ts';
-import type { SQLTemplate } from './sql-template.ts';
+import { SQLTemplate } from './sql-template.ts';
 import type {
 	Identifier,
 	IdentifierObject,
@@ -29,7 +30,7 @@ export interface Query {
 
 export interface BuildQueryConfig {
 	escapeIdentifier(identifier: string): string;
-	escapeParam(lastParamIdx: number): string;
+	escapeParam(lastParamIdx: number, typeToCast: string): string;
 	formParam(param: any, lastParamIdx: number): any;
 	checkIdentifierObject(object: IdentifierObject): void;
 	valueToSQL(
@@ -80,7 +81,8 @@ export class SQLWrapper {
 				this.queryChunks.push(new SQLString(strings[0]!));
 			}
 			for (const [paramIndex, param] of params.entries()) {
-				if (param instanceof SQLChunk) this.queryChunks.push(param, new SQLString(strings[paramIndex + 1]!));
+				if (param instanceof SQLQuery || param instanceof SQLTemplate) this.append(param.sqlWrapper);
+				else if (param instanceof SQLChunk) this.queryChunks.push(param, new SQLString(strings[paramIndex + 1]!));
 				else {
 					paramsCheck(param);
 					this.queryChunks.push(new SQLCommonParam(param), new SQLString(strings[paramIndex + 1]!));
@@ -101,11 +103,11 @@ export class SQLWrapper {
 	}
 
 	// This alias is provided to improve clarity when recalculating queries for functions such as "append."
-	recalculateQuery(config: Dialect): this {
-		return this.prepareQuery(config);
+	recalculateQuery(dialect: Dialect): this {
+		return this.prepareQuery(dialect);
 	}
 
-	prepareQuery(config: Dialect): this {
+	prepareQuery(dialect: Dialect): this {
 		if (this.queryChunks.length === 1 && this.queryChunks[0] instanceof SQLString) {
 			this.query = this.queryChunks[0].generateSQL().sql;
 			this.params = [];
@@ -124,11 +126,11 @@ export class SQLWrapper {
 			}
 
 			if (chunk instanceof SQLIdentifier) {
-				query += chunk.generateSQL({ dialect: config }).sql;
+				query += chunk.generateSQL({ dialect }).sql;
 			}
 
 			if (chunk instanceof SQLValues || chunk instanceof SQLCommonParam) {
-				const { sql, params } = chunk.generateSQL({ dialect: config, lastParamIdx: params4driver.length });
+				const { sql, params } = chunk.generateSQL({ dialect, lastParamIdx: params4driver.length });
 				query += sql;
 				params4driver.push(...params);
 			}
@@ -138,6 +140,26 @@ export class SQLWrapper {
 		this.params = params4driver;
 
 		return this;
+	}
+
+	append(other: SQLWrapper) {
+		const thisLastChunk = this.queryChunks.at(-1), otherFirstChunk = other.queryChunks.at(0);
+		if (thisLastChunk instanceof SQLString && otherFirstChunk instanceof SQLString) {
+			const middleChunk = new SQLString(
+				`${thisLastChunk.generateSQL().sql}${otherFirstChunk.generateSQL().sql}`,
+			);
+			this.queryChunks = [
+				...this.queryChunks.slice(0, -1),
+				middleChunk,
+				...other.queryChunks.slice(1),
+			];
+			return;
+		}
+		this.queryChunks.push(...other.queryChunks);
+
+		// should accept queryChunks that will be recalculated, I'll leave it as mutating object for now,
+		// but I don't want to do it this way
+		// this.recalculateQuery(this.dialect);
 	}
 }
 

@@ -9,16 +9,16 @@ const queryConfig = { arrayMode: true } satisfies ExecuteOptions;
 
 export class TidbServerlessSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
-		override sql: SQLWrapper,
+		override sqlWrapper: SQLWrapper,
 		protected readonly client: Connection, // TODO should I include Tx here?
 		dialect: MySQLDialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sql, dialect);
+		super(sqlWrapper, dialect);
 	}
 
 	async execute() {
-		const { query, params } = this.sql.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery();
 		try {
 			if (this.options.rowMode === 'array') {
 				const rows = await this.client.execute(query, params, queryConfig) as T[];

@@ -19,7 +19,7 @@ export const dropMoodEnumType = async (sql: SQL) => {
 export const createAllDataTypesTable = async (sql: SQL) => {
 	await createMoodEnumType(sql);
 
-	await sql.unsafe(`create table all_data_types (
+	await sql.unsafe(`create table if not exists all_data_types (
     "integer" integer,
 	"smallint" smallint,
 	"bigint" bigint,

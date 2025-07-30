@@ -6,16 +6,16 @@ import type { SQLWrapper } from '../../sql.ts';
 
 export class PostgresSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
-		override sql: SQLWrapper,
+		override sqlWrapper: SQLWrapper,
 		protected readonly client: Sql,
 		dialect: PgDialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sql, dialect);
+		super(sqlWrapper, dialect);
 	}
 
 	async execute() {
-		const { query, params } = this.sql.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery();
 		// wrapping postgres-js driver error in new js error to add stack trace to it
 		try {
 			const queryResult = await (this.options.rowMode === 'array'

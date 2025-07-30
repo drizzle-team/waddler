@@ -6,11 +6,11 @@ import { getArrayDepth, makeClickHouseArray } from './utils.ts';
 
 export class ClickHouseDialect extends Dialect {
 	escapeParam(lastParamIdx: number, typeToCast?: string): string {
-		return `{val${lastParamIdx}:${typeToCast || 'String'}}`;
+		return `{param${lastParamIdx}:${typeToCast || 'String'}}`;
 	}
 
 	override formParam(param: any, lastParamIdx: number) {
-		return [`val${lastParamIdx}`, param];
+		return [`param${lastParamIdx}`, param];
 	}
 
 	escapeIdentifier(identifier: string): string {
@@ -84,7 +84,7 @@ export class ClickHouseDialect extends Dialect {
 		}
 
 		if (typeof value === 'bigint') {
-			params.push([`val${lastParamIdx + params.length + 1}`, `${value}`] as any);
+			params.push([`param${lastParamIdx + params.length + 1}`, `${value}`] as any);
 			return this.escapeParam(lastParamIdx + params.length, types[colIdx]);
 		}
 
@@ -97,7 +97,7 @@ export class ClickHouseDialect extends Dialect {
 				for (let i = 0; i < arrayDepth; i++) arrayTypeToCast = `Array(${arrayTypeToCast})`;
 			}
 
-			params.push([`val${lastParamIdx + params.length + 1}`, mappedValue] as any);
+			params.push([`param${lastParamIdx + params.length + 1}`, mappedValue] as any);
 			return this.escapeParam(lastParamIdx + params.length, types[colIdx] ?? arrayTypeToCast);
 		}
 
@@ -108,19 +108,19 @@ export class ClickHouseDialect extends Dialect {
 			|| value === null
 			|| value instanceof Date
 		) {
-			params.push([`val${lastParamIdx + params.length + 1}`, value] as any);
+			params.push([`param${lastParamIdx + params.length + 1}`, value] as any);
 			return this.escapeParam(lastParamIdx + params.length, types[colIdx]);
 		}
 
 		if (value instanceof Map || value instanceof TupleParam) {
 			// Map, Tuple type
-			params.push([`val${lastParamIdx + params.length + 1}`, value] as any);
+			params.push([`param${lastParamIdx + params.length + 1}`, value] as any);
 			return this.escapeParam(lastParamIdx + params.length, types[colIdx]);
 		}
 
 		if (typeof value === 'object') {
 			// should be JSON type
-			params.push([`val${lastParamIdx + params.length + 1}`, JSON.stringify(value)] as any);
+			params.push([`param${lastParamIdx + params.length + 1}`, JSON.stringify(value)] as any);
 			return this.escapeParam(lastParamIdx + params.length, types[colIdx] ?? 'JSON');
 		}
 

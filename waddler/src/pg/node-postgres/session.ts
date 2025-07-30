@@ -24,14 +24,14 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 	private rawQueryConfig: QueryArrayConfig;
 
 	constructor(
-		override sql: SQLWrapper,
+		override sqlWrapper: SQLWrapper,
 		protected readonly client: NodePgClient,
 		dialect: PgDialect,
 		configOptions: WaddlerConfig,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sql, dialect, configOptions);
-		const query = this.sql.getQuery().query;
+		super(sqlWrapper, dialect, configOptions);
+		const query = this.sqlWrapper.getQuery().query;
 		this.queryConfig = {
 			text: query,
 			types: pgTypeConfig,
@@ -44,7 +44,7 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { params } = this.sql.getQuery();
+		const { params } = this.sqlWrapper.getQuery();
 		try {
 			const queryResult = await (this.options.rowMode === 'array'
 				? this.client.query(this.rawQueryConfig, params)
@@ -59,7 +59,7 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 	// TODO: revise: maybe I should override chunked method because we can use QueryStream with option 'batchSize' in QueryStreamConfig
 	async *stream() {
 		let conn: ClientT | PoolT | PoolClient | undefined;
-		const { query, params } = this.sql.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery();
 		// wrapping node-postgres driver error in new js error to add stack trace to it
 		try {
 			conn = this.client instanceof Pool

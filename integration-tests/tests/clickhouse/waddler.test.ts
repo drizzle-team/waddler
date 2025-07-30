@@ -2,7 +2,7 @@ import { type ClickHouseClient, createClient, TupleParam } from '@clickhouse/cli
 import type Docker from 'dockerode';
 import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
 import type { ClickHouseSQL } from 'waddler/clickhouse';
-import { waddler } from 'waddler/clickhouse';
+import { sql as sqlQuery, waddler } from 'waddler/clickhouse';
 import { commonTests } from '../common.test.ts';
 import { createClickHouseDockerDB, vitestExpectSoftDate } from '../utils.ts';
 import {
@@ -15,6 +15,8 @@ import {
 	dropAllDataTypesTable,
 	dropAllNdarrayDataTypesTable,
 } from './clickhouse-core.ts';
+import { filter as filter1 } from './test-filters1.ts';
+import { filter as filter2 } from './test-filters2.ts';
 
 let clickHouseContainer: Docker.Container;
 let clickHouseClient: ClickHouseClient;
@@ -1079,6 +1081,7 @@ test('sql.stream test', async () => {
 });
 
 test('query database test from documentation', async () => {
+	await sql.unsafe(`drop table if exists users;`).command();
 	await sql.unsafe(`create table users(
     id    Int32,
     name  String,
@@ -1106,7 +1109,11 @@ order by id;
     email: string;
   }[]
   */
-	await sql`alter table ${sql.identifier('users')} update age = ${31} where email = ${user[2]};`.command();
+	const query = sql`alter table ${sql.identifier('users')} update age = ${sql.param(31, 'Int32')} where email = ${
+		user[2]
+	};`.command();
+	// console.log(query.toSQL());
+	await query;
 	// console.log('User info updated!');
 
 	const stream = sql`select * from ${sql.identifier('users')};`.query().stream();
@@ -1127,5 +1134,55 @@ order by id;
 	await sql`alter table ${sql.identifier('users')} delete where email = ${user[2]};`.command();
 	// console.log('User deleted!');
 
-	await sql.unsafe(`drop table users;`).command();
+	await sql.unsafe(`drop table if exists users;`).command();
+});
+
+test('sql query api test', async () => {
+	const filter = sqlQuery`id = ${sql.param(1, 'Int32')} or ${sqlQuery`id = ${2}`}`;
+	filter.append(sqlQuery` and email = ${'hello@test.com'}`);
+
+	const query = sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
+
+	query.toSQL();
+	filter.toSQL();
+});
+
+test('embeding SQLQuery and SQLTemplate test', async () => {
+	await sql.unsafe(`drop table if exists users;`).command();
+	await sql.unsafe(`create table users(
+    id    Int32,
+    name  String,
+    age   Int32,
+    email String
+)
+engine = MergeTree
+order by id;
+  `).command();
+
+	await sql`insert into users values ${
+		sql.values([[1, 'a', 23, 'example1@gmail.com'], [2, 'b', 24, 'example2@gmail.com']])
+	}`.command();
+
+	await sql`select * from ${sql.identifier('users')};`;
+	// console.log(res);
+
+	const query1 = sql`select * from ${sql.identifier('users')} where ${filter1({ id: 1, name: 'a' })};`;
+	// console.log(query1.toSQL());
+	// console.log(await query1);
+	const res1 = await query1;
+	expect(res1.length).not.toBe(0);
+
+	const query2 = sql`select * from ${sql.identifier('users')} where ${filter2({ id: 1, name: 'a' })};`;
+	// console.log(query2.toSQL());
+	// console.log(await query2);
+	const res2 = await query2;
+	expect(res2.length).not.toBe(0);
+
+	const query3 = sql`select * from ${sql.identifier('users')} where ${sql`id = ${sql.param(1, 'Int32')}`};`;
+	// console.log(query3.toSQL());
+	const res3 = await query3;
+	// console.log(res3);
+	expect(res3.length).not.toBe(0);
+
+	await sql.unsafe(`drop table if exists users;`).command();
 });

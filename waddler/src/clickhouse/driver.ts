@@ -1,7 +1,7 @@
 import type { ClickHouseClient } from '@clickhouse/client';
 import { createClient } from '@clickhouse/client';
 import type { NodeClickHouseClientConfigOptions } from '@clickhouse/client/dist/config';
-import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '~/sql-template-params.ts';
+import { SQLCommonParam, SQLDefault, SQLIdentifier, SQLQuery, SQLRaw, SQLValues } from '~/sql-template-params.ts';
 import { isConfig } from '~/utils.ts';
 import type { DbType } from '../clickhouse-core/index.ts';
 import { ClickHouseDialect, UnsafePromise } from '../clickhouse-core/index.ts';
@@ -63,28 +63,55 @@ export interface ClickHouseSQL extends Omit<SQL, 'unsafe' | 'values'> {
 	 * ```
 	 */
 	values(value: Values, types?: DbType[]): SQLValues;
+	param(value: any, type: DbType): SQLCommonParam;
 }
+
+export interface ClickHouseSQLQuery
+	extends Pick<ClickHouseSQL, 'values' | 'param'>, Pick<SQL, 'identifier' | 'raw' | 'default'>
+{
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+}
+
+const SQLFunctions = {
+	identifier: (value: Identifier<IdentifierObject>) => {
+		return new SQLIdentifier(value);
+	},
+	values: (value: Values, types?: DbType[]) => {
+		return new SQLValues(value, types);
+	},
+	param: (value: any, type?: DbType) => {
+		return new SQLCommonParam(value, type);
+	},
+	raw: (value: Raw) => {
+		return new SQLRaw(value);
+	},
+	default: new SQLDefault(),
+};
+
+const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
+	const sqlWrapper = new SQLWrapper();
+	sqlWrapper.with({ templateParams: { strings, params } });
+	const dialect = new ClickHouseDialect();
+
+	return new SQLQuery(sqlWrapper, dialect);
+}) as ClickHouseSQLQuery;
+
+Object.assign(sql, SQLFunctions);
+
+export { sql };
 
 const createSqlTemplate = (
 	client: ClickHouseClient,
 	dialect: ClickHouseDialect,
 ): ClickHouseSQL => {
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): ClickHouseSQLTemplate<T> => {
-		const sql = new SQLWrapper();
-		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
-		return new ClickHouseSQLTemplate<T>(sql, client, dialect);
+		const sqlWrapper = new SQLWrapper();
+		sqlWrapper.with({ templateParams: { strings, params } }).prepareQuery(dialect);
+		return new ClickHouseSQLTemplate<T>(sqlWrapper, client, dialect);
 	};
 
 	Object.assign(fn, {
-		identifier: (value: Identifier<IdentifierObject>) => {
-			return new SQLIdentifier(value);
-		},
-		values: (value: Values, types?: DbType[]) => {
-			return new SQLValues(value, types);
-		},
-		raw: (value: Raw) => {
-			return new SQLRaw(value);
-		},
+		...SQLFunctions,
 		unsafe: (
 			query: string,
 			params?: UnsafeParamType[],
@@ -93,15 +120,14 @@ const createSqlTemplate = (
 			params = params ?? [];
 			options = options ?? { rowMode: 'object' };
 
-			const sql = new SQLWrapper();
-			sql.with({ rawParams: { query, params } });
+			const sqlWrapper = new SQLWrapper();
+			sqlWrapper.with({ rawParams: { query, params } });
 
-			const unsafeDriver = new ClickHouseSQLTemplate(sql, client, dialect, options);
+			const unsafeDriver = new ClickHouseSQLTemplate(sqlWrapper, client, dialect, options);
 			const unsafePromise = new UnsafePromise(unsafeDriver);
 
 			return unsafePromise;
 		},
-		default: new SQLDefault(),
 	});
 
 	return fn as any;

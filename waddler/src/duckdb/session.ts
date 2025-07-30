@@ -115,7 +115,7 @@ export class DuckdbSQLTemplate<T> extends SQLTemplate<T> {
 		// Implement your actual DB execution logic here
 		// This could be a fetch or another async operation
 		// gets connection from pool, runs query, release connection
-		const { query, params } = this.sql.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery();
 		let result;
 
 		prepareParams(params);
@@ -141,7 +141,7 @@ export class DuckdbSQLTemplate<T> extends SQLTemplate<T> {
 
 	async *stream() {
 		let row: T;
-		const { query, params } = this.sql.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery();
 
 		prepareParams(params);
 
