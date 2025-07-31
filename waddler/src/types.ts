@@ -95,3 +95,5 @@ export type Raw = string | number | boolean | bigint;
 export type isObjectEmpty<O> = keyof O extends never ? true : false;
 
 export type IfNotImported<T, Y, N> = unknown extends T ? Y : N;
+
+export type IsEqual<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;

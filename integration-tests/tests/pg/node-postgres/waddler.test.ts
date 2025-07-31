@@ -194,3 +194,21 @@ test('sql.stream test', async () => {
 
 	await pool.end();
 });
+
+test('insert benchmark', async () => {
+	await sql.unsafe(`create table tests(
+	id    integer
+);
+  `);
+
+	const valuesIds = Array.from({ length: 10 ** 4 }).fill([1]) as number[][];
+
+	console.time('insert');
+	await sql`insert into ${sql.identifier('tests')} values ${sql.values(valuesIds)};`;
+	console.timeEnd('insert');
+	// console.log('New user created!');
+	// const ids = await sql`select * from ${sql.identifier('tests')};`.query();
+	// console.log('Getting all users from the database:', ids);
+
+	await sql.unsafe(`drop table tests;`);
+});

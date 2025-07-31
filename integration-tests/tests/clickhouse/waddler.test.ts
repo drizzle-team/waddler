@@ -97,7 +97,7 @@ test('connection test', async () => {
 	await sql23`select 23;`;
 });
 
-commonTests();
+commonTests('clickhouse');
 commonClickHouseTests();
 
 // ALL TYPES with sql.unsafe and sql.values-------------------------------------------------------------------
@@ -105,7 +105,7 @@ test('all types in sql.unsafe test', async () => {
 	await dropAllDataTypesTable(sql);
 	await createAllDataTypesTable(sql);
 
-	const allDataTypesValues = [
+	const allDataTypesValues = Object.fromEntries([
 		127, // int8
 		32767, // int16
 		2147483647, // int32
@@ -157,7 +157,7 @@ test('all types in sql.unsafe test', async () => {
 		"(0, 'a')", // Tuple(i UInt8, s String) ;
 		{ key1: 1, key2: 10 }, // Map(String, UInt8)
 		// 'qwerty', // Dynamic // TODO revise: can't insert dynamic using parameterized query
-	].map((val, idx) => [`val${idx + 1}`, val]);
+	].map((val, idx) => [`val${idx + 1}`, val]));
 
 	await sql.unsafe(
 		`
@@ -1185,4 +1185,24 @@ order by id;
 	expect(res3.length).not.toBe(0);
 
 	await sql.unsafe(`drop table if exists users;`).command();
+});
+
+test('insert benchmark', async () => {
+	await sql.unsafe(`create table tests(
+    id    Int32
+)
+engine = MergeTree
+order by id;
+  `).command();
+
+	const valuesIds = Array.from({ length: 10 ** 3 }).fill([1]) as number[][];
+
+	console.time('insert');
+	await sql`insert into ${sql.identifier('tests')} values ${sql.values(valuesIds)};`.command();
+	console.timeEnd('insert');
+	// console.log('New user created!');
+	// const ids = await sql`select * from ${sql.identifier('tests')};`.query();
+	// console.log('Getting all users from the database:', ids);
+
+	await sql.unsafe(`drop table tests;`).command();
 });

@@ -9,8 +9,18 @@ export class ClickHouseDialect extends Dialect {
 		return `{param${lastParamIdx}:${typeToCast || 'String'}}`;
 	}
 
-	override formParam(param: any, lastParamIdx: number) {
-		return [`param${lastParamIdx}`, param];
+	override createEmptyParams(): Record<string, any> {
+		return {};
+	}
+
+	override pushParams(
+		params: Record<string, any>,
+		param: any | Record<string, any>,
+		lastParamIdx: number,
+		mode: 'bulk' | 'single' = 'bulk',
+	) {
+		if (mode === 'bulk') Object.assign(params, param);
+		else params[`param${lastParamIdx}`] = param;
 	}
 
 	escapeIdentifier(identifier: string): string {
@@ -65,12 +75,13 @@ export class ClickHouseDialect extends Dialect {
 	}
 
 	valueToSQL(
-		{ value, lastParamIdx, params, types, colIdx }: {
+		{ value, lastParamIdx, params, types, colIdx, paramsCount }: {
 			value: Value;
 			lastParamIdx: number;
-			params: Value[];
+			params: Record<string, Value>;
 			types: DbType[];
 			colIdx: number;
+			paramsCount: number;
 		},
 	): string {
 		// TODO: add mapValueToType
@@ -84,8 +95,9 @@ export class ClickHouseDialect extends Dialect {
 		}
 
 		if (typeof value === 'bigint') {
-			params.push([`param${lastParamIdx + params.length + 1}`, `${value}`] as any);
-			return this.escapeParam(lastParamIdx + params.length, types[colIdx]);
+			this.pushParams(params, `${value}`, lastParamIdx + paramsCount + 1, 'single');
+			// params.push([`param${lastParamIdx + params.length + 1}`, `${value}`] as any);
+			return this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]);
 		}
 
 		if (Array.isArray(value)) {
@@ -97,8 +109,9 @@ export class ClickHouseDialect extends Dialect {
 				for (let i = 0; i < arrayDepth; i++) arrayTypeToCast = `Array(${arrayTypeToCast})`;
 			}
 
-			params.push([`param${lastParamIdx + params.length + 1}`, mappedValue] as any);
-			return this.escapeParam(lastParamIdx + params.length, types[colIdx] ?? arrayTypeToCast);
+			this.pushParams(params, mappedValue, lastParamIdx + paramsCount + 1, 'single');
+			// params.push([`param${lastParamIdx + params.length + 1}`, mappedValue] as any);
+			return this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx] ?? arrayTypeToCast);
 		}
 
 		if (
@@ -108,20 +121,23 @@ export class ClickHouseDialect extends Dialect {
 			|| value === null
 			|| value instanceof Date
 		) {
-			params.push([`param${lastParamIdx + params.length + 1}`, value] as any);
-			return this.escapeParam(lastParamIdx + params.length, types[colIdx]);
+			this.pushParams(params, value, lastParamIdx + paramsCount + 1, 'single');
+			// params.push([`param${lastParamIdx + params.length + 1}`, value] as any);
+			return this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]);
 		}
 
 		if (value instanceof Map || value instanceof TupleParam) {
 			// Map, Tuple type
-			params.push([`param${lastParamIdx + params.length + 1}`, value] as any);
-			return this.escapeParam(lastParamIdx + params.length, types[colIdx]);
+			this.pushParams(params, value, lastParamIdx + paramsCount + 1, 'single');
+			// params.push([`param${lastParamIdx + params.length + 1}`, value] as any);
+			return this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]);
 		}
 
 		if (typeof value === 'object') {
 			// should be JSON type
-			params.push([`param${lastParamIdx + params.length + 1}`, JSON.stringify(value)] as any);
-			return this.escapeParam(lastParamIdx + params.length, types[colIdx] ?? 'JSON');
+			this.pushParams(params, JSON.stringify(value), lastParamIdx + paramsCount + 1, 'single');
+			// params.push([`param${lastParamIdx + params.length + 1}`, JSON.stringify(value)] as any);
+			return this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx] ?? 'JSON');
 		}
 
 		if (value === undefined) {

@@ -3,8 +3,19 @@ import type { Identifier, IdentifierObject, Raw, UnsafeParamType, Value } from '
 
 export abstract class Dialect implements BuildQueryConfig {
 	abstract escapeParam(lastParamIdx: number, typeToCast: string): string;
-	formParam(param: any, _lastParamIdx: number): any {
-		return param;
+	createEmptyParams(): any[] | Record<string, any>;
+	createEmptyParams() {
+		return [];
+	}
+	pushParams(
+		params: any[] | Record<string, any>,
+		param: any | any[] | Record<string, any>,
+		lastParamIdx: number,
+		mode: 'bulk' | 'single',
+	): void;
+	pushParams(params: any[], param: any | any[], _lastParamIdx: number, mode: 'bulk' | 'single' = 'bulk') {
+		if (mode === 'bulk') params.push(...param);
+		else params.push(param);
 	}
 	abstract escapeIdentifier(identifier: string): string;
 	abstract checkIdentifierObject(object: IdentifierObject): void;
@@ -13,9 +24,10 @@ export abstract class Dialect implements BuildQueryConfig {
 	abstract valueToSQL<V extends Value = Value>(params: {
 		value: V;
 		lastParamIdx: number;
-		params: UnsafeParamType[];
+		params: UnsafeParamType[] | Record<string, UnsafeParamType>;
 		types: string[];
-		colIdx?: number;
+		colIdx: number;
+		paramsCount: number;
 	}): string;
 }
 
@@ -25,7 +37,7 @@ export abstract class SQLChunk {
 			dialect?: Dialect;
 			lastParamIdx?: number;
 		},
-	): { sql: string; params?: any[] };
+	): { sql: string; params?: any[] | Record<string, any> };
 }
 
 export class SQLQuery extends SQLChunk {
@@ -33,9 +45,9 @@ export class SQLQuery extends SQLChunk {
 		super();
 	}
 
-	override generateSQL(): { sql: string; params?: any[] } {
+	override generateSQL() {
 		this.sqlWrapper.prepareQuery(this.dialect);
-		const { query, params } = this.sqlWrapper.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
 		return { sql: query, params };
 	}
 
@@ -59,9 +71,12 @@ export class SQLCommonParam extends SQLChunk {
 	generateSQL(
 		{ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number },
 	) {
+		const params = dialect.createEmptyParams();
+		dialect.pushParams(params, this.value, lastParamIdx + 1, 'single');
 		return {
 			sql: dialect.escapeParam(lastParamIdx + 1, this.type),
-			params: [dialect.formParam(this.value, lastParamIdx + 1)],
+			params,
+			paramsCount: 1,
 		};
 	}
 }
@@ -152,9 +167,13 @@ export class SQLValues extends SQLChunk {
 	constructor(readonly value: Value[][], readonly types: string[] = []) {
 		super();
 	}
-	params: UnsafeParamType[] = [];
+	params: UnsafeParamType[] | Record<string, UnsafeParamType> = [];
+	paramsCount: number = 0;
 
 	generateSQL({ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number }) {
+		this.params = dialect.createEmptyParams();
+		this.paramsCount = 0;
+
 		if (!Array.isArray(this.value)) {
 			if (this.value === null) {
 				throw new Error(`you can't specify null as parameter for sql.values.`);
@@ -176,6 +195,7 @@ export class SQLValues extends SQLChunk {
 		return {
 			sql,
 			params: this.params,
+			paramsCount: this.paramsCount,
 		};
 	}
 
@@ -187,9 +207,18 @@ export class SQLValues extends SQLChunk {
 
 			return `(${
 				rowValues
-					.map((value, index) =>
-						dialect.valueToSQL({ value, lastParamIdx, params: this.params, types: this.types, colIdx: index })
-					)
+					.map((value, index) => {
+						const sql = dialect.valueToSQL({
+							value,
+							lastParamIdx,
+							params: this.params,
+							types: this.types,
+							colIdx: index,
+							paramsCount: this.paramsCount,
+						});
+						this.paramsCount++;
+						return sql;
+					})
 					.join(', ')
 			})`;
 		}

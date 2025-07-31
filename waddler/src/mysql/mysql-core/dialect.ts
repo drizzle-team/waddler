@@ -48,7 +48,7 @@ export class MySQLDialect extends Dialect {
 	valueToSQL(
 		{ value, params }: {
 			value: Value;
-			params: Value[];
+			params: Value[] | Record<string, any>;
 		},
 	): string {
 		if (value instanceof SQLDefault) {

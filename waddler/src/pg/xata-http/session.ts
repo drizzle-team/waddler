@@ -19,7 +19,7 @@ export class XataHttpSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
 		// wrapping xata-http driver error in new js error to add stack trace to it
 		try {
 			if (this.options.rowMode === 'array') {

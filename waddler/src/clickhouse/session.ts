@@ -10,7 +10,7 @@ export class ClickHouseSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
 		override sqlWrapper: SQLWrapper,
 		protected readonly client: ClickHouseClient,
-		dialect: ClickHouseDialect,
+		override dialect: ClickHouseDialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
 		super(sqlWrapper, dialect);
@@ -27,15 +27,14 @@ export class ClickHouseSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery();
-		const queryParams = Object.fromEntries(params);
+		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
 		try {
 			if (this.returningData) {
 				const format = this.options.rowMode === 'object' ? 'JSON' : 'JSONCompact';
 				const rawRes = await this.client.query({
 					query,
 					format,
-					query_params: queryParams,
+					query_params: params,
 				});
 
 				const jsonRes = await rawRes.json();
@@ -43,7 +42,7 @@ export class ClickHouseSQLTemplate<T> extends SQLTemplate<T> {
 			} else {
 				return await this.client.command({
 					query,
-					query_params: queryParams,
+					query_params: params,
 				}) as any;
 			}
 		} catch (error) {
@@ -52,12 +51,11 @@ export class ClickHouseSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async *stream() {
-		const { query, params } = this.sqlWrapper.getQuery();
-		const queryParams = Object.fromEntries(params);
+		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
 		// wrapping clickhouse driver error in new js error to add stack trace to it
 		try {
 			const format = this.options.rowMode === 'object' ? 'JSONEachRow' : 'JSONCompactEachRow';
-			const rawRes = await this.client.query({ query, format, query_params: queryParams });
+			const rawRes = await this.client.query({ query, format, query_params: params });
 			const stream = rawRes.stream();
 
 			// size chunk can be set using property `max_block_size` in clickhouse_settings

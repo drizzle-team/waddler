@@ -18,7 +18,7 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
 		let result;
 
 		const connObj = await this.pool.acquire();
@@ -42,7 +42,7 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async *stream() {
-		const { query, params } = this.sqlWrapper.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
 
 		const connObj = await this.pool.acquire();
 

@@ -27,7 +27,7 @@ export class OpSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
 
 		// TODO: do I really need branching to all and run here?
 		// wrapping op-sqlite driver error in new js error to add stack trace to it

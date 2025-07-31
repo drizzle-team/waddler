@@ -62,7 +62,7 @@ export class GelDialect extends Dialect {
 		{ value, lastParamIdx, params }: {
 			value: Value;
 			lastParamIdx: number;
-			params: Value[];
+			params: Value[] | Record<string, any>;
 		},
 	): string {
 		if (value instanceof SQLDefault) {

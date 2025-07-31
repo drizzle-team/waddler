@@ -39,7 +39,7 @@ export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
 	) {
 		super(sqlWrapper, dialect, configOptions);
 
-		const query = this.sqlWrapper.getQuery().query;
+		const query = this.sqlWrapper.getQuery(this.dialect).query;
 		this.rawQueryConfig = {
 			text: query,
 			types: pgTypeConfig,
@@ -52,7 +52,7 @@ export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
 
 		// wrapping neon-serverless driver error in new js error to add stack trace to it
 		try {
@@ -83,7 +83,7 @@ export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
 			);
 		}
 
-		const { query, params } = this.sqlWrapper.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
 		const queryStream = new queryStreamObj.constructor(query, params, {
 			types: this.queryConfig.types,
 			// rowMode: 'array',

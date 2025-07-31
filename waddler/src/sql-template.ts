@@ -15,7 +15,7 @@ export abstract class SQLTemplate<T> {
 	}
 
 	toSQL(): Query {
-		return this.sqlWrapper.getQuery();
+		return this.sqlWrapper.getQuery(this.dialect);
 	}
 
 	// Allow it to be awaited (like a Promise)

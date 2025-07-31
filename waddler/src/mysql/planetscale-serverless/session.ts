@@ -18,7 +18,7 @@ export class PlanetscaleServerlessSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
 		try {
 			if (this.options.rowMode === 'array') {
 				const { rows } = await this.client.execute(query, params, this.queryConfig);

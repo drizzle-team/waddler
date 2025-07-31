@@ -27,7 +27,7 @@ export class BetterSqlite3SQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
 
 		// wrapping better-sqlite3 driver error in new js error to add stack trace to it
 		try {
@@ -47,7 +47,7 @@ export class BetterSqlite3SQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async *stream() {
-		const { query, params } = this.sqlWrapper.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
 
 		// wrapping better-sqlite3 driver error in new js error to add stack trace to it
 		try {

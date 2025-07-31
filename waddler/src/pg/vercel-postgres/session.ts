@@ -30,7 +30,7 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
 		super(sqlWrapper, dialect, configOptions);
-		const query = this.sqlWrapper.getQuery().query;
+		const query = this.sqlWrapper.getQuery(this.dialect).query;
 		this.queryConfig = {
 			rowMode: 'array',
 			text: query,
@@ -43,7 +43,7 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { params } = this.sqlWrapper.getQuery();
+		const { params } = this.sqlWrapper.getQuery(this.dialect);
 		// wrapping vercel-postgres driver error in new js error to add stack trace to it
 		try {
 			const queryResult = await (this.options.rowMode === 'array'
@@ -74,7 +74,7 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 				);
 			}
 
-			({ query, params } = this.sqlWrapper.getQuery());
+			({ query, params } = this.sqlWrapper.getQuery(this.dialect));
 			const queryStream = new queryStreamObj.constructor(query, params, { types: this.queryConfig.types });
 
 			const stream = conn.query(queryStream);

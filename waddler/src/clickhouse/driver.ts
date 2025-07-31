@@ -17,7 +17,7 @@ export interface ClickHouseSQL extends Omit<SQL, 'unsafe' | 'values'> {
 
 	unsafe<RowMode extends 'array' | 'object'>(
 		query: string,
-		params?: UnsafeParamType[],
+		params?: Record<string, UnsafeParamType>,
 		options?: { rowMode: RowMode },
 	): UnsafePromise<
 		RowMode extends 'array' ? any[] : {
@@ -114,10 +114,10 @@ const createSqlTemplate = (
 		...SQLFunctions,
 		unsafe: (
 			query: string,
-			params?: UnsafeParamType[],
+			params?: Record<string, UnsafeParamType>,
 			options?: { rowMode: 'array' | 'object' },
 		) => {
-			params = params ?? [];
+			params = params ?? {};
 			options = options ?? { rowMode: 'object' };
 
 			const sqlWrapper = new SQLWrapper();

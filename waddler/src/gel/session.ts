@@ -15,7 +15,7 @@ export class GelSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
 		try {
 			if (this.options.rowMode === 'array') {
 				const rows = await this.client.withSQLRowMode('array').querySQL(query, params.length ? params : undefined);

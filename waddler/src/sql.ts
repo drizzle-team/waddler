@@ -1,3 +1,4 @@
+import type { ClickHouseDialect } from './clickhouse-core/dialect.ts';
 import type { Dialect } from './sql-template-params.ts';
 import {
 	SQLChunk,
@@ -13,6 +14,7 @@ import { SQLTemplate } from './sql-template.ts';
 import type {
 	Identifier,
 	IdentifierObject,
+	IsEqual,
 	Raw,
 	RowData,
 	SQLParamType,
@@ -21,23 +23,32 @@ import type {
 	Values,
 } from './types.ts';
 
-export interface Query {
+export interface Query<ParamsType extends 'array' | 'object' = 'array'> {
 	query: string;
 	// TODO: revise: params should have types that are suitable for specific driver therefore can differ. example: pg driver and sqlite driver(can't accept Date value)
 	// for now I should leave params as they are until I add more descriptve errors in the types
-	params: Value[];
+	params: ParamsType extends 'array' ? Value[] : Record<string, Value>;
 }
 
 export interface BuildQueryConfig {
 	escapeIdentifier(identifier: string): string;
 	escapeParam(lastParamIdx: number, typeToCast: string): string;
-	formParam(param: any, lastParamIdx: number): any;
+	createEmptyParams(): any[] | Record<string, any>;
+	pushParams(
+		params: any[] | Record<string, any>,
+		param: any[] | Record<string, any>,
+		lastParamIdx: number,
+		mode: 'bulk' | 'single',
+	): void;
 	checkIdentifierObject(object: IdentifierObject): void;
 	valueToSQL(
 		{ value, lastParamIdx, params }: {
 			value: Value;
 			lastParamIdx: number;
-			params: Exclude<Value, SQLDefault>[];
+			params: UnsafeParamType[] | Record<string, UnsafeParamType>;
+			types: string[];
+			colIdx: number;
+			paramsCount: number;
 		},
 	): string;
 }
@@ -66,12 +77,12 @@ export class SQLWrapper {
 	constructor(
 		public queryChunks: SQLChunk[] = [],
 		public query?: string,
-		public params?: UnsafeParamType[],
+		public params?: UnsafeParamType[] | Record<string, UnsafeParamType>,
 	) {}
 
 	with({ templateParams, rawParams }: {
 		templateParams?: { strings?: TemplateStringsArray; params: SQLParamType[] };
-		rawParams?: { query: string; params: UnsafeParamType[] };
+		rawParams?: { query: string; params: UnsafeParamType[] | Record<string, UnsafeParamType> };
 	}): this {
 		if (templateParams) {
 			const { strings, params } = templateParams;
@@ -95,10 +106,13 @@ export class SQLWrapper {
 		return this;
 	}
 
-	getQuery(): Query {
+	getQuery<
+		DialectT extends Dialect,
+		ParamsType extends 'array' | 'object' = IsEqual<DialectT, ClickHouseDialect> extends true ? 'object' : 'array',
+	>(dialect: DialectT): Query<ParamsType> {
 		return {
 			query: this.query ?? '',
-			params: this.params ?? [],
+			params: this.params as Query<ParamsType>['params'] ?? dialect.createEmptyParams() as Query<ParamsType>['params'],
 		};
 	}
 
@@ -110,10 +124,11 @@ export class SQLWrapper {
 	prepareQuery(dialect: Dialect): this {
 		if (this.queryChunks.length === 1 && this.queryChunks[0] instanceof SQLString) {
 			this.query = this.queryChunks[0].generateSQL().sql;
-			this.params = [];
+			this.params = dialect.createEmptyParams();
 		}
 
-		const params4driver: UnsafeParamType[] = [];
+		const params4driver: UnsafeParamType[] | Record<string, UnsafeParamType> = dialect.createEmptyParams();
+		let paramsCount = 0;
 		let query = '';
 
 		for (const chunk of this.queryChunks) {
@@ -130,9 +145,11 @@ export class SQLWrapper {
 			}
 
 			if (chunk instanceof SQLValues || chunk instanceof SQLCommonParam) {
-				const { sql, params } = chunk.generateSQL({ dialect, lastParamIdx: params4driver.length });
+				const { sql, params, paramsCount: newParamsCount } = chunk.generateSQL({ dialect, lastParamIdx: paramsCount });
 				query += sql;
-				params4driver.push(...params);
+				dialect.pushParams(params4driver, params, paramsCount + 1, 'bulk');
+				paramsCount += newParamsCount;
+				// params4driver.push(...params);
 			}
 		}
 

@@ -15,10 +15,10 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 		dialect: Dialect,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 		private queryConfig: QueryOptions = {
-			sql: sqlWrapper.getQuery().query,
+			sql: sqlWrapper.getQuery(dialect).query,
 		},
 		private rawQueryConfig: QueryOptions = {
-			sql: sqlWrapper.getQuery().query,
+			sql: sqlWrapper.getQuery(dialect).query,
 			rowsAsArray: true,
 		},
 	) {
@@ -26,7 +26,7 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { params } = this.sqlWrapper.getQuery();
+		const { params } = this.sqlWrapper.getQuery(this.dialect);
 		try {
 			const queryResult = await (this.options.rowMode === 'array'
 				? (this.client as Pool | Connection).query(this.rawQueryConfig, params)
@@ -40,7 +40,7 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 
 	async *stream() {
 		let conn: CallbackConnection | undefined;
-		const { params } = this.sqlWrapper.getQuery();
+		const { params } = this.sqlWrapper.getQuery(this.dialect);
 		// wrapping mysql2 driver error in new js error to add stack trace to it
 		try {
 			const conn = ((isPool(this.client) ? await this.client.getConnection() : this.client) as object as {

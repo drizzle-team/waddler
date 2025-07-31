@@ -15,7 +15,7 @@ export class BunSqlSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery();
+		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
 
 		// wrapping bun-sql driver error in new js error to add stack trace to it
 		try {
