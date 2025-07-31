@@ -1,10 +1,10 @@
 import type { DuckDBResult } from '@duckdb/node-api';
 import { DuckDBInstance } from '@duckdb/node-api';
-import { DuckdbDialect } from '../duckdb-core/dialect.ts';
+import { DuckdbDialect, SQLFunctions } from '../duckdb-core/dialect.ts';
 import { WaddlerQueryError } from '../errors/index.ts';
 import type { Factory } from '../pool-ts/types.ts';
 import { RecyclingPool } from '../recycling-pool.ts';
-import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
+import { SQLDefault, SQLIdentifier, SQLQuery, SQLRaw, SQLValues } from '../sql-template-params.ts';
 import type { SQL } from '../sql.ts';
 import { SQLWrapper } from '../sql.ts';
 import type { Identifier, IdentifierObject, Raw, SQLParamType, UnsafeParamType, Values } from '../types.ts';
@@ -12,6 +12,22 @@ import { transformResultToArrays, transformResultToObjects } from './result-tran
 import { DuckdbNeoSQLTemplate } from './session.ts';
 import type { DuckDBConnectionObj } from './types.ts';
 import { bindParams } from './utils.ts';
+
+export interface DuckdbNeoSQLQuery extends Pick<SQL, 'identifier' | 'raw' | 'default' | 'values'> {
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+}
+
+const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
+	const sqlWrapper = new SQLWrapper();
+	sqlWrapper.with({ templateParams: { strings, params } });
+	const dialect = new DuckdbDialect();
+
+	return new SQLQuery(sqlWrapper, dialect);
+}) as DuckdbNeoSQLQuery;
+
+Object.assign(sql, SQLFunctions);
+
+export { sql };
 
 const createSqlTemplate = (pool: RecyclingPool<DuckDBConnectionObj>, dialect: DuckdbDialect): SQL => {
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): DuckdbNeoSQLTemplate<T> => {

@@ -1,9 +1,17 @@
 import { D1Database, D1DatabaseAPI } from '@miniflare/d1';
 import { createSQLiteDB } from '@miniflare/shared';
 import { beforeAll, beforeEach, expect, test } from 'vitest';
-import { type D1SQL, waddler } from 'waddler/d1';
+import { type D1SQL, sql as sqlQuery, waddler } from 'waddler/d1';
 import { commonTests } from '../../common.test';
-import { commonSqliteTests, createAllDataTypesTable, dropAllDataTypesTable } from '../sqlite-core';
+import {
+	commonSqliteTests,
+	createAllDataTypesTable,
+	createUsersTable,
+	dropAllDataTypesTable,
+	dropUsersTable,
+} from '../sqlite-core';
+import { filter1 } from './test-filters1';
+import { filter2 } from './test-filters2';
 
 let sql: D1SQL;
 
@@ -167,3 +175,51 @@ test('all types in sql.values test', async () => {
 });
 
 // sql.stream, sql.unsafe(...).stream()
+
+test('sql query api test', async () => {
+	const filter = sqlQuery`id = ${1} or ${sqlQuery`id = ${2}`}`;
+	filter.append(sqlQuery` and email = ${'hello@test.com'}`);
+
+	const query = sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
+
+	expect(query.toSQL()).toStrictEqual({
+		query: 'select * from "users" where id = ? or id = ? and email = ?',
+		params: [1, 2, 'hello@test.com'],
+	});
+	expect(filter.toSQL()).toStrictEqual({
+		sql: 'id = ? or id = ? and email = ?',
+		params: [1, 2, 'hello@test.com'],
+	});
+});
+
+test('embeding SQLQuery and SQLTemplate test', async () => {
+	await dropUsersTable(sql);
+	await createUsersTable(sql);
+
+	await sql`insert into users values ${
+		sql.values([[1, 'a', 23, 'example1@gmail.com'], [2, 'b', 24, 'example2@gmail.com']])
+	}`.run();
+
+	await sql`select * from ${sql.identifier('users')};`;
+	// console.log(res);
+
+	const query1 = sql`select * from ${sql.identifier('users')} where ${filter1({ id: 1, name: 'a' })};`;
+	// console.log(query1.toSQL());
+	// console.log(await query1);
+	const res1 = await query1;
+	expect(res1.length).not.toBe(0);
+
+	const query2 = sql`select * from ${sql.identifier('users')} where ${filter2({ id: 1, name: 'a' })};`;
+	// console.log(query2.toSQL());
+	// console.log(await query2);
+	const res2 = await query2;
+	expect(res2.length).not.toBe(0);
+
+	const query3 = sql`select * from ${sql.identifier('users')} where ${sql`id = ${1}`};`;
+	// console.log(query3.toSQL());
+	const res3 = await query3;
+	// console.log(res3);
+	expect(res3.length).not.toBe(0);
+
+	await dropUsersTable(sql);
+});

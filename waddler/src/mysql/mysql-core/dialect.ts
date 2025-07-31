@@ -1,5 +1,5 @@
-import { Dialect, SQLDefault } from '../../sql-template-params.ts';
-import type { Value } from '../../types.ts';
+import { Dialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
+import type { Identifier, Raw, Value, Values } from '../../types.ts';
 
 export type MySQLIdentifierObject = {
 	table?: string;
@@ -80,3 +80,16 @@ export class MySQLDialect extends Dialect {
 		throw new Error(`you can't specify ${typeof value} as value.`);
 	}
 }
+
+export const SQLFunctions = {
+	identifier: (value: Identifier<MySQLIdentifierObject>) => {
+		return new SQLIdentifier(value);
+	},
+	values: (value: Values) => {
+		return new SQLValues(value);
+	},
+	raw: (value: Raw) => {
+		return new SQLRaw(value);
+	},
+	default: new SQLDefault(),
+};

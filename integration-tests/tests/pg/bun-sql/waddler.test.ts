@@ -1,17 +1,21 @@
 import { SQL as BunSql } from 'bun';
 import { afterAll, beforeAll, expect, test } from 'bun:test';
 import type Docker from 'dockerode';
-import { waddler } from 'waddler/bun-sql';
+import { sql as sqlQuery, waddler } from 'waddler/bun-sql';
 import {
 	createAllArrayDataTypesTable,
 	createAllDataTypesTable,
 	createAllNdarrayDataTypesTable,
+	createUsersTable,
 	defaultValue,
 	dropAllArrayDataTypesTable,
 	dropAllDataTypesTable,
 	dropAllNdarrayDataTypesTable,
+	dropUsersTable,
 } from '../../pg/pg-core';
 import { createPgDockerDB } from '../../utils';
+import { filter1 } from './test-filters1';
+import { filter2 } from './test-filters2';
 
 let pgContainer: Docker.Container;
 let pgClient: BunSql;
@@ -388,4 +392,52 @@ test('all nd-array types in sql.values test', async () => {
 	expect(res[0]).toStrictEqual(expectedRes1);
 
 	await dropAllNdarrayDataTypesTable(sql);
+});
+
+test('sql query api test', async () => {
+	const filter = sqlQuery`id = ${1} or ${sqlQuery`id = ${2}`}`;
+	filter.append(sqlQuery` and email = ${'hello@test.com'}`);
+
+	const query = sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
+
+	expect(query.toSQL()).toStrictEqual({
+		query: 'select * from "users" where id = $1 or id = $2 and email = $3',
+		params: [1, 2, 'hello@test.com'],
+	});
+	expect(filter.toSQL()).toStrictEqual({
+		sql: 'id = $1 or id = $2 and email = $3',
+		params: [1, 2, 'hello@test.com'],
+	});
+});
+
+test('embeding SQLQuery and SQLTemplate test', async () => {
+	await dropUsersTable(sql);
+	await createUsersTable(sql);
+
+	await sql`insert into users values ${
+		sql.values([[1, 'a', 23, 'example1@gmail.com'], [2, 'b', 24, 'example2@gmail.com']])
+	}`;
+
+	await sql`select * from ${sql.identifier('users')};`;
+	// console.log(res);
+
+	const query1 = sql`select * from ${sql.identifier('users')} where ${filter1({ id: 1, name: 'a' })};`;
+	// console.log(query1.toSQL());
+	// console.log(await query1);
+	const res1 = await query1;
+	expect(res1.length).not.toBe(0);
+
+	const query2 = sql`select * from ${sql.identifier('users')} where ${filter2({ id: 1, name: 'a' })};`;
+	// console.log(query2.toSQL());
+	// console.log(await query2);
+	const res2 = await query2;
+	expect(res2.length).not.toBe(0);
+
+	const query3 = sql`select * from ${sql.identifier('users')} where ${sql`id = ${1}`};`;
+	// console.log(query3.toSQL());
+	const res3 = await query3;
+	// console.log(res3);
+	expect(res3.length).not.toBe(0);
+
+	await dropUsersTable(sql);
 });

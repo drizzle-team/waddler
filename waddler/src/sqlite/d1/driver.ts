@@ -2,14 +2,15 @@
 
 import type { D1Database as MiniflareD1Database } from '@miniflare/d1';
 import type { SqliteIdentifierObject } from '~/sqlite/sqlite-core/index.ts';
-import { SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
+import type { SQLIdentifier } from '../../sql-template-params.ts';
+import { SQLQuery } from '../../sql-template-params.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
-import type { Identifier, IfNotImported, Raw, RowData, SQLParamType, UnsafeParamType, Values } from '../../types.ts';
-import { SqliteDialect, UnsafePromise } from '../sqlite-core/dialect.ts';
+import type { Identifier, IfNotImported, RowData, SQLParamType, UnsafeParamType } from '../../types.ts';
+import { SQLFunctions, SqliteDialect, UnsafePromise } from '../sqlite-core/dialect.ts';
 import { D1SQLTemplate } from './session.ts';
 
-export interface D1SQL extends Omit<SQL, 'default' | 'unsafe'> {
+export interface D1SQL extends Omit<SQL, 'default' | 'unsafe' | 'identifier'> {
 	/**
 	 * sql.default is not implemented for sqlite because sqlite doesn't support feature of specifying 'default' keyword in insert statements.
 	 */
@@ -17,6 +18,7 @@ export interface D1SQL extends Omit<SQL, 'default' | 'unsafe'> {
 		strings: TemplateStringsArray,
 		...params: SQLParamType[]
 	): D1SQLTemplate<T>;
+	identifier(value: Identifier<SqliteIdentifierObject>): SQLIdentifier<SqliteIdentifierObject>;
 	unsafe<RowMode extends 'array' | 'object'>(
 		query: string,
 		params?: UnsafeParamType[],
@@ -28,6 +30,22 @@ export interface D1SQL extends Omit<SQL, 'default' | 'unsafe'> {
 		D1SQLTemplate<any>
 	>;
 }
+
+export interface D1SQLQuery extends Pick<SQL, 'raw' | 'values'>, Pick<D1SQL, 'identifier'> {
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+}
+
+const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
+	const sqlWrapper = new SQLWrapper();
+	sqlWrapper.with({ templateParams: { strings, params } });
+	const dialect = new SqliteDialect();
+
+	return new SQLQuery(sqlWrapper, dialect);
+}) as D1SQLQuery;
+
+Object.assign(sql, SQLFunctions);
+
+export { sql };
 
 export type AnyD1Database = IfNotImported<
 	D1Database,
@@ -48,15 +66,7 @@ const createSqlTemplate = <
 	};
 
 	Object.assign(fn, {
-		identifier: (value: Identifier<SqliteIdentifierObject>) => {
-			return new SQLIdentifier(value);
-		},
-		values: (value: Values) => {
-			return new SQLValues(value);
-		},
-		raw: (value: Raw) => {
-			return new SQLRaw(value);
-		},
+		...SQLFunctions,
 		unsafe: (
 			query: string,
 			params?: UnsafeParamType[],

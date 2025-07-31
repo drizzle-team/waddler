@@ -1,12 +1,28 @@
 import type { Options, PostgresType, Sql } from 'postgres';
 import postgres from 'postgres';
-import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
+import { SQLQuery } from '../../sql-template-params.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
-import type { Identifier, IdentifierObject, Raw, SQLParamType, UnsafeParamType, Values } from '../../types.ts';
+import type { SQLParamType, UnsafeParamType } from '../../types.ts';
 import { isConfig } from '../../utils.ts';
-import { PgDialect } from '../pg-core/dialect.ts';
+import { PgDialect, SQLFunctions } from '../pg-core/dialect.ts';
 import { PostgresSQLTemplate } from './session.ts';
+
+export interface PostgresSQLQuery extends Pick<SQL, 'identifier' | 'raw' | 'default' | 'values'> {
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+}
+
+const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
+	const sqlWrapper = new SQLWrapper();
+	sqlWrapper.with({ templateParams: { strings, params } });
+	const dialect = new PgDialect();
+
+	return new SQLQuery(sqlWrapper, dialect);
+}) as PostgresSQLQuery;
+
+Object.assign(sql, SQLFunctions);
+
+export { sql };
 
 const createSqlTemplate = (
 	client: Sql,
@@ -19,15 +35,7 @@ const createSqlTemplate = (
 	};
 
 	Object.assign(fn, {
-		identifier: (value: Identifier<IdentifierObject>) => {
-			return new SQLIdentifier(value);
-		},
-		values: (value: Values) => {
-			return new SQLValues(value);
-		},
-		raw: (value: Raw) => {
-			return new SQLRaw(value);
-		},
+		...SQLFunctions,
 		unsafe: async (
 			query: string,
 			params?: UnsafeParamType[],
@@ -42,7 +50,6 @@ const createSqlTemplate = (
 			const unsafeDriver = new PostgresSQLTemplate(sql, client, dialect, options);
 			return await unsafeDriver.execute();
 		},
-		default: new SQLDefault(),
 	});
 
 	return fn as any;

@@ -1,9 +1,10 @@
 import duckdb from 'duckdb';
 // import type { DuckdbValues } from '../duckdb-core/dialect.ts';
-import { DuckdbDialect } from '../duckdb-core/dialect.ts';
+import { DuckdbDialect, SQLFunctions } from '../duckdb-core/dialect.ts';
 import type { Factory } from '../pool-ts/types.ts';
 import { RecyclingPool } from '../recycling-pool.ts';
-import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
+import type { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
+import { SQLQuery } from '../sql-template-params.ts';
 import { SQLWrapper } from '../sql.ts';
 import type { Identifier, IdentifierObject, Raw, RowData, SQLParamType, Values } from '../types.ts';
 import { DuckdbSQLTemplate } from './session.ts';
@@ -16,6 +17,22 @@ export interface SQL {
 	default: SQLDefault;
 }
 
+export interface DuckdbSQLQuery extends Pick<SQL, 'identifier' | 'raw' | 'default' | 'values'> {
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+}
+
+const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
+	const sqlWrapper = new SQLWrapper();
+	sqlWrapper.with({ templateParams: { strings, params } });
+	const dialect = new DuckdbDialect();
+
+	return new SQLQuery(sqlWrapper, dialect);
+}) as DuckdbSQLQuery;
+
+Object.assign(sql, SQLFunctions);
+
+export { sql };
+
 const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>, dialect: DuckdbDialect): SQL => {
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): DuckdbSQLTemplate<T> => {
 		const sql = new SQLWrapper();
@@ -24,18 +41,7 @@ const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>, dialect: Duckdb
 		return new DuckdbSQLTemplate<T>(sql, pool, dialect);
 	};
 
-	Object.assign(fn, {
-		identifier: (value: Identifier<IdentifierObject>) => {
-			return new SQLIdentifier(value);
-		},
-		values: (value: Values) => {
-			return new SQLValues(value);
-		},
-		raw: (value: Raw) => {
-			return new SQLRaw(value);
-		},
-		default: new SQLDefault(),
-	});
+	Object.assign(fn, SQLFunctions);
 
 	return fn as any;
 };

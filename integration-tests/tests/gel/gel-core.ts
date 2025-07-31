@@ -86,3 +86,16 @@ export const createAllNdarrayDataTypesTable = async (dsn: string, tlsSecurity: s
 };
 
 export const defaultValue = 3;
+
+export const createUsersTable = async (dsn: string, tlsSecurity: string) => {
+	await $`gel query "CREATE TYPE default::users_ {
+        create property user_id:int32;
+        create property name:str;
+        create property age:int32;
+        create property email:str;
+};" --tls-security=${tlsSecurity} --dsn=${dsn}`;
+};
+
+export const dropUsersTable = async (dsn: string, tlsSecurity: string) => {
+	await $`gel query "DROP TYPE default::users_;" --tls-security=${tlsSecurity} --dsn=${dsn}`;
+};

@@ -1,6 +1,6 @@
 import * as waddlerTools from 'waddler/clickhouse';
 
-export const filter = ({ id, name, email }: { id?: number; name?: string; email?: string }) => {
+export const filter2 = ({ id, name, email }: { id?: number; name?: string; email?: string }) => {
 	const filters = [];
 	if (id) filters.push(waddlerTools.sql`id = ${waddlerTools.sql.param(id, 'Int32')}`);
 	if (name) filters.push(waddlerTools.sql`name = ${waddlerTools.sql.param(name, 'String')}`);

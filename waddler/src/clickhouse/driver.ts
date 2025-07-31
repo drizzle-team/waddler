@@ -1,12 +1,13 @@
 import type { ClickHouseClient } from '@clickhouse/client';
 import { createClient } from '@clickhouse/client';
 import type { NodeClickHouseClientConfigOptions } from '@clickhouse/client/dist/config';
-import { SQLCommonParam, SQLDefault, SQLIdentifier, SQLQuery, SQLRaw, SQLValues } from '~/sql-template-params.ts';
+import type { SQLCommonParam, SQLValues } from '~/sql-template-params.ts';
+import { SQLQuery } from '~/sql-template-params.ts';
 import { isConfig } from '~/utils.ts';
 import type { DbType } from '../clickhouse-core/index.ts';
-import { ClickHouseDialect, UnsafePromise } from '../clickhouse-core/index.ts';
+import { ClickHouseDialect, SQLFunctions, UnsafePromise } from '../clickhouse-core/index.ts';
 import { type SQL, SQLWrapper } from '../sql.ts';
-import type { Identifier, IdentifierObject, Raw, RowData, SQLParamType, UnsafeParamType, Values } from '../types.ts';
+import type { RowData, SQLParamType, UnsafeParamType, Values } from '../types.ts';
 import { ClickHouseSQLTemplate } from './session.ts';
 
 export interface ClickHouseSQL extends Omit<SQL, 'unsafe' | 'values'> {
@@ -71,22 +72,6 @@ export interface ClickHouseSQLQuery
 {
 	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
 }
-
-const SQLFunctions = {
-	identifier: (value: Identifier<IdentifierObject>) => {
-		return new SQLIdentifier(value);
-	},
-	values: (value: Values, types?: DbType[]) => {
-		return new SQLValues(value, types);
-	},
-	param: (value: any, type?: DbType) => {
-		return new SQLCommonParam(value, type);
-	},
-	raw: (value: Raw) => {
-		return new SQLRaw(value);
-	},
-	default: new SQLDefault(),
-};
 
 const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
 	const sqlWrapper = new SQLWrapper();

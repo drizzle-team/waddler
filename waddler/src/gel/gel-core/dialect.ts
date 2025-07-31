@@ -1,5 +1,5 @@
-import { Dialect, SQLDefault } from '../../sql-template-params.ts';
-import type { IdentifierObject, Value } from '../../types.ts';
+import { Dialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
+import type { Identifier, IdentifierObject, Raw, Value, Values } from '../../types.ts';
 
 export class GelDialect extends Dialect {
 	escapeParam(lastParamIdx: number): string {
@@ -77,3 +77,16 @@ export class GelDialect extends Dialect {
 		return this.escapeParam(lastParamIdx + params.length);
 	}
 }
+
+export const SQLFunctions = {
+	identifier: (value: Identifier<IdentifierObject>) => {
+		return new SQLIdentifier(value);
+	},
+	values: (value: Values) => {
+		return new SQLValues(value);
+	},
+	raw: (value: Raw) => {
+		return new SQLRaw(value);
+	},
+	default: new SQLDefault(),
+};

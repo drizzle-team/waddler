@@ -3,8 +3,8 @@ import type { BunSqliteSQLTemplate } from '~/sqlite/bun-sqlite/session.ts';
 import type { D1SQLTemplate } from '~/sqlite/d1/session.ts';
 import type { DurableSqliteSQLTemplate } from '~/sqlite/durable-sqlite/session.ts';
 import type { LibsqlSQLTemplate } from '~/sqlite/libsql/session.ts';
-import { Dialect, SQLDefault } from '../../sql-template-params.ts';
-import type { Value } from '../../types.ts';
+import { Dialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
+import type { Identifier, Raw, Value, Values } from '../../types.ts';
 import type { ExpoSqliteSQLTemplate } from '../expo-sqlite/session.ts';
 import type { OpSqliteSQLTemplate } from '../op-sqlite/session.ts';
 
@@ -114,3 +114,15 @@ export class UnsafePromise<
 		return Promise.resolve(result).then(onfulfilled, onrejected);
 	}
 }
+
+export const SQLFunctions = {
+	identifier: (value: Identifier<SqliteIdentifierObject>) => {
+		return new SQLIdentifier(value);
+	},
+	values: (value: Values) => {
+		return new SQLValues(value);
+	},
+	raw: (value: Raw) => {
+		return new SQLRaw(value);
+	},
+};

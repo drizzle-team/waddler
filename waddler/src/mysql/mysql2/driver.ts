@@ -1,15 +1,30 @@
 import type { Connection as CallbackConnection, Pool as CallbackPool, PoolOptions } from 'mysql2';
 import { createPool } from 'mysql2/promise';
 import type { Connection, Pool } from 'mysql2/promise';
-import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
+import { SQLQuery } from '../../sql-template-params.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
-import type { Identifier, Raw, SQLParamType, UnsafeParamType, Values } from '../../types.ts';
+import type { SQLParamType, UnsafeParamType } from '../../types.ts';
 import { isConfig } from '../../utils.ts';
-import type { MySQLIdentifierObject } from '../mysql-core/dialect.ts';
-import { MySQLDialect } from '../mysql-core/dialect.ts';
+import { MySQLDialect, SQLFunctions } from '../mysql-core/dialect.ts';
 import { MySql2SQLTemplate } from './session.ts';
 import { isCallbackClient } from './utils.ts';
+
+export interface MySql2SQLQuery extends Pick<SQL, 'identifier' | 'raw' | 'default' | 'values'> {
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+}
+
+const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
+	const sqlWrapper = new SQLWrapper();
+	sqlWrapper.with({ templateParams: { strings, params } });
+	const dialect = new MySQLDialect();
+
+	return new SQLQuery(sqlWrapper, dialect);
+}) as MySql2SQLQuery;
+
+Object.assign(sql, SQLFunctions);
+
+export { sql };
 
 const createSqlTemplate = (
 	client: Pool | Connection,
@@ -22,15 +37,7 @@ const createSqlTemplate = (
 	};
 
 	Object.assign(fn, {
-		identifier: (value: Identifier<MySQLIdentifierObject>) => {
-			return new SQLIdentifier(value);
-		},
-		values: (value: Values) => {
-			return new SQLValues(value);
-		},
-		raw: (value: Raw) => {
-			return new SQLRaw(value);
-		},
+		...SQLFunctions,
 		unsafe: async (
 			query: string,
 			params?: UnsafeParamType[],
@@ -45,7 +52,6 @@ const createSqlTemplate = (
 			const unsafeDriver = new MySql2SQLTemplate(sql, client, dialect, options);
 			return await unsafeDriver.execute();
 		},
-		default: new SQLDefault(),
 	});
 
 	return fn as any;

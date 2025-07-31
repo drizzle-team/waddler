@@ -1,5 +1,5 @@
-import { Dialect, SQLDefault } from '../sql-template-params.ts';
-import type { IdentifierObject } from '../types.ts';
+import { Dialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
+import type { Identifier, IdentifierObject, Raw, Values } from '../types.ts';
 
 export class DuckdbDialect extends Dialect {
 	escapeParam(lastParamIdx: number): string {
@@ -102,3 +102,16 @@ export class DuckdbDialect extends Dialect {
 // export type DuckdbValue = Exclude<Value, Buffer | JSONArray>;
 
 // export type DuckdbValues = Value[][];
+
+export const SQLFunctions = {
+	identifier: (value: Identifier<IdentifierObject>) => {
+		return new SQLIdentifier(value);
+	},
+	values: (value: Values) => {
+		return new SQLValues(value);
+	},
+	raw: (value: Raw) => {
+		return new SQLRaw(value);
+	},
+	default: new SQLDefault(),
+};

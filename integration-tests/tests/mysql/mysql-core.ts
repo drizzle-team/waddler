@@ -39,6 +39,19 @@ export const dropAllDataTypesTable = async (sql: SQL) => {
 
 export const defaultValue = 3;
 
+export const createUsersTable = async (sql: SQL) => {
+	await sql.unsafe(`create table users(
+    id    int,
+    name  text,
+    age   int,
+    email text
+	);`);
+};
+
+export const dropUsersTable = async (sql: SQL) => {
+	await sql.unsafe(`drop table if exists users;`);
+};
+
 export const commonMysqlTests = () => {
 	describe('common_mysql_tests', () => {
 		// default ------------------------------------------------------------------------------

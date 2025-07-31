@@ -28,6 +28,19 @@ export const dropAllDataTypesTable = async (sql: SqliteSQL) => {
 	await sql`drop table if exists "all_data_types";`.run();
 };
 
+export const createUsersTable = async (sql: SqliteSQL) => {
+	await sql.unsafe(`create table users(
+    id    integer,
+    name  text,
+    age   integer,
+    email text
+	);`).run();
+};
+
+export const dropUsersTable = async (sql: SqliteSQL) => {
+	await sql.unsafe(`drop table if exists users;`).run();
+};
+
 export const commonSqliteTests = () => {
 	describe('common_sqlite_tests', () => {
 		// toSQL

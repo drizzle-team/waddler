@@ -108,6 +108,19 @@ export const dropAllNdarrayDataTypesTable = async (sql: SQL) => {
 	// await dropMoodEnumType(sql);
 };
 
+export const createUsersTable = async (sql: SQL) => {
+	await sql.unsafe(`create table users(
+    id    integer,
+    name  text,
+    age   integer,
+    email text
+	);`);
+};
+
+export const dropUsersTable = async (sql: SQL) => {
+	await sql.unsafe(`drop table if exists users;`);
+};
+
 export const commonPgTests = () => {
 	describe('common_pg_tests', () => {
 		// default ------------------------------------------------------------------------------

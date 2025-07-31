@@ -15,8 +15,8 @@ import {
 	dropAllDataTypesTable,
 	dropAllNdarrayDataTypesTable,
 } from './clickhouse-core.ts';
-import { filter as filter1 } from './test-filters1.ts';
-import { filter as filter2 } from './test-filters2.ts';
+import { filter1 } from './test-filters1.ts';
+import { filter2 } from './test-filters2.ts';
 
 let clickHouseContainer: Docker.Container;
 let clickHouseClient: ClickHouseClient;
@@ -1143,8 +1143,14 @@ test('sql query api test', async () => {
 
 	const query = sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
 
-	query.toSQL();
-	filter.toSQL();
+	expect(query.toSQL()).toStrictEqual({
+		query: 'select * from `users` where id = {param1:Int32} or id = {param2:String} and email = {param3:String}',
+		params: { param1: 1, param2: 2, param3: 'hello@test.com' },
+	});
+	expect(filter.toSQL()).toStrictEqual({
+		sql: 'id = {param1:Int32} or id = {param2:String} and email = {param3:String}',
+		params: { param1: 1, param2: 2, param3: 'hello@test.com' },
+	});
 });
 
 test('embeding SQLQuery and SQLTemplate test', async () => {

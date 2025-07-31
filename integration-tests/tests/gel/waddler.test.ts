@@ -2,18 +2,22 @@ import type Docker from 'dockerode';
 import type { Client } from 'gel';
 import createClient, { DateDuration, Duration, LocalDate, LocalDateTime, LocalTime, RelativeDuration } from 'gel';
 import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
-import { waddler } from 'waddler/gel';
+import { sql as sqlQuery, waddler } from 'waddler/gel';
 import { commonTests } from '../common.test.ts';
 import { createGelDockerDB } from '../utils.ts';
 import {
 	createAllArrayDataTypesTable,
 	createAllDataTypesTable,
+	createUsersTable,
 	defaultValue,
 	dropAllDataTypesTable,
+	dropUsersTable,
 } from './gel-core.ts';
 import 'zx/globals';
 import type { SQL } from 'waddler';
 import { commonPgTests } from '../pg/pg-core.ts';
+import { filter1 } from './test-filters1.ts';
+import { filter2 } from './test-filters2.ts';
 
 let gelContainer: Docker.Container;
 let gelClient: Client;
@@ -379,6 +383,54 @@ test('all array types in sql.values test', async () => {
 	);
 
 	expect(res[0]).toStrictEqual(expectedRes);
+});
+
+test('sql query api test', async () => {
+	const filter = sqlQuery`id = ${1} or ${sqlQuery`id = ${2}`}`;
+	filter.append(sqlQuery` and email = ${'hello@test.com'}`);
+
+	const query = sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
+
+	expect(query.toSQL()).toStrictEqual({
+		query: 'select * from "users" where id = $1 or id = $2 and email = $3',
+		params: [1, 2, 'hello@test.com'],
+	});
+	expect(filter.toSQL()).toStrictEqual({
+		sql: 'id = $1 or id = $2 and email = $3',
+		params: [1, 2, 'hello@test.com'],
+	});
+});
+
+test('embeding SQLQuery and SQLTemplate test', async () => {
+	await createUsersTable(gelConnectionString, tlsSecurity);
+
+	const columnNames = ['user_id', 'name', 'age', 'email'];
+	await sql`insert into users_ (${sql.identifier(columnNames)}) values ${
+		sql.values([[1, 'a', 23, 'example1@gmail.com'], [2, 'b', 24, 'example2@gmail.com']])
+	}`;
+
+	await sql`select * from ${sql.identifier('users_')};`;
+	// console.log(res);
+
+	const query1 = sql`select * from ${sql.identifier('users_')} where ${filter1({ user_id: 1, name: 'a' })};`;
+	// console.log(query1.toSQL());
+	// console.log(await query1);
+	const res1 = await query1;
+	expect(res1.length).not.toBe(0);
+
+	const query2 = sql`select * from ${sql.identifier('users_')} where ${filter2({ user_id: 1, name: 'a' })};`;
+	// console.log(query2.toSQL());
+	// console.log(await query2);
+	const res2 = await query2;
+	expect(res2.length).not.toBe(0);
+
+	const query3 = sql`select * from ${sql.identifier('users_')} where ${sql`user_id = ${1}`};`;
+	// console.log(query3.toSQL());
+	const res3 = await query3;
+	// console.log(res3);
+	expect(res3.length).not.toBe(0);
+
+	await dropUsersTable(gelConnectionString, tlsSecurity);
 });
 
 // test('all nd-array types in sql.values test', async () => {

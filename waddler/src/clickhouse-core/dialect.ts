@@ -1,7 +1,7 @@
 import { TupleParam } from '@clickhouse/client';
 import type { ClickHouseSQLTemplate } from '../clickhouse/session.ts';
-import { Dialect, SQLDefault, SQLRaw } from '../sql-template-params.ts';
-import type { IdentifierObject, Value } from '../types.ts';
+import { Dialect, SQLCommonParam, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
+import type { Identifier, IdentifierObject, Raw, Value, Values } from '../types.ts';
 import { getArrayDepth, makeClickHouseArray } from './utils.ts';
 
 export class ClickHouseDialect extends Dialect {
@@ -232,3 +232,19 @@ export type DbType =
 	| 'Polygon'
 	| 'MultiPolygon'
 	| (string & {});
+
+export const SQLFunctions = {
+	identifier: (value: Identifier<IdentifierObject>) => {
+		return new SQLIdentifier(value);
+	},
+	values: (value: Values, types?: DbType[]) => {
+		return new SQLValues(value, types);
+	},
+	param: (value: any, type?: DbType) => {
+		return new SQLCommonParam(value, type);
+	},
+	raw: (value: Raw) => {
+		return new SQLRaw(value);
+	},
+	default: new SQLDefault(),
+};

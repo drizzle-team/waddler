@@ -1,14 +1,14 @@
 import type { Client } from '@libsql/client';
 import type { SqliteIdentifierObject } from '~/sqlite/sqlite-core/index.ts';
-import { SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
+import type { SQLIdentifier } from '../../sql-template-params.ts';
+import { SQLQuery } from '../../sql-template-params.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
-import type { Identifier, Raw, RowData, SQLParamType, UnsafeParamType, Values } from '../../types.ts';
-import type { SqliteDialect } from '../sqlite-core/dialect.ts';
-import { UnsafePromise } from '../sqlite-core/dialect.ts';
+import type { Identifier, RowData, SQLParamType, UnsafeParamType } from '../../types.ts';
+import { SQLFunctions, SqliteDialect, UnsafePromise } from '../sqlite-core/dialect.ts';
 import { LibsqlSQLTemplate } from './session.ts';
 
-export interface LibsqlSQL extends Omit<SQL, 'default' | 'unsafe'> {
+export interface LibsqlSQL extends Omit<SQL, 'default' | 'unsafe' | 'identifier'> {
 	/**
 	 * sql.default is not implemented for sqlite because sqlite doesn't support feature of specifying 'default' keyword in insert statements.
 	 */
@@ -16,6 +16,7 @@ export interface LibsqlSQL extends Omit<SQL, 'default' | 'unsafe'> {
 		strings: TemplateStringsArray,
 		...params: SQLParamType[]
 	): LibsqlSQLTemplate<T>;
+	identifier(value: Identifier<SqliteIdentifierObject>): SQLIdentifier<SqliteIdentifierObject>;
 	unsafe<RowMode extends 'array' | 'object'>(
 		query: string,
 		params?: UnsafeParamType[],
@@ -27,6 +28,22 @@ export interface LibsqlSQL extends Omit<SQL, 'default' | 'unsafe'> {
 		LibsqlSQLTemplate<any>
 	>;
 }
+
+export interface LibsqlSQLQuery extends Pick<SQL, 'raw' | 'values'>, Pick<LibsqlSQL, 'identifier'> {
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+}
+
+const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
+	const sqlWrapper = new SQLWrapper();
+	sqlWrapper.with({ templateParams: { strings, params } });
+	const dialect = new SqliteDialect();
+
+	return new SQLQuery(sqlWrapper, dialect);
+}) as LibsqlSQLQuery;
+
+Object.assign(sql, SQLFunctions);
+
+export { sql };
 
 export const createSqlTemplate = <
 	TClient extends Client = Client,
@@ -41,15 +58,7 @@ export const createSqlTemplate = <
 	};
 
 	Object.assign(fn, {
-		identifier: (value: Identifier<SqliteIdentifierObject>) => {
-			return new SQLIdentifier(value);
-		},
-		values: (value: Values) => {
-			return new SQLValues(value);
-		},
-		raw: (value: Raw) => {
-			return new SQLRaw(value);
-		},
+		...SQLFunctions,
 		unsafe: (
 			query: string,
 			params?: UnsafeParamType[],

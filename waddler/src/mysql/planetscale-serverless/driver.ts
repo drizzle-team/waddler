@@ -1,13 +1,28 @@
 import type { Config } from '@planetscale/database';
 import { Client } from '@planetscale/database';
-import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
+import { SQLQuery } from '../../sql-template-params.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
-import type { Identifier, Raw, SQLParamType, UnsafeParamType, Values } from '../../types.ts';
+import type { SQLParamType, UnsafeParamType } from '../../types.ts';
 import { isConfig } from '../../utils.ts';
-import type { MySQLIdentifierObject } from '../mysql-core/dialect.ts';
-import { MySQLDialect } from '../mysql-core/dialect.ts';
+import { MySQLDialect, SQLFunctions } from '../mysql-core/dialect.ts';
 import { PlanetscaleServerlessSQLTemplate } from './session.ts';
+
+export interface PlanetscaleServerlessSQLQuery extends Pick<SQL, 'identifier' | 'raw' | 'default' | 'values'> {
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+}
+
+const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
+	const sqlWrapper = new SQLWrapper();
+	sqlWrapper.with({ templateParams: { strings, params } });
+	const dialect = new MySQLDialect();
+
+	return new SQLQuery(sqlWrapper, dialect);
+}) as PlanetscaleServerlessSQLQuery;
+
+Object.assign(sql, SQLFunctions);
+
+export { sql };
 
 const createSqlTemplate = (
 	client: Client,
@@ -20,15 +35,7 @@ const createSqlTemplate = (
 	};
 
 	Object.assign(fn, {
-		identifier: (value: Identifier<MySQLIdentifierObject>) => {
-			return new SQLIdentifier(value);
-		},
-		values: (value: Values) => {
-			return new SQLValues(value);
-		},
-		raw: (value: Raw) => {
-			return new SQLRaw(value);
-		},
+		...SQLFunctions,
 		unsafe: async (
 			query: string,
 			params?: UnsafeParamType[],
@@ -43,7 +50,6 @@ const createSqlTemplate = (
 			const unsafeDriver = new PlanetscaleServerlessSQLTemplate(sql, client, dialect, options);
 			return await unsafeDriver.execute();
 		},
-		default: new SQLDefault(),
 	});
 
 	return fn as any;
