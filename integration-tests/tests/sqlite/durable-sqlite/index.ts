@@ -1,8 +1,10 @@
 /// <reference types="@cloudflare/workers-types" />
 import { expect } from 'chai';
 import { DurableObject } from 'cloudflare:workers';
-import { type DurableSqliteSQL, waddler } from 'waddler/durable-sqlite';
-import { createAllDataTypesTable, dropAllDataTypesTable } from '../sqlite-core';
+import { type DurableSqliteSQL, sql as sqlQuery, waddler } from 'waddler/durable-sqlite';
+import { createAllDataTypesTable, createUsersTable, dropAllDataTypesTable, dropUsersTable } from '../sqlite-core';
+import { filter1 } from './test-filters1';
+import { filter2 } from './test-filters2';
 
 export class MyDurableObject extends DurableObject {
 	testsPassed: number = 0;
@@ -252,6 +254,70 @@ export class MyDurableObject extends DurableObject {
 		}
 	}
 
+	async sqlQueryApi() {
+		try {
+			const filter = sqlQuery`id = ${1} or ${sqlQuery`id = ${2}`}`;
+			filter.append(sqlQuery` and email = ${'hello@test.com'}`);
+
+			const query = this.sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
+
+			expect(query.toSQL()).deep.equal({
+				query: 'select * from "users" where id = ? or id = ? and email = ?',
+				params: [1, 2, 'hello@test.com'],
+			});
+			expect(filter.toSQL()).deep.equal({
+				sql: 'id = ? or id = ? and email = ?',
+				params: [1, 2, 'hello@test.com'],
+			});
+
+			this.testsPassed += 1;
+		} catch (error) {
+			console.error(error);
+			this.testsFailed += 1;
+			// throw new Error('sql.stream test error.');
+		}
+	}
+
+	async embedingSQLQueryAndSQLTemplate() {
+		try {
+			await dropUsersTable(this.sql);
+			await createUsersTable(this.sql);
+
+			await this.sql`insert into users values ${
+				this.sql.values([[1, 'a', 23, 'example1@gmail.com'], [2, 'b', 24, 'example2@gmail.com']])
+			}`.run();
+
+			await this.sql`select * from ${this.sql.identifier('users')};`;
+			// console.log(res);
+
+			const query1 = this.sql`select * from ${this.sql.identifier('users')} where ${filter1({ id: 1, name: 'a' })};`;
+			// console.log(query1.toSQL());
+			// console.log(await query1);
+			const res1 = await query1;
+			expect(res1.length).not.equal(0);
+
+			const query2 = this.sql`select * from ${this.sql.identifier('users')} where ${filter2({ id: 1, name: 'a' })};`;
+			// console.log(query2.toSQL());
+			// console.log(await query2);
+			const res2 = await query2;
+			expect(res2.length).not.equal(0);
+
+			const query3 = this.sql`select * from ${this.sql.identifier('users')} where ${this.sql`id = ${1}`};`;
+			// console.log(query3.toSQL());
+			const res3 = await query3;
+			// console.log(res3);
+			expect(res3.length).not.equal(0);
+
+			await dropUsersTable(this.sql);
+
+			this.testsPassed += 1;
+		} catch (error) {
+			console.error(error);
+			this.testsFailed += 1;
+			// throw new Error('sql.stream test error.');
+		}
+	}
+
 	async insertAndList(user: any[]) {
 		await this.insert(user);
 		return this.select();
@@ -288,6 +354,8 @@ export default {
 		await stub.allTypesInSqlUnsafe();
 		await stub.allTypesInSqlValues();
 		await stub.sqlStream();
+		await stub.sqlQueryApi();
+		await stub.embedingSQLQueryAndSQLTemplate();
 
 		const greeting = await stub.sayHello() as string;
 
