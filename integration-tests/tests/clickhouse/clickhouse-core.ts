@@ -184,13 +184,13 @@ export const commonClickHouseTests = () => {
 		test('base test with number param', (ctx) => {
 			const res = ctx.sql`select ${1};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select {param1:String};`, params: { param1: 1 } });
+			expect(res).toStrictEqual({ query: `select {param1:Int32};`, params: { param1: 1 } });
 		});
 
 		test('base test with bigint param', (ctx) => {
 			const res = ctx.sql`select ${BigInt(10)};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select {param1:String};`, params: { param1: 10n } });
+			expect(res).toStrictEqual({ query: `select {param1:Int64};`, params: { param1: 10n } });
 		});
 
 		test('base test with string param', (ctx) => {
@@ -226,7 +226,7 @@ export const commonClickHouseTests = () => {
 
 			const res = query.toSQL();
 			expect(res).toStrictEqual({
-				query: 'select * from users where id = {param1:String} or id = {param2:String} or id = {param3:String};',
+				query: 'select * from users where id = {param1:Int32} or id = {param2:Int32} or id = {param3:Int32};',
 				params: { param1: 1, param2: 3, param3: 4 },
 			});
 		});

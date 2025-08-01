@@ -46,7 +46,7 @@ export class ClickHouseSQLTemplate<T> extends SQLTemplate<T> {
 				}) as any;
 			}
 		} catch (error) {
-			throw new WaddlerQueryError(query, params, error as Error);
+			throw new WaddlerQueryError(query, JSON.stringify(params), error as Error);
 		}
 	}
 

@@ -1,7 +1,7 @@
 export class WaddlerQueryError extends Error {
 	constructor(
 		public query: string,
-		public params: any[] | Record<string, any>,
+		public params: any[] | Record<string, any> | any,
 		public override cause?: Error,
 	) {
 		super(`Failed query: ${query}\nparams: ${params}`);

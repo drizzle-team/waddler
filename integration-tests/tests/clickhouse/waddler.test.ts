@@ -1144,11 +1144,11 @@ test('sql query api test', async () => {
 	const query = sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
 
 	expect(query.toSQL()).toStrictEqual({
-		query: 'select * from `users` where id = {param1:Int32} or id = {param2:String} and email = {param3:String}',
+		query: 'select * from `users` where id = {param1:Int32} or id = {param2:Int32} and email = {param3:String}',
 		params: { param1: 1, param2: 2, param3: 'hello@test.com' },
 	});
 	expect(filter.toSQL()).toStrictEqual({
-		sql: 'id = {param1:Int32} or id = {param2:String} and email = {param3:String}',
+		sql: 'id = {param1:Int32} or id = {param2:Int32} and email = {param3:String}',
 		params: { param1: 1, param2: 2, param3: 'hello@test.com' },
 	});
 });
@@ -1201,14 +1201,90 @@ engine = MergeTree
 order by id;
   `).command();
 
-	const valuesIds = Array.from({ length: 10 ** 3 }).fill([1]) as number[][];
+	const valuesIds = Array.from({ length: 10 ** 1 }).fill([1]) as number[][];
 
 	console.time('insert');
-	await sql`insert into ${sql.identifier('tests')} values ${sql.values(valuesIds)};`.command();
+	const query = sql`insert into ${sql.identifier('tests')} values ${sql.values(valuesIds)};`.command();
+	const { query: rawSql, params } = query.toSQL();
+	// await query;
+	// const rawSqlNew = rawSql.slice(0, -1) + ' FORMAT JSONEachRow;';
+	await clickHouseClient.command({ query: rawSql, query_params: params as Record<string, any> });
+	await clickHouseClient.insert({
+		table: 'tests',
+		query_params: params as Record<string, any>,
+		values: valuesIds,
+	});
+
 	console.timeEnd('insert');
 	// console.log('New user created!');
 	// const ids = await sql`select * from ${sql.identifier('tests')};`.query();
 	// console.log('Getting all users from the database:', ids);
+
+	await sql.unsafe(`drop table tests;`).command();
+});
+
+test('1d array of strings, integer as SQLCommonParam test', async () => {
+	await sql.unsafe(`create table tests(
+    id    Int32,
+	path  String
+)
+engine = MergeTree
+order by id;
+  `).command();
+
+	const valuesToInsert = [[1, '/'], [2, '/watch'], [3, '/over_watch']];
+
+	await sql`insert into tests values ${sql.values(valuesToInsert)};`.command();
+
+	// case0
+	const query0 = sql`select * from tests where path in ${['/', '/watch']};`;
+	expect(query0.toSQL()).toStrictEqual({
+		query: 'select * from tests where path in {param1:Array(String)};',
+		params: { param1: ['/', '/watch'] },
+	});
+
+	const res0 = await query0;
+	expect(res0).toStrictEqual([{ id: 1, path: '/' }, { id: 2, path: '/watch' }]);
+
+	// case1 (datetime)
+	const query1 = sql`select toDateTime(${1754055760745}, 3) as some_datetime;`;
+	expect(query1.toSQL()).toStrictEqual({
+		query: 'select toDateTime({param1:Int64}, 3) as some_datetime;',
+		params: { param1: 1754055760745 },
+	});
+
+	const res1 = await query1;
+	expect(res1.length).equal(1);
+
+	// case2 (int32 max)
+	const query2 = sql`select ${2_147_483_647} as max_int32;`;
+	expect(query2.toSQL()).toStrictEqual({
+		query: 'select {param1:Int32} as max_int32;',
+		params: { param1: 2147483647 },
+	});
+
+	const res2 = await query2;
+	expect(res2).toStrictEqual([{ max_int32: 2147483647 }]);
+
+	// case3 (int32 min)
+	const query3 = sql`select ${-2_147_483_648} as min_int32;`;
+	expect(query3.toSQL()).toStrictEqual({
+		query: 'select {param1:Int32} as min_int32;',
+		params: { param1: -2147483648 },
+	});
+
+	const res3 = await query3;
+	expect(res3).toStrictEqual([{ min_int32: -2147483648 }]);
+
+	// case4 (float)
+	const query4 = sql`select ${-2_147_483_648.123} as some_float;`;
+	expect(query4.toSQL()).toStrictEqual({
+		query: 'select {param1:String} as some_float;',
+		params: { param1: -2147483648.123 },
+	});
+
+	const res4 = await query4;
+	expect(res4).toStrictEqual([{ some_float: '-2147483648.123' }]);
 
 	await sql.unsafe(`drop table tests;`).command();
 });

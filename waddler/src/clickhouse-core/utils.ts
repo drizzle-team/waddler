@@ -66,3 +66,33 @@ export const getArrayDepth = (value: any[]) => {
 		return Math.max(d, maxDepth);
 	}, 0);
 };
+
+export const inspectArray = (value: any[]): { depth: number; type: string } => {
+	if (Array.isArray(value)) {
+		const { depth, type } = inspectArray(value[0]);
+		return { depth: depth + 1, type };
+	}
+
+	return { depth: 0, type: typeof value };
+};
+
+export const inspectArray1 = (value: any[]): { depth: number; type: string } => {
+	let currNode: any | any[] = value;
+	let depth: number = 0;
+
+	for (let i = 0; i < 100; i++) {
+		if (!Array.isArray(currNode)) return { depth, type: typeof currNode };
+		currNode = currNode[0];
+		depth++;
+	}
+
+	return { depth, type: typeof value };
+};
+
+// console.log(inspectArray(['a', 'b']));
+// console.log(inspectArray([['a', 'b'], ['a', 'b']]));
+// console.log(inspectArray([[['a', 'b'], ['a', 'b']], [['a', 'b'], ['a', 'b']]]));
+
+// console.log(inspectArray1(['a', 'b']));
+// console.log(inspectArray1([['a', 'b'], ['a', 'b']]));
+// console.log(inspectArray1([[['a', 'b'], ['a', 'b']], [['a', 'b'], ['a', 'b']]]));
