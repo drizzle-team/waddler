@@ -1,9 +1,11 @@
 import Client, { type Database, type Options } from 'better-sqlite3';
+import type { Logger } from '../../logger.ts';
+import { DefaultLogger } from '../../logger.ts';
 import type { SQLIdentifier } from '../../sql-template-params.ts';
 import { SQLQuery } from '../../sql-template-params.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
-import type { Identifier, RowData, SQLParamType, UnsafeParamType } from '../../types.ts';
+import type { Identifier, RowData, SQLParamType, UnsafeParamType, WaddlerConfig } from '../../types.ts';
 import { isConfig } from '../../utils.ts';
 import type { SqliteIdentifierObject } from '../sqlite-core/dialect.ts';
 import { SQLFunctions, SqliteDialect, UnsafePromise } from '../sqlite-core/dialect.ts';
@@ -48,13 +50,21 @@ export { sql };
 
 const createSqlTemplate = (
 	client: Database,
-	dialect: SqliteDialect,
+	configOptions: WaddlerConfig = {},
 ): BetterSqlite3SQL => {
+	const dialect = new SqliteDialect();
+	let logger: Logger | undefined;
+	if (configOptions.logger === true) {
+		logger = new DefaultLogger();
+	} else if (configOptions.logger !== false) {
+		logger = configOptions.logger;
+	}
+
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): BetterSqlite3SQLTemplate<T> => {
 		const sql = new SQLWrapper();
 		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
 		// client.defaultSafeIntegers(true);
-		return new BetterSqlite3SQLTemplate<T>(sql, client, dialect);
+		return new BetterSqlite3SQLTemplate<T>(sql, client, dialect, { logger });
 	};
 
 	Object.assign(fn, {
@@ -70,7 +80,7 @@ const createSqlTemplate = (
 			const sql = new SQLWrapper();
 			sql.with({ rawParams: { query, params } });
 
-			const unsafeDriver = new BetterSqlite3SQLTemplate(sql, client, dialect, options);
+			const unsafeDriver = new BetterSqlite3SQLTemplate(sql, client, dialect, { logger }, options);
 			const unsafePromise = new UnsafePromise(unsafeDriver);
 
 			return unsafePromise;
@@ -100,39 +110,44 @@ export function waddler(
 			string,
 		]
 		| [
-			(({
-				connection?: BetterSQLite3DatabaseConfig;
-			} | {
-				client: Database;
-			})),
+			string,
+			WaddlerConfig,
+		]
+		| [
+			(
+				& WaddlerConfig
+				& ({
+					connection?: BetterSQLite3DatabaseConfig;
+				} | {
+					client: Database;
+				})
+			),
 		]
 ) {
-	const dialect = new SqliteDialect();
-
 	if (params[0] === undefined || typeof params[0] === 'string') {
 		const client = params[0] === undefined ? new Client() : new Client(params[0]);
-		return createSqlTemplate(client, dialect);
+		return createSqlTemplate(client, params[1]);
 	}
 
 	if (isConfig(params[0])) {
-		const { connection, client } = params[0] as {
+		const { connection, client, ...configOptions } = params[0] as ({
 			connection?: BetterSQLite3DatabaseConfig;
 			client?: Database;
-		};
+		} & WaddlerConfig);
 
-		if (client) return createSqlTemplate(client, dialect);
+		if (client) return createSqlTemplate(client, configOptions);
 
 		if (typeof connection === 'object') {
 			const { source, ...options } = connection;
 
 			const client = new Client(source, options);
 
-			return createSqlTemplate(client, dialect);
+			return createSqlTemplate(client, configOptions);
 		}
 
 		const client_ = new Client(connection);
 
-		return createSqlTemplate(client_, dialect);
+		return createSqlTemplate(client_, configOptions);
 	}
 
 	// TODO make error more descriptive

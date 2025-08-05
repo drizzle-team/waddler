@@ -1,6 +1,6 @@
 import { type Client, type Config, createClient } from '@libsql/client/ws';
+import type { WaddlerConfig } from '~/types.ts';
 import { isConfig } from '../../../utils.ts';
-import { SqliteDialect } from '../../sqlite-core/dialect.ts';
 import { createSqlTemplate } from '../driver-core.ts';
 
 export function waddler<
@@ -9,8 +9,12 @@ export function waddler<
 	...params: [
 		string,
 	] | [
+		string,
+		WaddlerConfig,
+	] | [
 		(
-			({
+			& WaddlerConfig
+			& ({
 				connection: string | Config;
 			} | {
 				client: TClient;
@@ -18,23 +22,23 @@ export function waddler<
 		),
 	]
 ) {
-	const dialect = new SqliteDialect();
 	if (typeof params[0] === 'string') {
 		const instance = createClient({
 			url: params[0],
 		});
 
-		return createSqlTemplate(instance, dialect);
+		return createSqlTemplate(instance, params[1]);
 	}
 
 	if (isConfig(params[0])) {
-		const { connection, client } = params[0] as { connection?: Config; client?: TClient };
+		const { connection, client, ...configOptions } =
+			params[0] as ({ connection?: Config; client?: TClient } & WaddlerConfig);
 
-		if (client) return createSqlTemplate(client, dialect);
+		if (client) return createSqlTemplate(client, configOptions);
 
 		const instance = typeof connection === 'string' ? createClient({ url: connection }) : createClient(connection!);
 
-		return createSqlTemplate(instance, dialect);
+		return createSqlTemplate(instance, configOptions);
 	}
 
 	// TODO make error more descriptive

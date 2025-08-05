@@ -1,5 +1,7 @@
 import { sql as vercelSql } from '@vercel/postgres';
-import type { WaddlerConfig } from '../../extensions/index.ts';
+import type { WaddlerConfigWithExtensions } from '../../extensions/index.ts';
+import type { Logger } from '../../logger.ts';
+import { DefaultLogger } from '../../logger.ts';
 import { SQLQuery } from '../../sql-template-params.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
@@ -27,13 +29,21 @@ export { sql };
 
 const createSqlTemplate = (
 	client: VercelPgClient,
-	configOptions: WaddlerConfig,
-	dialect: PgDialect,
+	configOptions: WaddlerConfigWithExtensions = {},
 ): SQL => {
+	const dialect = new PgDialect();
+	let logger: Logger | undefined;
+	if (configOptions.logger === true) {
+		logger = new DefaultLogger();
+	} else if (configOptions.logger !== false) {
+		logger = configOptions.logger;
+	}
+	const extensions = configOptions.extensions;
+
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): VercelPgSQLTemplate<T> => {
 		const sql = new SQLWrapper();
 		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
-		return new VercelPgSQLTemplate<T>(sql, client, dialect, configOptions);
+		return new VercelPgSQLTemplate<T>(sql, client, dialect, { logger, extensions });
 	};
 
 	Object.assign(fn, {
@@ -49,7 +59,7 @@ const createSqlTemplate = (
 			const sql = new SQLWrapper();
 			sql.with({ rawParams: { query, params } });
 
-			const unsafeDriver = new VercelPgSQLTemplate(sql, client, dialect, configOptions, options);
+			const unsafeDriver = new VercelPgSQLTemplate(sql, client, dialect, { logger, extensions }, options);
 			return await unsafeDriver.execute();
 		},
 	});
@@ -59,25 +69,24 @@ const createSqlTemplate = (
 
 export function waddler<TClient extends VercelPgClient = typeof vercelSql>(
 	...params: [] | [
-		WaddlerConfig,
+		WaddlerConfigWithExtensions,
 	] | [
 		(
-			& WaddlerConfig
+			& WaddlerConfigWithExtensions
 			& ({
 				client?: TClient;
 			})
 		),
 	]
 ) {
-	const dialect = new PgDialect();
 	if (params[0] === undefined) {
-		return createSqlTemplate(vercelSql, {}, dialect);
+		return createSqlTemplate(vercelSql, {});
 	}
 
 	if (isConfig(params[0])) {
-		const { client, ...waddlerConfig } = params[0] as ({ client?: TClient } & WaddlerConfig);
-		return createSqlTemplate(client ?? vercelSql, waddlerConfig, dialect);
+		const { client, ...waddlerConfig } = params[0] as ({ client?: TClient } & WaddlerConfigWithExtensions);
+		return createSqlTemplate(client ?? vercelSql, waddlerConfig);
 	}
 
-	return createSqlTemplate(vercelSql, params[0] as WaddlerConfig, dialect);
+	return createSqlTemplate(vercelSql, params[0] as WaddlerConfigWithExtensions);
 }

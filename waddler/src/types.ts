@@ -1,4 +1,5 @@
 // import type { DateDuration, Duration, LocalDate, LocalDateTime, LocalTime, RelativeDuration } from 'gel';
+import type { Logger } from './logger.ts';
 import type { SQLDefault } from './sql-template-params.ts';
 
 export type ValueForArray = string | Buffer | number | bigint | boolean | null | Date | JSONObject | JSONArray;
@@ -90,6 +91,10 @@ export type Values = Value[][];
 export type Raw = string | number | boolean | bigint;
 
 // ------------------------------------------------------------------------------------
+
+export type WaddlerConfig = {
+	logger?: boolean | Logger;
+};
 
 // Utils types
 export type isObjectEmpty<O> = keyof O extends never ? true : false;

@@ -1,6 +1,7 @@
 import type { Connection, ExecuteOptions, FullResult } from '@tidbcloud/serverless';
 import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
+import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { MySQLDialect } from '../mysql-core/dialect.ts';
 
@@ -12,13 +13,16 @@ export class TidbServerlessSQLTemplate<T> extends SQLTemplate<T> {
 		override sqlWrapper: SQLWrapper,
 		protected readonly client: Connection, // TODO should I include Tx here?
 		dialect: MySQLDialect,
+		configOptions: SQLTemplateConfigOptions,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sqlWrapper, dialect);
+		super(sqlWrapper, dialect, configOptions);
 	}
 
 	async execute() {
 		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(query, params);
+
 		try {
 			if (this.options.rowMode === 'array') {
 				const rows = await this.client.execute(query, params, queryConfig) as T[];

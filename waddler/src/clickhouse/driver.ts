@@ -6,8 +6,10 @@ import { SQLQuery } from '~/sql-template-params.ts';
 import { isConfig } from '~/utils.ts';
 import type { DbType } from '../clickhouse-core/index.ts';
 import { ClickHouseDialect, SQLFunctions, UnsafePromise } from '../clickhouse-core/index.ts';
+import type { Logger } from '../logger.ts';
+import { DefaultLogger } from '../logger.ts';
 import { type SQL, SQLWrapper } from '../sql.ts';
-import type { RowData, SQLParamType, UnsafeParamType, Values } from '../types.ts';
+import type { RowData, SQLParamType, UnsafeParamType, Values, WaddlerConfig } from '../types.ts';
 import { ClickHouseSQLTemplate } from './session.ts';
 
 export interface ClickHouseSQL extends Omit<SQL, 'unsafe' | 'values'> {
@@ -87,12 +89,20 @@ export { sql };
 
 const createSqlTemplate = (
 	client: ClickHouseClient,
-	dialect: ClickHouseDialect,
+	configOptions: WaddlerConfig = {},
 ): ClickHouseSQL => {
+	const dialect = new ClickHouseDialect();
+	let logger: Logger | undefined;
+	if (configOptions.logger === true) {
+		logger = new DefaultLogger();
+	} else if (configOptions.logger !== false) {
+		logger = configOptions.logger;
+	}
+
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): ClickHouseSQLTemplate<T> => {
 		const sqlWrapper = new SQLWrapper();
 		sqlWrapper.with({ templateParams: { strings, params } }).prepareQuery(dialect);
-		return new ClickHouseSQLTemplate<T>(sqlWrapper, client, dialect);
+		return new ClickHouseSQLTemplate<T>(sqlWrapper, client, dialect, { logger });
 	};
 
 	Object.assign(fn, {
@@ -108,7 +118,7 @@ const createSqlTemplate = (
 			const sqlWrapper = new SQLWrapper();
 			sqlWrapper.with({ rawParams: { query, params } });
 
-			const unsafeDriver = new ClickHouseSQLTemplate(sqlWrapper, client, dialect, options);
+			const unsafeDriver = new ClickHouseSQLTemplate(sqlWrapper, client, dialect, { logger }, options);
 			const unsafePromise = new UnsafePromise(unsafeDriver);
 
 			return unsafePromise;
@@ -122,32 +132,36 @@ export function waddler<TClient extends ClickHouseClient>(
 	...params: [
 		string,
 	] | [
-		(({
-			connection: string | NodeClickHouseClientConfigOptions;
-		} | {
-			client: TClient;
-		})),
+		string,
+		WaddlerConfig,
+	] | [
+		(
+			& WaddlerConfig
+			& ({
+				connection: string | NodeClickHouseClientConfigOptions;
+			} | {
+				client: TClient;
+			})
+		),
 	]
 ) {
-	const dialect = new ClickHouseDialect();
-
 	if (typeof params[0] === 'string') {
 		const connectionString = params[0]!;
 		const pool = createClient({
 			url: connectionString,
 		});
 
-		return createSqlTemplate(pool, dialect);
+		return createSqlTemplate(pool, params[1]);
 	}
 
 	if (isConfig(params[0])) {
-		const { connection, client } = params[0] as {
+		const { connection, client, ...configOptions } = params[0] as ({
 			connection?: NodeClickHouseClientConfigOptions | string;
 			client?: TClient;
-		};
+		} & WaddlerConfig);
 
 		if (client) {
-			return createSqlTemplate(client, dialect);
+			return createSqlTemplate(client, configOptions);
 		}
 
 		const client_ = typeof connection === 'string'
@@ -156,7 +170,7 @@ export function waddler<TClient extends ClickHouseClient>(
 			})
 			: createClient(connection!);
 
-		return createSqlTemplate(client_, dialect);
+		return createSqlTemplate(client_, configOptions);
 	}
 
 	// TODO make error more descriptive

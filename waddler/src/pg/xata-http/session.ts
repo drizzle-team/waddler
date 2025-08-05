@@ -1,6 +1,7 @@
 import type { SQLPluginResult } from '@xata.io/client';
 import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
+import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { PgDialect } from '../pg-core/index.ts';
 
@@ -13,13 +14,15 @@ export class XataHttpSQLTemplate<T> extends SQLTemplate<T> {
 		override sqlWrapper: SQLWrapper,
 		protected readonly client: XataHttpClient,
 		dialect: PgDialect,
+		configOptions: SQLTemplateConfigOptions,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sqlWrapper, dialect);
+		super(sqlWrapper, dialect, configOptions);
 	}
 
 	async execute() {
 		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(query, params);
 		// wrapping xata-http driver error in new js error to add stack trace to it
 		try {
 			if (this.options.rowMode === 'array') {

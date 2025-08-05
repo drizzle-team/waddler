@@ -1201,19 +1201,19 @@ engine = MergeTree
 order by id;
   `).command();
 
-	const valuesIds = Array.from({ length: 10 ** 1 }).fill([1]) as number[][];
+	const valuesIds = Array.from({ length: 10 ** 4 }).fill([1]) as number[][];
 
 	console.time('insert');
 	const query = sql`insert into ${sql.identifier('tests')} values ${sql.values(valuesIds)};`.command();
-	const { query: rawSql, params } = query.toSQL();
-	// await query;
+	// const { query: rawSql, params } = query.toSQL();
+	await query;
 	// const rawSqlNew = rawSql.slice(0, -1) + ' FORMAT JSONEachRow;';
-	await clickHouseClient.command({ query: rawSql, query_params: params as Record<string, any> });
-	await clickHouseClient.insert({
-		table: 'tests',
-		query_params: params as Record<string, any>,
-		values: valuesIds,
-	});
+	// await clickHouseClient.command({ query: rawSql, query_params: params as Record<string, any> });
+	// await clickHouseClient.insert({
+	// 	table: 'tests',
+	// 	query_params: params as Record<string, any>,
+	// 	values: valuesIds,
+	// });
 
 	console.timeEnd('insert');
 	// console.log('New user created!');

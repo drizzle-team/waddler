@@ -1,10 +1,12 @@
 import type { Connection as CallbackConnection, Pool as CallbackPool, PoolOptions } from 'mysql2';
 import { createPool } from 'mysql2/promise';
 import type { Connection, Pool } from 'mysql2/promise';
+import type { Logger } from '../../logger.ts';
+import { DefaultLogger } from '../../logger.ts';
 import { SQLQuery } from '../../sql-template-params.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
-import type { SQLParamType, UnsafeParamType } from '../../types.ts';
+import type { SQLParamType, UnsafeParamType, WaddlerConfig } from '../../types.ts';
 import { isConfig } from '../../utils.ts';
 import { MySQLDialect, SQLFunctions } from '../mysql-core/dialect.ts';
 import { MySql2SQLTemplate } from './session.ts';
@@ -28,12 +30,20 @@ export { sql };
 
 const createSqlTemplate = (
 	client: Pool | Connection,
-	dialect: MySQLDialect,
+	configOptions: WaddlerConfig = {},
 ): SQL => {
+	const dialect = new MySQLDialect();
+	let logger: Logger | undefined;
+	if (configOptions.logger === true) {
+		logger = new DefaultLogger();
+	} else if (configOptions.logger !== false) {
+		logger = configOptions.logger;
+	}
+
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): MySql2SQLTemplate<T> => {
 		const sql = new SQLWrapper();
 		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
-		return new MySql2SQLTemplate<T>(sql, client, dialect);
+		return new MySql2SQLTemplate<T>(sql, client, dialect, { logger });
 	};
 
 	Object.assign(fn, {
@@ -49,7 +59,7 @@ const createSqlTemplate = (
 			const sql = new SQLWrapper();
 			sql.with({ rawParams: { query, params } });
 
-			const unsafeDriver = new MySql2SQLTemplate(sql, client, dialect, options);
+			const unsafeDriver = new MySql2SQLTemplate(sql, client, dialect, { logger }, options);
 			return await unsafeDriver.execute();
 		},
 	});
@@ -63,34 +73,38 @@ export function waddler<TClient extends MySql2Client>(
 	...params: [
 		string,
 	] | [
-		(({
-			connection: string | PoolOptions;
-		} | {
-			client: TClient;
-		})),
+		string,
+		WaddlerConfig,
+	] | [
+		(
+			& WaddlerConfig
+			& ({
+				connection: string | PoolOptions;
+			} | {
+				client: TClient;
+			})
+		),
 	]
 ) {
-	const dialect = new MySQLDialect();
-
 	if (typeof params[0] === 'string') {
 		const connectionString = params[0]!;
 		const pool = createPool({
 			uri: connectionString,
 		});
 
-		return createSqlTemplate(pool, dialect);
+		return createSqlTemplate(pool, params[1]);
 	}
 
 	if (isConfig(params[0])) {
-		const { connection, client } = params[0] as {
+		const { connection, client, ...configOptions } = params[0] as ({
 			connection?: PoolOptions | string;
 			client?: TClient;
-		};
+		} & WaddlerConfig);
 
 		if (client) {
 			const promiseClient = isCallbackClient(client) ? client.promise() : client as (Pool | Connection);
 
-			return createSqlTemplate(promiseClient, dialect);
+			return createSqlTemplate(promiseClient, configOptions);
 		}
 
 		const pool = typeof connection === 'string'
@@ -99,7 +113,7 @@ export function waddler<TClient extends MySql2Client>(
 			})
 			: createPool(connection!);
 
-		return createSqlTemplate(pool, dialect);
+		return createSqlTemplate(pool, configOptions);
 	}
 
 	// TODO make error more descriptive

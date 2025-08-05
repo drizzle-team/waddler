@@ -1,6 +1,7 @@
 import type { Database } from 'better-sqlite3';
 import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
+import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { SqliteDialect } from '../sqlite-core/dialect.ts';
 
@@ -11,9 +12,10 @@ export class BetterSqlite3SQLTemplate<T> extends SQLTemplate<T> {
 		override sqlWrapper: SQLWrapper,
 		protected readonly client: Database,
 		dialect: SqliteDialect,
+		configOptions: SQLTemplateConfigOptions,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sqlWrapper, dialect);
+		super(sqlWrapper, dialect, configOptions);
 	}
 
 	all(): Omit<BetterSqlite3SQLTemplate<T>, 'all' | 'run'> {
@@ -28,6 +30,7 @@ export class BetterSqlite3SQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(query, params);
 
 		// wrapping better-sqlite3 driver error in new js error to add stack trace to it
 		try {
@@ -48,6 +51,7 @@ export class BetterSqlite3SQLTemplate<T> extends SQLTemplate<T> {
 
 	async *stream() {
 		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(query, params);
 
 		// wrapping better-sqlite3 driver error in new js error to add stack trace to it
 		try {

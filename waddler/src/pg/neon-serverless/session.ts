@@ -11,7 +11,7 @@ import {
 import type { PgDialect } from '~/pg/pg-core/dialect.ts';
 import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
-import type { WaddlerConfig } from '../../extensions';
+import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 
 export type NeonClient = Pool | PoolClient | Client;
@@ -34,7 +34,7 @@ export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
 		override sqlWrapper: SQLWrapper,
 		protected readonly client: NeonClient,
 		dialect: PgDialect,
-		configOptions: WaddlerConfig,
+		configOptions: SQLTemplateConfigOptions,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
 		super(sqlWrapper, dialect, configOptions);
@@ -53,6 +53,7 @@ export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(query, params);
 
 		// wrapping neon-serverless driver error in new js error to add stack trace to it
 		try {
@@ -88,6 +89,7 @@ export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
 			types: this.queryConfig.types,
 			// rowMode: 'array',
 		});
+		this.logger.logQuery(query, params);
 
 		try {
 			const stream = this.client.query(queryStream);

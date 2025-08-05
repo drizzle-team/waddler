@@ -1,5 +1,6 @@
 import type { PGlite, QueryOptions } from '@electric-sql/pglite';
 import type { Dialect } from '../../sql-template-params.ts';
+import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { SQLWrapper } from '../../sql.ts';
 
@@ -14,9 +15,10 @@ export class PGliteSQLTemplate<T> extends SQLTemplate<T> {
 		override sqlWrapper: SQLWrapper,
 		protected readonly client: PGlite,
 		dialect: Dialect,
+		configOptions: SQLTemplateConfigOptions,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sqlWrapper, dialect);
+		super(sqlWrapper, dialect, configOptions);
 
 		this.rawQueryConfig = {
 			rowMode: 'object',
@@ -40,6 +42,7 @@ export class PGliteSQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(query, params);
 		try {
 			const queryResult = await (this.options.rowMode === 'array'
 				? this.client.query(query, params, this.queryConfig)

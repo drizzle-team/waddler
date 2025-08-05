@@ -3,6 +3,7 @@
 import type { SQLWrapper } from '~/sql.ts';
 import type { SqliteDialect } from '~/sqlite/sqlite-core/dialect.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
+import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 
 export class D1SQLTemplate<T> extends SQLTemplate<T> {
@@ -12,9 +13,10 @@ export class D1SQLTemplate<T> extends SQLTemplate<T> {
 		override sqlWrapper: SQLWrapper,
 		protected readonly client: D1Database,
 		dialect: SqliteDialect,
+		configOptions: SQLTemplateConfigOptions,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sqlWrapper, dialect);
+		super(sqlWrapper, dialect, configOptions);
 	}
 
 	all(): Omit<D1SQLTemplate<T>, 'all' | 'run'> {
@@ -29,6 +31,7 @@ export class D1SQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(query, params);
 
 		// wrapping d1 driver error in new js error to add stack trace to it
 		try {

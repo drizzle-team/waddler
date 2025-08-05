@@ -1,12 +1,14 @@
 import duckdb from 'duckdb';
 // import type { DuckdbValues } from '../duckdb-core/dialect.ts';
 import { DuckdbDialect, SQLFunctions } from '../duckdb-core/dialect.ts';
+import type { Logger } from '../logger.ts';
+import { DefaultLogger } from '../logger.ts';
 import type { Factory } from '../pool-ts/types.ts';
 import { RecyclingPool } from '../recycling-pool.ts';
 import type { SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
 import { SQLQuery } from '../sql-template-params.ts';
 import { SQLWrapper } from '../sql.ts';
-import type { Identifier, IdentifierObject, Raw, RowData, SQLParamType, Values } from '../types.ts';
+import type { Identifier, IdentifierObject, Raw, RowData, SQLParamType, Values, WaddlerConfig } from '../types.ts';
 import { DuckdbSQLTemplate } from './session.ts';
 
 export interface SQL {
@@ -33,12 +35,23 @@ Object.assign(sql, SQLFunctions);
 
 export { sql };
 
-const createSqlTemplate = (pool: RecyclingPool<duckdb.Database>, dialect: DuckdbDialect): SQL => {
+const createSqlTemplate = (
+	pool: RecyclingPool<duckdb.Database>,
+	configOptions: WaddlerConfig = {},
+): SQL => {
+	const dialect = new DuckdbDialect();
+	let logger: Logger | undefined;
+	if (configOptions.logger === true) {
+		logger = new DefaultLogger();
+	} else if (configOptions.logger !== false) {
+		logger = configOptions.logger;
+	}
+
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): DuckdbSQLTemplate<T> => {
 		const sql = new SQLWrapper();
 		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
 
-		return new DuckdbSQLTemplate<T>(sql, pool, dialect);
+		return new DuckdbSQLTemplate<T>(sql, pool, dialect, { logger });
 	};
 
 	Object.assign(fn, SQLFunctions);
@@ -111,6 +124,7 @@ export function waddler(
 		accessMode = 'read_write',
 		maxMemory = '512MB',
 		threads = '4',
+		logger,
 	}: {
 		/** @deprecated */
 		dbUrl?: string;
@@ -120,9 +134,8 @@ export function waddler(
 		accessMode?: 'read_only' | 'read_write';
 		maxMemory?: string;
 		threads?: string;
-	},
+	} & WaddlerConfig,
 ) {
-	const dialect = new DuckdbDialect();
 	url = url === undefined && dbUrl !== undefined ? dbUrl : url;
 
 	const factory = createFactory({
@@ -138,5 +151,5 @@ export function waddler(
 
 	const pool = new RecyclingPool<duckdb.Database>(factory, options);
 
-	return createSqlTemplate(pool, dialect);
+	return createSqlTemplate(pool, { logger });
 }

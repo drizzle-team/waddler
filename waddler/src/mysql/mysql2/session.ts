@@ -3,6 +3,7 @@ import type { Connection, Pool, PoolConnection, QueryOptions } from 'mysql2/prom
 import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
 import type { Dialect } from '../../sql-template-params.ts';
+import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 import { isPool } from './utils.ts';
 
@@ -13,6 +14,7 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 		override sqlWrapper: SQLWrapper,
 		protected readonly client: Pool | Connection,
 		dialect: Dialect,
+		configOptions: SQLTemplateConfigOptions,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 		private queryConfig: QueryOptions = {
 			sql: sqlWrapper.getQuery(dialect).query,
@@ -22,11 +24,13 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 			rowsAsArray: true,
 		},
 	) {
-		super(sqlWrapper, dialect);
+		super(sqlWrapper, dialect, configOptions);
 	}
 
 	async execute() {
 		const { params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(this.queryConfig.sql, params);
+
 		try {
 			const queryResult = await (this.options.rowMode === 'array'
 				? (this.client as Pool | Connection).query(this.rawQueryConfig, params)
@@ -41,6 +45,8 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 	async *stream() {
 		let conn: CallbackConnection | undefined;
 		const { params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(this.queryConfig.sql, params);
+
 		// wrapping mysql2 driver error in new js error to add stack trace to it
 		try {
 			const conn = ((isPool(this.client) ? await this.client.getConnection() : this.client) as object as {
