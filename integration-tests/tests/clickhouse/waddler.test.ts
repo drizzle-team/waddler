@@ -1288,3 +1288,54 @@ order by id;
 
 	await sql.unsafe(`drop table tests;`).command();
 });
+
+test('logger test', async () => {
+	const { host: _, port: __, ...filteredParams } = clickHouseConnectionParams;
+	const loggerQuery = 'select {param1:Int32};';
+	const loggerParams = { param1: 1 };
+
+	const logger = {
+		logQuery: (query: string, params: Record<string, unknown>) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+		},
+	};
+
+	let loggerSql: ClickHouseSQL;
+
+	// case 0
+	const client = createClient(filteredParams);
+	loggerSql = waddler({ client, logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client, logger: true });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client, logger: false });
+	await loggerSql`select ${1};`;
+
+	await client.close();
+
+	// case 1
+	loggerSql = waddler({ connection: filteredParams, logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ connection: filteredParams, logger: true });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ connection: filteredParams, logger: false });
+	await loggerSql`select ${1};`;
+
+	// case 2
+	const url =
+		`http://${clickHouseConnectionParams.user}:${clickHouseConnectionParams.password}@${clickHouseConnectionParams.host}:${clickHouseConnectionParams.port}/${clickHouseConnectionParams.database}`;
+
+	loggerSql = waddler(url, { logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler(url, { logger: true });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler(url, { logger: false });
+	await loggerSql`select ${1};`;
+});
