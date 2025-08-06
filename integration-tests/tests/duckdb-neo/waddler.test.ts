@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, expect, test } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler/duckdb-neo';
 import { sql as sqlQuery, waddler } from 'waddler/duckdb-neo';
 import { commonTests } from '../common.test';
@@ -825,4 +825,31 @@ test('embeding SQLQuery and SQLTemplate test', async () => {
 	expect(res3.length).not.toBe(0);
 
 	await dropUsersTable(sql);
+});
+
+test('logger test', async () => {
+	const loggerQuery = 'select $1;';
+	const loggerParams = [1];
+	const loggerText = `Query: select $1; -- params: [1]`;
+
+	const logger = {
+		logQuery: (query: string, params: unknown[]) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+		},
+	};
+
+	let loggerSql: SQL;
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	// case 0
+	loggerSql = waddler({ url: ':memory:', max: 10, accessMode: 'read_write', logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ url: ':memory:', max: 10, accessMode: 'read_write', logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
+
+	loggerSql = waddler({ url: ':memory:', max: 10, accessMode: 'read_write', logger: false });
+	await loggerSql`select ${1};`;
 });

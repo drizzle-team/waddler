@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { Client } from '@neondatabase/serverless';
-import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
+import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import { commonTests } from '../../common.test.ts';
 import {
 	commonPgTests,
@@ -65,6 +65,46 @@ test('connection test', async () => {
 	await sql5`select 5;`;
 
 	// TODO: add case with ws connection
+});
+
+test('logger test', async () => {
+	const loggerQuery = 'select $1;';
+	const loggerParams = [1];
+	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+
+	const logger = {
+		logQuery: (query: string, params: unknown[]) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+		},
+	};
+
+	let loggerSql: SQL;
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	// case 0
+	const client = new Client(connectionString);
+	await client.connect();
+	loggerSql = waddler({ client, logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client, logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler({ client, logger: false });
+	await loggerSql`select ${1};`;
+
+	// case 1
+	loggerSql = waddler(connectionString, { logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler(connectionString, { logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler(connectionString, { logger: false });
+	await loggerSql`select ${1};`;
 });
 
 nodePgTests();

@@ -47,9 +47,9 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 		const { params } = this.sqlWrapper.getQuery(this.dialect);
 		this.logger.logQuery(this.queryConfig.text, params);
 		try {
-			const queryResult = await (this.options.rowMode === 'array'
-				? this.client.query(this.rawQueryConfig, params)
-				: this.client.query(this.queryConfig, params));
+			const queryResult = this.options.rowMode === 'array'
+				? await (this.client.query(this.rawQueryConfig, params))
+				: await (this.client.query(this.queryConfig, params));
 
 			return queryResult.rows;
 		} catch (error) {

@@ -70,6 +70,9 @@ export function waddler<TClient extends PGlite = PGlite>(
 		| []
 		| [
 			string,
+		]
+		| [
+			string,
 			WaddlerConfig,
 		]
 		| [

@@ -1,7 +1,7 @@
 import type Docker from 'dockerode';
 import type { Sql } from 'postgres';
 import postgres from 'postgres';
-import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
+import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
 import { sql as sqlQuery, waddler } from 'waddler/postgres-js';
 import { commonTests } from '../../common.test.ts';
@@ -101,6 +101,47 @@ test('connection test', async () => {
 
 	const sql23 = waddler({ connection: { url } });
 	await sql23`select 23;`;
+});
+
+test('logger test', async () => {
+	const loggerQuery = 'select $1;';
+	const loggerParams = [1];
+	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+
+	const logger = {
+		logQuery: (query: string, params: unknown[]) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+		},
+	};
+
+	let loggerSql: SQL;
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	// case 0
+	const client = postgres({ ...pgConnectionParams });
+	loggerSql = waddler({ client, logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client, logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler({ client, logger: false });
+	await loggerSql`select ${1};`;
+
+	// case 1
+	const url =
+		`postgres://${pgConnectionParams.user}:${pgConnectionParams.password}@${pgConnectionParams.host}:${pgConnectionParams.port}/${pgConnectionParams.database}`;
+	loggerSql = waddler(url, { logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler(url, { logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler(url, { logger: false });
+	await loggerSql`select ${1};`;
 });
 
 // UNSAFE-------------------------------------------------------------------

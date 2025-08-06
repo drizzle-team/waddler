@@ -2,7 +2,7 @@ import type Docker from 'dockerode';
 import mysqlCallback from 'mysql2';
 import type { Connection } from 'mysql2/promise';
 import mysql from 'mysql2/promise';
-import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
+import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
 import { sql as sqlQuery, waddler } from 'waddler/mysql2';
 import { commonTests } from '../../common.test';
@@ -110,6 +110,50 @@ test('connection test', async () => {
 
 	const sql23 = waddler({ connection: { uri: url } });
 	await sql23`select 23;`;
+});
+
+test('logger test', async () => {
+	const loggerQuery = 'select ?;';
+	const loggerParams = [1];
+	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+
+	const logger = {
+		logQuery: (query: string, params: unknown[]) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+		},
+	};
+
+	let loggerSql: SQL;
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	// case 0
+	const pool = mysql.createPool({ ...mysqlConnectionParams });
+	loggerSql = waddler({ client: pool, logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client: pool, logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler({ client: pool, logger: false });
+	await loggerSql`select ${1};`;
+
+	await pool.end();
+
+	// case 1
+	const url =
+		`postgres://${mysqlConnectionParams.user}:${mysqlConnectionParams.password}@${mysqlConnectionParams.host}:${mysqlConnectionParams.port}/${mysqlConnectionParams.database}`;
+
+	loggerSql = waddler(url, { logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler(url, { logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler(url, { logger: false });
+	await loggerSql`select ${1};`;
 });
 
 commonTests();

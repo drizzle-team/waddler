@@ -1,7 +1,7 @@
 import type Docker from 'dockerode';
 import type { Client as ClientT } from 'pg';
 import pg from 'pg';
-import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
+import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
 import { queryStream } from 'waddler/extensions/pg-query-stream';
 import { sql as sqlQuery, waddler } from 'waddler/node-postgres';
@@ -92,6 +92,56 @@ test('connection test', async () => {
 	const sql22 = waddler({ client: pool });
 	await sql22`select 22;`;
 	await pool.end();
+
+	// TODO fix the code below
+	// const connectionString =
+	// 	`postgresql://${pgConnectionParams.user}:${pgConnectionParams.password}@${pgConnectionParams.host}:${pgConnectionParams.port}/${pgConnectionParams.database}`;
+
+	// console.log(connectionString);
+
+	// const sql3 = waddler(connectionString);
+	// await sql3`select 3;`;
+});
+
+test('logger test', async () => {
+	const loggerQuery = 'select $1;';
+	const loggerParams = [1];
+	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+
+	const logger = {
+		logQuery: (query: string, params: unknown[]) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+		},
+	};
+
+	let loggerSql: SQL;
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	// case 0
+	loggerSql = waddler({ client: pgClient, logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client: pgClient, logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler({ client: pgClient, logger: false });
+	await loggerSql`select ${1};`;
+
+	// case 1
+	// TODO fix case below
+	// const connectionString =
+	// 	`postgresql://${pgConnectionParams.user}:${pgConnectionParams.password}@${pgConnectionParams.host}:${pgConnectionParams.port}/${pgConnectionParams.database}`;
+	// loggerSql = waddler(connectionString, { logger });
+	// await loggerSql`select ${1};`;
+
+	// loggerSql = waddler(connectionString, { logger: true });
+	// await loggerSql`select ${1};`;
+	// expect(consoleMock).toBeCalledWith(loggerText);
+
+	// loggerSql = waddler(connectionString, { logger: false });
+	// await loggerSql`select ${1};`;
 });
 
 nodePgTests();

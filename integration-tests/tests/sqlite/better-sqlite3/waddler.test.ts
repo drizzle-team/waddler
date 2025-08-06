@@ -1,5 +1,5 @@
 import Database from 'better-sqlite3';
-import { beforeAll, beforeEach, expect, test } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import { type BetterSqlite3SQL, sql as sqlQuery, waddler } from 'waddler/better-sqlite3';
 import { commonTests } from '../../common.test';
 import {
@@ -39,6 +39,45 @@ test('connection test', async () => {
 
 	const sql5 = waddler({ connection: { fileMustExist: false, source: '' } });
 	await sql5`select 5;`;
+});
+
+test('logger test', async () => {
+	const loggerQuery = 'select ?;';
+	const loggerParams = [1];
+	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+
+	const logger = {
+		logQuery: (query: string, params: unknown[]) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+		},
+	};
+
+	let loggerSql: BetterSqlite3SQL;
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	// case 0
+	const client = new Database();
+	loggerSql = waddler({ client, logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client, logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler({ client, logger: false });
+	await loggerSql`select ${1};`;
+
+	// case 1
+	loggerSql = waddler('', { logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler('', { logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler('', { logger: false });
+	await loggerSql`select ${1};`;
 });
 
 // UNSAFE-------------------------------------------------------------------

@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { Client } from '@planetscale/database';
-import { beforeAll, beforeEach, expect, test } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
 import { sql as sqlQuery, waddler } from 'waddler/planetscale-serverless';
 import { commonTests } from '../../common.test';
@@ -39,6 +39,50 @@ test('connection test', async () => {
 
 	const sql3 = waddler({ connection: connectionString });
 	await sql3`select 3;`;
+});
+
+test('logger test', async () => {
+	const loggerQuery = 'select ?;';
+	const loggerParams = [1];
+	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+
+	const logger = {
+		logQuery: (query: string, params: unknown[]) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+		},
+	};
+
+	let loggerSql: SQL;
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	const connectionString = process.env['PLANETSCALE_CONNECTION_STRING'];
+	if (!connectionString) {
+		throw new Error('PLANETSCALE_CONNECTION_STRING is not set');
+	}
+
+	// case 0
+	const client = new Client({ url: connectionString });
+	loggerSql = waddler({ client, logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client, logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler({ client, logger: false });
+	await loggerSql`select ${1};`;
+
+	// case 1
+	loggerSql = waddler(connectionString, { logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler(connectionString, { logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler(connectionString, { logger: false });
+	await loggerSql`select ${1};`;
 });
 
 commonTests();

@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import { type Client, createClient } from '@libsql/client/http';
 import retry from 'async-retry';
-import { afterAll, beforeAll, beforeEach, test } from 'vitest';
+import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { LibsqlSQL } from 'waddler/libsql';
 import { waddler } from 'waddler/libsql/http';
 import { commonTests } from '../../common.test';
@@ -80,6 +80,52 @@ test('connection test', async () => {
 
 	const sql5 = waddler({ connection: { url, authToken } });
 	await sql5`select 5;`.all();
+});
+
+test('logger test', async () => {
+	const loggerQuery = 'select ?;';
+	const loggerParams = [1];
+	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+
+	const logger = {
+		logQuery: (query: string, params: unknown[]) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+		},
+	};
+
+	let loggerSql: LibsqlSQL;
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	// case 0
+	const url = process.env['LIBSQL_REMOTE_URL'];
+	const authToken = process.env['LIBSQL_REMOTE_TOKEN'];
+	if (!url) {
+		throw new Error('LIBSQL_REMOTE_URL is not set');
+	}
+	client = await retry(async () => {
+		client = createClient({ url, authToken, intMode: 'number' });
+		return client;
+	}, {
+		retries: 20,
+		factor: 1,
+		minTimeout: 250,
+		maxTimeout: 250,
+		randomize: false,
+		onRetry() {
+			client?.close();
+		},
+	});
+
+	loggerSql = waddler({ client, logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client, logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler({ client, logger: false });
+	await loggerSql`select ${1};`;
 });
 
 libsqlTests();

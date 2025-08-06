@@ -1,6 +1,6 @@
 import { type ClickHouseClient, createClient, TupleParam } from '@clickhouse/client';
 import type Docker from 'dockerode';
-import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
+import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { ClickHouseSQL } from 'waddler/clickhouse';
 import { sql as sqlQuery, waddler } from 'waddler/clickhouse';
 import { commonTests } from '../common.test.ts';
@@ -1293,6 +1293,7 @@ test('logger test', async () => {
 	const { host: _, port: __, ...filteredParams } = clickHouseConnectionParams;
 	const loggerQuery = 'select {param1:Int32};';
 	const loggerParams = { param1: 1 };
+	const loggerText = `Query: ${loggerQuery} -- params: {"param1":"1"}`;
 
 	const logger = {
 		logQuery: (query: string, params: Record<string, unknown>) => {
@@ -1302,6 +1303,7 @@ test('logger test', async () => {
 	};
 
 	let loggerSql: ClickHouseSQL;
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 	// case 0
 	const client = createClient(filteredParams);
@@ -1310,6 +1312,7 @@ test('logger test', async () => {
 
 	loggerSql = waddler({ client, logger: true });
 	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
 
 	loggerSql = waddler({ client, logger: false });
 	await loggerSql`select ${1};`;
@@ -1322,6 +1325,7 @@ test('logger test', async () => {
 
 	loggerSql = waddler({ connection: filteredParams, logger: true });
 	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
 
 	loggerSql = waddler({ connection: filteredParams, logger: false });
 	await loggerSql`select ${1};`;
@@ -1335,6 +1339,7 @@ test('logger test', async () => {
 
 	loggerSql = waddler(url, { logger: true });
 	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
 
 	loggerSql = waddler(url, { logger: false });
 	await loggerSql`select ${1};`;

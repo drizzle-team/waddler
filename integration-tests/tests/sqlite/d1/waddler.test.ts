@@ -1,6 +1,6 @@
 import { D1Database, D1DatabaseAPI } from '@miniflare/d1';
 import { createSQLiteDB } from '@miniflare/shared';
-import { beforeAll, beforeEach, expect, test } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import { type D1SQL, sql as sqlQuery, waddler } from 'waddler/d1';
 import { commonTests } from '../../common.test';
 import {
@@ -33,6 +33,35 @@ test('connection test', async () => {
 	const client = new D1Database(new D1DatabaseAPI(sqliteDb));
 	const sql1 = waddler({ client });
 	await sql1`select 1;`;
+});
+
+test('logger test', async () => {
+	const loggerQuery = 'select ?;';
+	const loggerParams = [1];
+	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+
+	const logger = {
+		logQuery: (query: string, params: unknown[]) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+		},
+	};
+
+	let loggerSql: D1SQL;
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	// case 0
+	const sqliteDb = await createSQLiteDB(':memory:');
+	const client = new D1Database(new D1DatabaseAPI(sqliteDb));
+	loggerSql = waddler({ client, config: { logger } });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client, config: { logger: true } });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler({ client, config: { logger: false } });
+	await loggerSql`select ${1};`;
 });
 
 // UNSAFE-------------------------------------------------------------------
