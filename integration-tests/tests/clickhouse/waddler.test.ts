@@ -1144,7 +1144,7 @@ test('sql query api test', async () => {
 	const query = sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
 
 	expect(query.toSQL()).toStrictEqual({
-		query: 'select * from `users` where id = {param1:Int32} or id = {param2:Int32} and email = {param3:String}',
+		query: 'select * from `users` where id = {param1:Int32} or id = {param2:Int32} and email = {param3:String};',
 		params: { param1: 1, param2: 2, param3: 'hello@test.com' },
 	});
 	expect(filter.toSQL()).toStrictEqual({
@@ -1343,4 +1343,14 @@ test('logger test', async () => {
 
 	loggerSql = waddler(url, { logger: false });
 	await loggerSql`select ${1};`;
+});
+
+test('sql standalone test', async () => {
+	const timestampSelector = sqlQuery`toStartOfHour(${sqlQuery.identifier('test')})`;
+	const timestampFilter = sqlQuery`${timestampSelector} >= from and ${timestampSelector} < to`;
+
+	expect(timestampFilter.toSQL()).toStrictEqual({
+		sql: 'toStartOfHour(`test`) >= from and toStartOfHour(`test`) < to',
+		params: {},
+	});
 });

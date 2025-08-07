@@ -92,8 +92,10 @@ export class SQLWrapper {
 				this.queryChunks.push(new SQLString(strings[0]!));
 			}
 			for (const [paramIndex, param] of params.entries()) {
-				if (param instanceof SQLQuery || param instanceof SQLTemplate) this.append(param.sqlWrapper);
-				else if (param instanceof SQLChunk) this.queryChunks.push(param, new SQLString(strings[paramIndex + 1]!));
+				if (param instanceof SQLQuery || param instanceof SQLTemplate) {
+					this.append(param.sqlWrapper);
+					this.queryChunks.push(new SQLString(strings[paramIndex + 1]!));
+				} else if (param instanceof SQLChunk) this.queryChunks.push(param, new SQLString(strings[paramIndex + 1]!));
 				else {
 					paramsCheck(param);
 					this.queryChunks.push(new SQLCommonParam(param), new SQLString(strings[paramIndex + 1]!));

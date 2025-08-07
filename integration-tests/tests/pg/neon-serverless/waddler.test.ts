@@ -206,7 +206,7 @@ test('sql query api test', async () => {
 	const query = sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
 
 	expect(query.toSQL()).toStrictEqual({
-		query: 'select * from "users" where id = $1 or id = $2 and email = $3',
+		query: 'select * from "users" where id = $1 or id = $2 and email = $3;',
 		params: [1, 2, 'hello@test.com'],
 	});
 	expect(filter.toSQL()).toStrictEqual({

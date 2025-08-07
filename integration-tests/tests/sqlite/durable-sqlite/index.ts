@@ -298,7 +298,7 @@ export class MyDurableObject extends DurableObject {
 			const query = this.sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
 
 			expect(query.toSQL()).deep.equal({
-				query: 'select * from "users" where id = ? or id = ? and email = ?',
+				query: 'select * from "users" where id = ? or id = ? and email = ?;',
 				params: [1, 2, 'hello@test.com'],
 			});
 			expect(filter.toSQL()).deep.equal({
