@@ -1,7 +1,10 @@
 // This file serves only as a reference for what and how I'm testing in a detached project.
 import { Buffer } from 'buffer';
 import { expect } from 'chai';
-import type { ExpoSqliteSQL } from 'waddler/expo-sqlite';
+import type { SQLiteDatabase } from 'expo-sqlite';
+import { type ExpoSqliteSQL, sql as sqlQuery, waddler } from 'waddler/expo-sqlite';
+import { filter1 } from './test-filters1';
+import { filter2 } from './test-filters2';
 
 export const createAllDataTypesTable = async (sql: ExpoSqliteSQL) => {
 	await sql`
@@ -21,6 +24,19 @@ export const createAllDataTypesTable = async (sql: ExpoSqliteSQL) => {
 
 export const dropAllDataTypesTable = async (sql: ExpoSqliteSQL) => {
 	await sql`drop table if exists "all_data_types";`.run();
+};
+
+export const createUsersTable = async (sql: ExpoSqliteSQL) => {
+	await sql.unsafe(`create table users(
+    id    integer,
+    name  text,
+    age   integer,
+    email text
+	);`).run();
+};
+
+export const dropUsersTable = async (sql: ExpoSqliteSQL) => {
+	await sql.unsafe(`drop table if exists users;`).run();
 };
 
 export const allDataTypesUnsafeTest = async (sql: ExpoSqliteSQL) => {
@@ -195,4 +211,74 @@ export const allDataTypesSqlStreamTest = async (sql: ExpoSqliteSQL) => {
 		expect(Array.isArray(row)).equal(true);
 		expect(row).deep.equal(values);
 	}
+};
+
+export const sqlQueryApiTest = async (sql: ExpoSqliteSQL) => {
+	const filter = sqlQuery`id = ${1} or ${sqlQuery`id = ${2}`}`;
+	filter.append(sqlQuery` and email = ${'hello@test.com'}`);
+
+	const query = sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
+
+	expect(query.toSQL()).deep.equal({
+		query: 'select * from "users" where id = ? or id = ? and email = ?',
+		params: [1, 2, 'hello@test.com'],
+	});
+	expect(filter.toSQL()).deep.equal({
+		sql: 'id = ? or id = ? and email = ?',
+		params: [1, 2, 'hello@test.com'],
+	});
+};
+
+export const embedingSQLQueryAndSQLTemplateTest = async (sql: ExpoSqliteSQL) => {
+	await dropUsersTable(sql);
+	await createUsersTable(sql);
+
+	await sql`insert into users values ${
+		sql.values([[1, 'a', 23, 'example1@gmail.com'], [2, 'b', 24, 'example2@gmail.com']])
+	}`.run();
+
+	await sql`select * from ${sql.identifier('users')};`;
+	// console.log(res);
+
+	const query1 = sql`select * from ${sql.identifier('users')} where ${filter1({ id: 1, name: 'a' })};`;
+	// console.log(query1.toSQL());
+	// console.log(await query1);
+	const res1 = await query1;
+	expect(res1.length).not.equal(0);
+
+	const query2 = sql`select * from ${sql.identifier('users')} where ${filter2({ id: 1, name: 'a' })};`;
+	// console.log(query2.toSQL());
+	// console.log(await query2);
+	const res2 = await query2;
+	expect(res2.length).not.equal(0);
+
+	const query3 = sql`select * from ${sql.identifier('users')} where ${sql`id = ${1}`};`;
+	// console.log(query3.toSQL());
+	const res3 = await query3;
+	// console.log(res3);
+	expect(res3.length).not.equal(0);
+
+	await dropUsersTable(sql);
+};
+
+export const loggerTest = async (client: SQLiteDatabase) => {
+	const loggerQuery = 'select ?;';
+	const loggerParams = [1];
+	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+
+	const logger = {
+		logQuery: (query: string, params: unknown[]) => {
+			expect(query).equal(loggerQuery);
+			expect(params).deep.equal(loggerParams);
+		},
+	};
+
+	let loggerSql = waddler({ client, config: { logger } });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client, config: { logger: true } });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client, config: { logger: false } });
+	await loggerSql`select ${1};`;
 };

@@ -5,7 +5,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 // @ts-expect-error
 import { StyleSheet, Text, View } from 'react-native';
-import { allDataTypesSqlStreamTest, allDataTypesSqlValuesTest, allDataTypesUnsafeTest } from './tests.ts';
+import { allDataTypesSqlStreamTest, allDataTypesSqlValuesTest, allDataTypesUnsafeTest, embedingSQLQueryAndSQLTemplateTest, loggerTest, sqlQueryApiTest } from './tests.ts';
 import * as SQLite from 'expo-sqlite';
 import { waddler } from 'waddler/expo-sqlite';
 
@@ -14,7 +14,7 @@ const sql = waddler({client});
 
 export default function App() {
   const [items, setItems] = useState<number>(0);
-  const tests = [allDataTypesUnsafeTest,allDataTypesSqlValuesTest,allDataTypesSqlStreamTest];
+  const tests = [allDataTypesUnsafeTest,allDataTypesSqlValuesTest,allDataTypesSqlStreamTest, sqlQueryApiTest, embedingSQLQueryAndSQLTemplateTest];
 
   useEffect(() => {
     (async () => {
@@ -24,6 +24,9 @@ export default function App() {
           await test(sql);
           passed += 1;
         }
+
+        await loggerTest(client);
+        passed += 1;
       
       }catch (error) {
         console.error((error as Error).name);
@@ -38,7 +41,7 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <Text>Tests	{tests.length - items} failed | {items} passed ({tests.length}){}</Text>
+      <Text>Tests	{tests.length + 1 - items} failed | {items} passed ({tests.length + 1}){}</Text>
       <StatusBar style="auto" />
     </View>
   );
