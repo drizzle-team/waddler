@@ -1,6 +1,6 @@
 import { type ClickHouseClient, createClient, TupleParam } from '@clickhouse/client';
 import type Docker from 'dockerode';
-import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
+import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { ClickHouseSQL } from 'waddler/clickhouse';
 import { sql as sqlQuery, waddler } from 'waddler/clickhouse';
 import { commonTests } from '../common.test.ts';
@@ -1201,19 +1201,19 @@ engine = MergeTree
 order by id;
   `).command();
 
-	const valuesIds = Array.from({ length: 10 ** 1 }).fill([1]) as number[][];
+	const valuesIds = Array.from({ length: 10 ** 4 }).fill([1]) as number[][];
 
 	console.time('insert');
 	const query = sql`insert into ${sql.identifier('tests')} values ${sql.values(valuesIds)};`.command();
-	const { query: rawSql, params } = query.toSQL();
-	// await query;
+	// const { query: rawSql, params } = query.toSQL();
+	await query;
 	// const rawSqlNew = rawSql.slice(0, -1) + ' FORMAT JSONEachRow;';
-	await clickHouseClient.command({ query: rawSql, query_params: params as Record<string, any> });
-	await clickHouseClient.insert({
-		table: 'tests',
-		query_params: params as Record<string, any>,
-		values: valuesIds,
-	});
+	// await clickHouseClient.command({ query: rawSql, query_params: params as Record<string, any> });
+	// await clickHouseClient.insert({
+	// 	table: 'tests',
+	// 	query_params: params as Record<string, any>,
+	// 	values: valuesIds,
+	// });
 
 	console.timeEnd('insert');
 	// console.log('New user created!');
@@ -1287,4 +1287,60 @@ order by id;
 	expect(res4).toStrictEqual([{ some_float: '-2147483648.123' }]);
 
 	await sql.unsafe(`drop table tests;`).command();
+});
+
+test('logger test', async () => {
+	const { host: _, port: __, ...filteredParams } = clickHouseConnectionParams;
+	const loggerQuery = 'select {param1:Int32};';
+	const loggerParams = { param1: 1 };
+	const loggerText = `Query: ${loggerQuery} -- params: {"param1":"1"}`;
+
+	const logger = {
+		logQuery: (query: string, params: Record<string, unknown>) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+		},
+	};
+
+	let loggerSql: ClickHouseSQL;
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	// case 0
+	const client = createClient(filteredParams);
+	loggerSql = waddler({ client, logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client, logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler({ client, logger: false });
+	await loggerSql`select ${1};`;
+
+	await client.close();
+
+	// case 1
+	loggerSql = waddler({ connection: filteredParams, logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ connection: filteredParams, logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler({ connection: filteredParams, logger: false });
+	await loggerSql`select ${1};`;
+
+	// case 2
+	const url =
+		`http://${clickHouseConnectionParams.user}:${clickHouseConnectionParams.password}@${clickHouseConnectionParams.host}:${clickHouseConnectionParams.port}/${clickHouseConnectionParams.database}`;
+
+	loggerSql = waddler(url, { logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler(url, { logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler(url, { logger: false });
+	await loggerSql`select ${1};`;
 });

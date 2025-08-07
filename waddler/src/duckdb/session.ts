@@ -2,6 +2,7 @@ import duckdb from 'duckdb';
 import { WaddlerQueryError } from '~/errors/index.ts';
 import type { RecyclingPool } from '../recycling-pool.ts';
 import type { Dialect } from '../sql-template-params.ts';
+import type { SQLTemplateConfigOptions } from '../sql-template.ts';
 import { SQLTemplate } from '../sql-template.ts';
 import type { SQLWrapper } from '../sql.ts';
 import { stringifyArray } from '../utils.ts';
@@ -107,8 +108,9 @@ export class DuckdbSQLTemplate<T> extends SQLTemplate<T> {
 		sql: SQLWrapper,
 		protected readonly pool: RecyclingPool<duckdb.Database>,
 		dialect: Dialect,
+		configOptions: SQLTemplateConfigOptions,
 	) {
-		super(sql, dialect);
+		super(sql, dialect, configOptions);
 	}
 
 	async execute() {
@@ -116,6 +118,7 @@ export class DuckdbSQLTemplate<T> extends SQLTemplate<T> {
 		// This could be a fetch or another async operation
 		// gets connection from pool, runs query, release connection
 		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(query, params);
 		let result;
 
 		prepareParams(params);
@@ -142,6 +145,7 @@ export class DuckdbSQLTemplate<T> extends SQLTemplate<T> {
 	async *stream() {
 		let row: T;
 		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(query, params);
 
 		prepareParams(params);
 

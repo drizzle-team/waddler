@@ -2,7 +2,7 @@ import type { Client as ClientT, Pool as PoolT, PoolClient, QueryArrayConfig, Qu
 import pg from 'pg';
 import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
-import type { WaddlerConfig } from '../../extensions';
+import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { PgDialect } from '../pg-core/dialect.ts';
 import type { NodePgClient } from './driver.ts';
@@ -27,7 +27,7 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 		override sqlWrapper: SQLWrapper,
 		protected readonly client: NodePgClient,
 		dialect: PgDialect,
-		configOptions: WaddlerConfig,
+		configOptions: SQLTemplateConfigOptions,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
 		super(sqlWrapper, dialect, configOptions);
@@ -45,10 +45,11 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(this.queryConfig.text, params);
 		try {
-			const queryResult = await (this.options.rowMode === 'array'
-				? this.client.query(this.rawQueryConfig, params)
-				: this.client.query(this.queryConfig, params));
+			const queryResult = this.options.rowMode === 'array'
+				? await (this.client.query(this.rawQueryConfig, params))
+				: await (this.client.query(this.queryConfig, params));
 
 			return queryResult.rows;
 		} catch (error) {
@@ -60,6 +61,8 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 	async *stream() {
 		let conn: ClientT | PoolT | PoolClient | undefined;
 		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(this.queryConfig.text, params);
+
 		// wrapping node-postgres driver error in new js error to add stack trace to it
 		try {
 			conn = this.client instanceof Pool

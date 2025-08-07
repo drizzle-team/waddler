@@ -3,6 +3,7 @@ import type { Client, InArgs, InStatement } from '@libsql/client';
 import type { SQLWrapper } from '~/sql.ts';
 import type { SqliteDialect } from '~/sqlite/sqlite-core/dialect.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
+import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 
 export class LibsqlSQLTemplate<T> extends SQLTemplate<T> {
@@ -12,9 +13,10 @@ export class LibsqlSQLTemplate<T> extends SQLTemplate<T> {
 		public override sqlWrapper: SQLWrapper,
 		public readonly client: Client,
 		dialect: SqliteDialect,
+		configOptions: SQLTemplateConfigOptions,
 		public options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sqlWrapper, dialect);
+		super(sqlWrapper, dialect, configOptions);
 	}
 
 	all(): Omit<LibsqlSQLTemplate<T>, 'all' | 'run'> {
@@ -29,6 +31,7 @@ export class LibsqlSQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(query, params);
 
 		// wrapping libsql driver error in new js error to add stack trace to it
 		try {

@@ -2,7 +2,7 @@ import type { QueryArrayConfig, QueryConfig, VercelClient, VercelPoolClient } fr
 import { types, VercelPool } from '@vercel/postgres';
 import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
-import type { WaddlerConfig } from '../../extensions';
+import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { PgDialect } from '../pg-core/index.ts';
 
@@ -26,7 +26,7 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 		override sqlWrapper: SQLWrapper,
 		protected readonly client: VercelPgClient,
 		dialect: PgDialect,
-		configOptions: WaddlerConfig,
+		configOptions: SQLTemplateConfigOptions,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
 		super(sqlWrapper, dialect, configOptions);
@@ -44,6 +44,8 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(this.queryConfig.text, params);
+
 		// wrapping vercel-postgres driver error in new js error to add stack trace to it
 		try {
 			const queryResult = await (this.options.rowMode === 'array'
@@ -75,6 +77,8 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 			}
 
 			({ query, params } = this.sqlWrapper.getQuery(this.dialect));
+			this.logger.logQuery(this.queryConfig.text, params);
+
 			const queryStream = new queryStreamObj.constructor(query, params, { types: this.queryConfig.types });
 
 			const stream = conn.query(queryStream);

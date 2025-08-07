@@ -2,6 +2,7 @@ import { type HTTPQueryOptions, type NeonQueryFunction, types } from '@neondatab
 import type { Dialect } from '~/sql-template-params.ts';
 import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
+import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 
 export type NeonHttpClient = NeonQueryFunction<any, any>;
@@ -33,13 +34,15 @@ export class NeonHttpSQLTemplate<T> extends SQLTemplate<T> {
 		override sqlWrapper: SQLWrapper,
 		protected readonly client: NeonHttpClient,
 		dialect: Dialect,
+		configOptions: SQLTemplateConfigOptions,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
-		super(sqlWrapper, dialect);
+		super(sqlWrapper, dialect, configOptions);
 	}
 
 	async execute() {
 		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(query, params);
 
 		// wrapping neon-http driver error in new js error to add stack trace to it
 		try {

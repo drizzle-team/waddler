@@ -1,6 +1,8 @@
 import type { PoolConfig } from '@neondatabase/serverless';
 import { neonConfig, Pool } from '@neondatabase/serverless';
-import type { WaddlerConfig } from '~/extensions/index.ts';
+import type { WaddlerConfigWithExtensions } from '~/extensions/index.ts';
+import type { Logger } from '../../logger.ts';
+import { DefaultLogger } from '../../logger.ts';
 import { SQLQuery } from '../../sql-template-params.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
@@ -28,13 +30,21 @@ export { sql };
 
 const createSqlTemplate = (
 	client: NeonClient,
-	dialect: PgDialect,
-	configOptions: WaddlerConfig,
+	configOptions: WaddlerConfigWithExtensions = {},
 ): SQL => {
+	const dialect = new PgDialect();
+	let logger: Logger | undefined;
+	if (configOptions.logger === true) {
+		logger = new DefaultLogger();
+	} else if (configOptions.logger !== false) {
+		logger = configOptions.logger;
+	}
+	const extensions = configOptions.extensions;
+
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): NeonServerlessSQLTemplate<T> => {
 		const sql = new SQLWrapper();
 		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
-		return new NeonServerlessSQLTemplate<T>(sql, client, dialect, configOptions);
+		return new NeonServerlessSQLTemplate<T>(sql, client, dialect, { logger, extensions });
 	};
 
 	Object.assign(fn, {
@@ -50,7 +60,7 @@ const createSqlTemplate = (
 			const sql = new SQLWrapper();
 			sql.with({ rawParams: { query, params } });
 
-			const unsafeDriver = new NeonServerlessSQLTemplate(sql, client, dialect, configOptions, options);
+			const unsafeDriver = new NeonServerlessSQLTemplate(sql, client, dialect, { logger, extensions }, options);
 			return await unsafeDriver.execute();
 		},
 	});
@@ -63,10 +73,10 @@ export function waddler<TClient extends NeonClient = Pool>(
 		string,
 	] | [
 		string,
-		WaddlerConfig,
+		WaddlerConfigWithExtensions,
 	] | [
 		(
-			& WaddlerConfig
+			& WaddlerConfigWithExtensions
 			& ({
 				connection: string | PoolConfig;
 			} | {
@@ -78,28 +88,29 @@ export function waddler<TClient extends NeonClient = Pool>(
 		),
 	]
 ) {
-	const dialect = new PgDialect();
-
 	if (typeof params[0] === 'string') {
 		const instance = new Pool({
 			connectionString: params[0],
 		});
 
-		return createSqlTemplate(instance, dialect, params[1] as WaddlerConfig);
+		return createSqlTemplate(instance, params[1] as WaddlerConfigWithExtensions);
 	}
 
 	if (isConfig(params[0])) {
-		const { connection, client, ws, ...waddlerConfig } = params[0] as {
-			connection?: PoolConfig | string;
-			ws?: any;
-			client?: TClient;
-		};
+		const { connection, client, ws, ...waddlerConfig } = params[0] as (
+			& ({
+				connection?: PoolConfig | string;
+				ws?: any;
+				client?: TClient;
+			})
+			& WaddlerConfigWithExtensions
+		);
 
 		if (ws) {
 			neonConfig.webSocketConstructor = ws;
 		}
 
-		if (client) return createSqlTemplate(client, dialect, waddlerConfig);
+		if (client) return createSqlTemplate(client, waddlerConfig);
 
 		const instance = typeof connection === 'string'
 			? new Pool({
@@ -107,7 +118,7 @@ export function waddler<TClient extends NeonClient = Pool>(
 			})
 			: new Pool(connection);
 
-		return createSqlTemplate(instance, dialect, waddlerConfig);
+		return createSqlTemplate(instance, waddlerConfig);
 	}
 
 	// TODO make error more descriptive

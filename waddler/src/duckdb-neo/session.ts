@@ -2,9 +2,15 @@ import type { DuckDBVector } from '@duckdb/node-api';
 import { WaddlerQueryError } from '../errors/index.ts';
 import type { RecyclingPool } from '../recycling-pool.ts';
 import type { Dialect } from '../sql-template-params.ts';
+import type { SQLTemplateConfigOptions } from '../sql-template.ts';
 import { SQLTemplate } from '../sql-template.ts';
 import type { SQLWrapper } from '../sql.ts';
-import { getColumnVectors, transformResultRowToObject, transformResultToObjects } from './result-transformers.ts';
+import {
+	getColumnVectors,
+	transformResultRowToObject,
+	transformResultToArrays,
+	transformResultToObjects,
+} from './result-transformers.ts';
 import type { DuckDBConnectionObj } from './types.ts';
 import { bindParams } from './utils.ts';
 
@@ -13,12 +19,15 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 		sql: SQLWrapper,
 		protected readonly pool: RecyclingPool<DuckDBConnectionObj>,
 		dialect: Dialect,
+		configOptions: SQLTemplateConfigOptions,
+		private options: { rowMode: 'array' | 'default' } = { rowMode: 'default' },
 	) {
-		super(sql, dialect);
+		super(sql, dialect, configOptions);
 	}
 
 	async execute() {
 		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(query, params);
 		let result;
 
 		const connObj = await this.pool.acquire();
@@ -29,7 +38,9 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 			bindParams(prepared, params);
 
 			const duckDbResult = await prepared.run().finally();
-			result = await transformResultToObjects(duckDbResult) as T[];
+			result = this.options.rowMode === 'default'
+				? (await transformResultToObjects(duckDbResult))
+				: (await transformResultToArrays(duckDbResult));
 		} catch (error) {
 			// TODO: this error handler does not work right, fix it
 			await this.pool.release(connObj);
@@ -38,11 +49,12 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 
 		await this.pool.release(connObj);
 
-		return result;
+		return result as T[];
 	}
 
 	async *stream() {
 		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		this.logger.logQuery(query, params);
 
 		const connObj = await this.pool.acquire();
 

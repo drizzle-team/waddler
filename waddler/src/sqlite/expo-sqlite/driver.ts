@@ -1,10 +1,12 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import type { SqliteIdentifierObject } from '~/sqlite/sqlite-core/index.ts';
+import type { Logger } from '../../logger.ts';
+import { DefaultLogger } from '../../logger.ts';
 import type { SQLIdentifier } from '../../sql-template-params.ts';
 import { SQLQuery } from '../../sql-template-params.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
-import type { Identifier, RowData, SQLParamType, UnsafeParamType } from '../../types.ts';
+import type { Identifier, RowData, SQLParamType, UnsafeParamType, WaddlerConfig } from '../../types.ts';
 import { SQLFunctions, SqliteDialect, UnsafePromise } from '../sqlite-core/dialect.ts';
 import { ExpoSqliteSQLTemplate } from './session.ts';
 
@@ -47,13 +49,21 @@ export { sql };
 
 const createSqlTemplate = (
 	client: SQLiteDatabase,
-	dialect: SqliteDialect,
+	configOptions: WaddlerConfig = {},
 ): ExpoSqliteSQL => {
+	const dialect = new SqliteDialect();
+	let logger: Logger | undefined;
+	if (configOptions.logger === true) {
+		logger = new DefaultLogger();
+	} else if (configOptions.logger !== false) {
+		logger = configOptions.logger;
+	}
+
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): ExpoSqliteSQLTemplate<T> => {
 		const sql = new SQLWrapper();
 		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
 		// client.defaultSafeIntegers(true);
-		return new ExpoSqliteSQLTemplate<T>(sql, client, dialect);
+		return new ExpoSqliteSQLTemplate<T>(sql, client, dialect, { logger });
 	};
 
 	Object.assign(fn, {
@@ -69,7 +79,7 @@ const createSqlTemplate = (
 			const sql = new SQLWrapper();
 			sql.with({ rawParams: { query, params } });
 
-			const unsafeDriver = new ExpoSqliteSQLTemplate(sql, client, dialect, options);
+			const unsafeDriver = new ExpoSqliteSQLTemplate(sql, client, dialect, { logger }, options);
 			const unsafePromise = new UnsafePromise(unsafeDriver);
 
 			return unsafePromise;
@@ -83,8 +93,6 @@ const createSqlTemplate = (
 	return fn as any;
 };
 
-export function waddler({ client }: { client: SQLiteDatabase }) {
-	const dialect = new SqliteDialect();
-
-	return createSqlTemplate(client, dialect);
+export function waddler({ client, config }: { client: SQLiteDatabase; config?: WaddlerConfig }) {
+	return createSqlTemplate(client, config);
 }

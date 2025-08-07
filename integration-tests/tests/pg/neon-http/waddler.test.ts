@@ -1,6 +1,6 @@
 import 'dotenv/config';
 import { neon } from '@neondatabase/serverless';
-import { beforeAll, beforeEach, expect, test } from 'vitest';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
 import type { NeonHttpClient } from 'waddler/neon-http';
 import { sql as sqlQuery, waddler } from 'waddler/neon-http';
@@ -43,6 +43,45 @@ test('connection test', async () => {
 
 	const sql4 = waddler({ connection: { connectionString } });
 	await sql4`select 4;`;
+});
+
+test('logger test', async () => {
+	const loggerQuery = 'select $1;';
+	const loggerParams = [1];
+	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+
+	const logger = {
+		logQuery: (query: string, params: unknown[]) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+		},
+	};
+
+	let loggerSql: SQL;
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	// case 0
+	const client = neon(connectionString);
+	loggerSql = waddler({ client, logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client, logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler({ client, logger: false });
+	await loggerSql`select ${1};`;
+
+	// case 1
+	loggerSql = waddler(connectionString, { logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler(connectionString, { logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler(connectionString, { logger: false });
+	await loggerSql`select ${1};`;
 });
 
 nodePgTests();

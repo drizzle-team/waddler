@@ -1,5 +1,6 @@
 export { ClickHouseDialect } from './clickhouse-core/dialect.ts';
 export { DuckdbDialect } from './duckdb-core/dialect.ts';
+export type { Logger } from './logger.ts';
 export { MySQLDialect } from './mysql/mysql-core/dialect.ts';
 export type { MySQLIdentifierObject } from './mysql/mysql-core/dialect.ts';
 export { PgDialect } from './pg/pg-core/dialect.ts';

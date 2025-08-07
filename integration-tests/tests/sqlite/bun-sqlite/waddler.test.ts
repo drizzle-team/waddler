@@ -2,6 +2,7 @@ import Database from 'bun:sqlite';
 import { beforeAll, expect, test } from 'bun:test';
 import { createAllDataTypesTable, createUsersTable, dropAllDataTypesTable, dropUsersTable } from '../sqlite-core';
 
+import { vi } from 'vitest';
 import { type BunSqliteSQL, sql as sqlQuery, waddler } from 'waddler/bun-sqlite';
 import { filter1 } from './test-filters1';
 import { filter2 } from './test-filters2';
@@ -26,6 +27,45 @@ test('connection test', async () => {
 
 	const sql5 = waddler({ connection: { source: '' } });
 	await sql5`select 5;`;
+});
+
+test('logger test', async () => {
+	const loggerQuery = 'select ?;';
+	const loggerParams = [1];
+	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+
+	const logger = {
+		logQuery: (query: string, params: unknown[]) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+		},
+	};
+
+	let loggerSql: BunSqliteSQL;
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	// case 0
+	const client = new Database();
+	loggerSql = waddler({ client, logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client, logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler({ client, logger: false });
+	await loggerSql`select ${1};`;
+
+	// case 1
+	loggerSql = waddler('', { logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler('', { logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler('', { logger: false });
+	await loggerSql`select ${1};`;
 });
 
 // UNSAFE-------------------------------------------------------------------

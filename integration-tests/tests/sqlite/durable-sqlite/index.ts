@@ -10,10 +10,32 @@ export class MyDurableObject extends DurableObject {
 	testsPassed: number = 0;
 	testsFailed: number = 0;
 	sql: DurableSqliteSQL;
+
+	loggerSql0: DurableSqliteSQL;
+	loggerSql1: DurableSqliteSQL;
+	loggerSql2: DurableSqliteSQL;
+	loggerText: string;
+
 	constructor(ctx: DurableObjectState, env: Env) {
 		// Required, as we are extending the base class.
 		super(ctx, env);
 		this.sql = waddler({ client: this.ctx.storage });
+
+		// logger
+		const loggerQuery = 'select ?;';
+		const loggerParams = [1];
+		this.loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+
+		const logger = {
+			logQuery: (query: string, params: unknown[]) => {
+				expect(query).equal(loggerQuery);
+				expect(params).deep.equal(loggerParams);
+			},
+		};
+
+		this.loggerSql0 = waddler({ client: this.ctx.storage, config: { logger } });
+		this.loggerSql1 = waddler({ client: this.ctx.storage, config: { logger: true } });
+		this.loggerSql2 = waddler({ client: this.ctx.storage, config: { logger: false } });
 
 		// Make sure all table creations complete before accepting queries.
 		ctx.blockConcurrencyWhile(async () => {
@@ -23,6 +45,20 @@ export class MyDurableObject extends DurableObject {
 
 	async sayHello() {
 		return `Tests	${this.testsFailed} failed | ${this.testsPassed} passed (${this.testsFailed + this.testsPassed}) `;
+	}
+
+	async loggerTest() {
+		try {
+			await this.loggerSql0`select ${1};`;
+			await this.loggerSql1`select ${1};`;
+			await this.loggerSql2`select ${1};`;
+
+			this.testsPassed += 1;
+		} catch (error) {
+			console.error(error);
+			this.testsFailed += 1;
+			// throw new Error('all types in sql.unsafe test error.');
+		}
 	}
 
 	async allTypesInSqlUnsafe() {
@@ -356,6 +392,7 @@ export default {
 		await stub.sqlStream();
 		await stub.sqlQueryApi();
 		await stub.embedingSQLQueryAndSQLTemplate();
+		await stub.loggerTest();
 
 		const greeting = await stub.sayHello() as string;
 

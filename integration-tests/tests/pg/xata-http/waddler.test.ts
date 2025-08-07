@@ -1,7 +1,7 @@
 import 'dotenv/config';
 
 import retry from 'async-retry';
-import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
+import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
 import type { XataHttpClient } from 'waddler/xata-http';
 import { sql as sqlQuery, waddler } from 'waddler/xata-http';
@@ -53,6 +53,34 @@ afterAll(async () => {
 	await dropAllDataTypesTable(sql);
 	await dropAllArrayDataTypesTable(sql);
 	await dropAllNdarrayDataTypesTable(sql);
+});
+
+test('logger test', async () => {
+	const loggerQuery = 'select $1;';
+	const loggerParams = [1];
+	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+
+	const logger = {
+		logQuery: (query: string, params: unknown[]) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+		},
+	};
+
+	let loggerSql: SQL;
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	// case 0
+	const client = getXataClient();
+	loggerSql = waddler({ client, config: { logger } });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler({ client, config: { logger: true } });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(loggerText);
+
+	loggerSql = waddler({ client, config: { logger: false } });
+	await loggerSql`select ${1};`;
 });
 
 commonTests();

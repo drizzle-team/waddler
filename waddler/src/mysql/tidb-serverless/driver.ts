@@ -1,9 +1,11 @@
 import type { Config, Connection } from '@tidbcloud/serverless';
 import { connect } from '@tidbcloud/serverless';
+import type { Logger } from '../../logger.ts';
+import { DefaultLogger } from '../../logger.ts';
 import { SQLQuery } from '../../sql-template-params.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
-import type { SQLParamType, UnsafeParamType } from '../../types.ts';
+import type { SQLParamType, UnsafeParamType, WaddlerConfig } from '../../types.ts';
 import { isConfig } from '../../utils.ts';
 import { MySQLDialect, SQLFunctions } from '../mysql-core/dialect.ts';
 import { TidbServerlessSQLTemplate } from './session.ts';
@@ -26,12 +28,20 @@ export { sql };
 
 const createSqlTemplate = (
 	client: Connection,
-	dialect: MySQLDialect,
+	configOptions: WaddlerConfig = {},
 ): SQL => {
+	const dialect = new MySQLDialect();
+	let logger: Logger | undefined;
+	if (configOptions.logger === true) {
+		logger = new DefaultLogger();
+	} else if (configOptions.logger !== false) {
+		logger = configOptions.logger;
+	}
+
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): TidbServerlessSQLTemplate<T> => {
 		const sql = new SQLWrapper();
 		sql.with({ templateParams: { strings, params } }).prepareQuery(dialect);
-		return new TidbServerlessSQLTemplate<T>(sql, client, dialect);
+		return new TidbServerlessSQLTemplate<T>(sql, client, dialect, { logger });
 	};
 
 	Object.assign(fn, {
@@ -47,7 +57,7 @@ const createSqlTemplate = (
 			const sql = new SQLWrapper();
 			sql.with({ rawParams: { query, params } });
 
-			const unsafeDriver = new TidbServerlessSQLTemplate(sql, client, dialect, options);
+			const unsafeDriver = new TidbServerlessSQLTemplate(sql, client, dialect, { logger }, options);
 			return await unsafeDriver.execute();
 		},
 	});
@@ -56,30 +66,38 @@ const createSqlTemplate = (
 };
 
 export function waddler<TClient extends Connection = Connection>(
-	...params: [
-		string,
-	] | [
-		({
-			connection: string | Config;
-		} | {
-			client: TClient;
-		}),
-	]
+	...params:
+		| [
+			string,
+		]
+		| [
+			string,
+			WaddlerConfig,
+		]
+		| [
+			(
+				& WaddlerConfig
+				& ({
+					connection: string | Config;
+				} | {
+					client: TClient;
+				})
+			),
+		]
 ) {
-	const dialect = new MySQLDialect();
-
 	if (typeof params[0] === 'string') {
 		const instance = connect({
 			url: params[0],
 		});
 
-		return createSqlTemplate(instance, dialect);
+		return createSqlTemplate(instance, params[1]);
 	}
 
 	if (isConfig(params[0])) {
-		const { connection, client } = params[0] as { connection?: Config | string; client?: TClient };
+		const { connection, client, ...configOptions } =
+			params[0] as ({ connection?: Config | string; client?: TClient } & WaddlerConfig);
 
-		if (client) return createSqlTemplate(client, dialect);
+		if (client) return createSqlTemplate(client, configOptions);
 
 		const instance = typeof connection === 'string'
 			? connect({
@@ -87,7 +105,7 @@ export function waddler<TClient extends Connection = Connection>(
 			})
 			: connect(connection!);
 
-		return createSqlTemplate(instance, dialect);
+		return createSqlTemplate(instance, configOptions);
 	}
 
 	// TODO make error more descriptive

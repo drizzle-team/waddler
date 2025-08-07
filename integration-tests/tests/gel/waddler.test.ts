@@ -1,7 +1,7 @@
 import type Docker from 'dockerode';
 import type { Client } from 'gel';
 import createClient, { DateDuration, Duration, LocalDate, LocalDateTime, LocalTime, RelativeDuration } from 'gel';
-import { afterAll, beforeAll, beforeEach, expect, test } from 'vitest';
+import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import { sql as sqlQuery, waddler } from 'waddler/gel';
 import { commonTests } from '../common.test.ts';
 import { createGelDockerDB } from '../utils.ts';
@@ -431,6 +431,48 @@ test('embeding SQLQuery and SQLTemplate test', async () => {
 	expect(res3.length).not.toBe(0);
 
 	await dropUsersTable(gelConnectionString, tlsSecurity);
+});
+
+test('logger test', async () => {
+	const loggerQuery = 'select $1;';
+	const loggerParams = ['1'];
+	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+
+	const logger = {
+		logQuery: (query: string, params: unknown[]) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+		},
+	};
+
+	let loggerSql: SQL;
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+
+	// case 0
+	const client = createClient({ ...gelConnectionParams, tlsSecurity: 'insecure' });
+	loggerSql = waddler({ client, logger });
+	// TODO revise: loggerSql`select ${1};` query will fail
+	await loggerSql`select ${'1'};`;
+
+	loggerSql = waddler({ client, logger: true });
+	await loggerSql`select ${'1'};`;
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
+
+	loggerSql = waddler({ client, logger: false });
+	await loggerSql`select ${'1'};`;
+
+	await client.close();
+
+	// case 1
+	loggerSql = waddler({ connection: { ...gelConnectionParams, tlsSecurity: 'insecure' }, logger });
+	await loggerSql`select ${'1'};`;
+
+	loggerSql = waddler({ connection: { ...gelConnectionParams, tlsSecurity: 'insecure' }, logger: true });
+	await loggerSql`select ${'1'};`;
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
+
+	loggerSql = waddler({ connection: { ...gelConnectionParams, tlsSecurity: 'insecure' }, logger: false });
+	await loggerSql`select ${'1'};`;
 });
 
 // test('all nd-array types in sql.values test', async () => {

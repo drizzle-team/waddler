@@ -3,7 +3,8 @@
 	"private": true,
 	"scripts": {
 		"build": "cd waddler && pnpm lint && pnpm build",
-		"test": "cd integration-tests && pnpm test"
+		"test": "cd integration-tests && pnpm test",
+		"test:bun": "cd integration-tests && pnpm test:bun"
 	},
 	"pnpm": {
 		"onlyBuiltDependencies": ["duckdb", "better-sqlite3"]

@@ -1,13 +1,21 @@
-import type { WaddlerConfig } from './extensions/index.ts';
+import type { WaddlerDriverExtension } from './extensions/index.ts';
+import { type Logger, NoopLogger } from './logger.ts';
 import type { Dialect, SQLQuery } from './sql-template-params.ts';
 import type { Query, SQLWrapper } from './sql.ts';
 
+export type SQLTemplateConfigOptions = {
+	extensions?: WaddlerDriverExtension[];
+	logger?: Logger;
+};
 export abstract class SQLTemplate<T> {
+	protected logger: Logger;
 	constructor(
 		public sqlWrapper: SQLWrapper,
 		public dialect: Dialect,
-		public configOptions?: WaddlerConfig,
-	) {}
+		public configOptions: SQLTemplateConfigOptions = {},
+	) {
+		this.logger = configOptions.logger ?? new NoopLogger();
+	}
 
 	append(other: SQLTemplate<T> | SQLQuery) {
 		this.sqlWrapper.append(other.sqlWrapper);
