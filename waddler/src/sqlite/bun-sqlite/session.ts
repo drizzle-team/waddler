@@ -29,7 +29,7 @@ export class BunSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
 		this.logger.logQuery(query, params);
 
 		// wrapping bun-sqlite driver error in new js error to add stack trace to it
@@ -50,7 +50,7 @@ export class BunSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async *stream() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
 		this.logger.logQuery(query, params);
 
 		// wrapping bun-sqlite driver error in new js error to add stack trace to it

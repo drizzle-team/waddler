@@ -55,7 +55,7 @@ const createSqlTemplate = (
 			options = options ?? { rowMode: 'object' };
 
 			const sql = new SQLWrapper();
-			sql.with({ rawParams: { query, params } });
+			sql.with({ rawParams: { sql: query, params } });
 
 			const unsafeDriver = new PlanetscaleServerlessSQLTemplate(sql, client, dialect, { logger }, options);
 			return await unsafeDriver.execute();

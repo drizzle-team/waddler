@@ -24,7 +24,7 @@ import type {
 } from './types.ts';
 
 export interface Query<ParamsType extends 'array' | 'object' = 'array'> {
-	query: string;
+	sql: string;
 	// TODO: revise: params should have types that are suitable for specific driver therefore can differ. example: pg driver and sqlite driver(can't accept Date value)
 	// for now I should leave params as they are until I add more descriptve errors in the types
 	params: ParamsType extends 'array' ? Value[] : Record<string, Value>;
@@ -76,13 +76,13 @@ export interface SQL {
 export class SQLWrapper {
 	constructor(
 		public queryChunks: SQLChunk[] = [],
-		public query?: string,
+		public sql?: string,
 		public params?: UnsafeParamType[] | Record<string, UnsafeParamType>,
 	) {}
 
 	with({ templateParams, rawParams }: {
 		templateParams?: { strings?: TemplateStringsArray; params: SQLParamType[] };
-		rawParams?: { query: string; params: UnsafeParamType[] | Record<string, UnsafeParamType> };
+		rawParams?: { sql: string; params: UnsafeParamType[] | Record<string, UnsafeParamType> };
 	}): this {
 		if (templateParams) {
 			const { strings, params } = templateParams;
@@ -102,7 +102,7 @@ export class SQLWrapper {
 				}
 			}
 		} else if (rawParams) {
-			this.query = rawParams.query;
+			this.sql = rawParams.sql;
 			this.params = rawParams.params;
 		}
 		return this;
@@ -113,7 +113,7 @@ export class SQLWrapper {
 		ParamsType extends 'array' | 'object' = IsEqual<DialectT, ClickHouseDialect> extends true ? 'object' : 'array',
 	>(dialect: DialectT): Query<ParamsType> {
 		return {
-			query: this.query ?? '',
+			sql: this.sql ?? '',
 			params: this.params as Query<ParamsType>['params'] ?? dialect.createEmptyParams() as Query<ParamsType>['params'],
 		};
 	}
@@ -125,7 +125,7 @@ export class SQLWrapper {
 
 	prepareQuery(dialect: Dialect): this {
 		if (this.queryChunks.length === 1 && this.queryChunks[0] instanceof SQLString) {
-			this.query = this.queryChunks[0].generateSQL().sql;
+			this.sql = this.queryChunks[0].generateSQL().sql;
 			this.params = dialect.createEmptyParams();
 		}
 
@@ -155,7 +155,7 @@ export class SQLWrapper {
 			}
 		}
 
-		this.query = query;
+		this.sql = query;
 		this.params = params4driver;
 
 		return this;

@@ -29,7 +29,7 @@ export class OpSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
 		this.logger.logQuery(query, params);
 
 		// TODO: do I really need branching to all and run here?

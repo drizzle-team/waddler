@@ -47,7 +47,7 @@ export class SQLQuery extends SQLChunk {
 
 	override generateSQL() {
 		this.sqlWrapper.prepareQuery(this.dialect);
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
 		return { sql: query, params };
 	}
 

@@ -23,8 +23,8 @@ test('SQLWrapper with template params(SQLIdentifier, SQLValues) test', () => {
 		new SQLDefault(),
 	]])};`;
 	sql.with({ templateParams }).prepareQuery(dialect);
-	const { query, params } = sql.getQuery(dialect);
-	expect(query).toBe('insert into "users" values ($1, default);');
+	const { sql: sql_, params } = sql.getQuery(dialect);
+	expect(sql_).toBe('insert into "users" values ($1, default);');
 	expect(params).toEqual([1]);
 });
 
@@ -40,8 +40,8 @@ test('SQLWrapper with template params(SQLRaw) test', () => {
 	)}${asClause} from all_data_types;`;
 
 	sql.with({ templateParams }).prepareQuery(dialect);
-	const { query, params } = sql.getQuery(dialect);
-	expect(query).toEqual(
+	const { sql: sql_, params } = sql.getQuery(dialect);
+	expect(sql_).toEqual(
 		`select case when "default" = 3 then 'column=default' else 'column!=default' end as case_column from all_data_types;`,
 	);
 	expect(params.length).toEqual(0);
@@ -54,8 +54,8 @@ test('SQLWrapper with template params(SQLIdentifier, SQLDefault along with usual
 		'users',
 	)} values (${new SQLDefault()}, ${1}, ${'2'}, ${BigInt(1)}, ${date}, ${true});`;
 	sql.with({ templateParams }).prepareQuery(dialect);
-	const { query, params } = sql.getQuery(dialect);
-	expect(query).toBe('insert into "users" values (default, $1, $2, $3, $4, $5);');
+	const { sql: sql_, params } = sql.getQuery(dialect);
+	expect(sql_).toBe('insert into "users" values (default, $1, $2, $3, $4, $5);');
 	expect(params).toEqual([1, '2', BigInt(1), date, true]);
 });
 
@@ -63,12 +63,12 @@ test('SQLWrapper with raw params test', () => {
 	const sql = new SQLWrapper();
 	const date = new Date('2024-10-31T14:25:29.425Z');
 	const rawParams = {
-		query: 'insert into users values (default, $1, $2, $3, $4, $5);',
+		sql: 'insert into users values (default, $1, $2, $3, $4, $5);',
 		params: [1, '2', BigInt(1), date, true],
 	};
 	sql.with({ rawParams });
-	const { query, params } = sql.getQuery(dialect);
-	expect(query).toBe('insert into users values (default, $1, $2, $3, $4, $5);');
+	const { sql: sql_, params } = sql.getQuery(dialect);
+	expect(sql_).toBe('insert into users values (default, $1, $2, $3, $4, $5);');
 	expect(params).toEqual([1, '2', BigInt(1), date, true]);
 });
 
@@ -78,7 +78,7 @@ export const commonTests = (dialect?: string) => {
 		test('base test', (ctx) => {
 			const res = ctx.sql`select 1;`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select 1;`, params: dialect === 'clickhouse' ? {} : [] });
+			expect(res).toStrictEqual({ sql: `select 1;`, params: dialect === 'clickhouse' ? {} : [] });
 		});
 
 		// toSQL errors
@@ -103,16 +103,16 @@ export const commonTests = (dialect?: string) => {
 		// sql.raw ----------------------------------------------------------------------------------
 		test('sql.raw test. number | boolean | bigint | string as parameter.', (ctx) => {
 			let res = ctx.sql`select ${ctx.sql.raw(1)};`.toSQL();
-			expect(res).toStrictEqual({ query: 'select 1;', params: dialect === 'clickhouse' ? {} : [] });
+			expect(res).toStrictEqual({ sql: 'select 1;', params: dialect === 'clickhouse' ? {} : [] });
 
 			res = ctx.sql`select ${ctx.sql.raw(true)};`.toSQL();
-			expect(res).toStrictEqual({ query: 'select true;', params: dialect === 'clickhouse' ? {} : [] });
+			expect(res).toStrictEqual({ sql: 'select true;', params: dialect === 'clickhouse' ? {} : [] });
 
 			res = ctx.sql`select ${ctx.sql.raw(BigInt(10))};`.toSQL();
-			expect(res).toStrictEqual({ query: 'select 10;', params: dialect === 'clickhouse' ? {} : [] });
+			expect(res).toStrictEqual({ sql: 'select 10;', params: dialect === 'clickhouse' ? {} : [] });
 
 			res = ctx.sql`select ${ctx.sql.raw('* from users')};`.toSQL();
-			expect(res).toStrictEqual({ query: 'select * from users;', params: dialect === 'clickhouse' ? {} : [] });
+			expect(res).toStrictEqual({ sql: 'select * from users;', params: dialect === 'clickhouse' ? {} : [] });
 		});
 
 		// sql.raw errors

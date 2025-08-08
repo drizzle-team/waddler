@@ -47,37 +47,37 @@ export const commonSqliteTests = () => {
 		test('base test with number param', (ctx) => {
 			const res = ctx.sql`select ${1};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select ?;`, params: [1] });
+			expect(res).toStrictEqual({ sql: `select ?;`, params: [1] });
 		});
 
 		test('base test with bigint param', (ctx) => {
 			const res = ctx.sql`select ${BigInt(10)};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select ?;`, params: [10n] });
+			expect(res).toStrictEqual({ sql: `select ?;`, params: [10n] });
 		});
 
 		test('base test with string param', (ctx) => {
 			const res = ctx.sql`select ${'hello world.'};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select ?;`, params: ['hello world.'] });
+			expect(res).toStrictEqual({ sql: `select ?;`, params: ['hello world.'] });
 		});
 
 		test('base test with boolean param', (ctx) => {
 			const res = ctx.sql`select ${true};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select ?;`, params: [true] });
+			expect(res).toStrictEqual({ sql: `select ?;`, params: [true] });
 		});
 
 		test('base test with Date param', (ctx) => {
 			const res = ctx.sql`select ${new Date('10.04.2025')};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select ?;`, params: [new Date('10.04.2025')] });
+			expect(res).toStrictEqual({ sql: `select ?;`, params: [new Date('10.04.2025')] });
 		});
 
 		test('base test with null param', (ctx) => {
 			const res = ctx.sql`select ${null};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select ?;`, params: [null] });
+			expect(res).toStrictEqual({ sql: `select ?;`, params: [null] });
 		});
 
 		// sql.append
@@ -89,7 +89,7 @@ export const commonSqliteTests = () => {
 
 			const res = query.toSQL();
 			expect(res).toStrictEqual({
-				query: 'select * from users where id = ? or id = ? or id = ?;',
+				sql: 'select * from users where id = ? or id = ? or id = ?;',
 				params: [1, 3, 4],
 			});
 		});
@@ -98,19 +98,19 @@ export const commonSqliteTests = () => {
 		test('sql.identifier test. string parameter', (ctx) => {
 			const res = ctx.sql`select ${ctx.sql.identifier('name')} from users;`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select "name" from users;`, params: [] });
+			expect(res).toStrictEqual({ sql: `select "name" from users;`, params: [] });
 		});
 
 		test('sql.identifier test. string[] parameter', (ctx) => {
 			const res = ctx.sql`select ${ctx.sql.identifier(['name', 'email', 'phone'])} from users;`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select "name", "email", "phone" from users;`, params: [] });
+			expect(res).toStrictEqual({ sql: `select "name", "email", "phone" from users;`, params: [] });
 		});
 
 		test('sql.identifier test. object parameter', (ctx) => {
 			const res = ctx.sql`select * from ${ctx.sql.identifier({ schema: 'public', table: 'users' })};`.toSQL();
 
-			expect(res).toStrictEqual({ query: `select * from "public"."users";`, params: [] });
+			expect(res).toStrictEqual({ sql: `select * from "public"."users";`, params: [] });
 		});
 
 		test('sql.identifier test. object[] parameter', (ctx) => {
@@ -122,7 +122,7 @@ export const commonSqliteTests = () => {
 			} from users;`.toSQL();
 
 			expect(res).toStrictEqual({
-				query: `select "public"."users"."name", "public"."users"."email" from users;`,
+				sql: `select "public"."users"."name", "public"."users"."email" from users;`,
 				params: [],
 			});
 		});
@@ -136,7 +136,7 @@ export const commonSqliteTests = () => {
 			} from users;`.toSQL();
 
 			expect(res).toStrictEqual({
-				query: `select "public"."users"."name" as "user_name", "public"."users"."email" as "user_email" from users;`,
+				sql: `select "public"."users"."name" as "user_name", "public"."users"."email" as "user_email" from users;`,
 				params: [],
 			});
 		});

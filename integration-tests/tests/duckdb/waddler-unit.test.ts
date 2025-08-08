@@ -22,7 +22,7 @@ test('sql.values test. ', () => {
 		sql.values([[1, 'Oleksii', false], [2, 'Alex', true]])
 	};`.toSQL();
 	expect(res).toStrictEqual({
-		query: "insert into users (id, name, is_active) values (1, 'Oleksii', false), (2, 'Alex', true);",
+		sql: "insert into users (id, name, is_active) values (1, 'Oleksii', false), (2, 'Alex', true);",
 		params: [],
 	});
 });
@@ -32,7 +32,7 @@ test('sql.values test. number, boolean, string, bigint, null, Date, SQLDefault a
 		sql.values([[1, true, 'Oleksii', BigInt(1), null, new Date('2025-10-04T00:00:00.000Z'), sql.default]])
 	};`.toSQL();
 	expect(res).toStrictEqual({
-		query:
+		sql:
 			"insert into users (id, is_active, name, bigint_, null_) values (1, true, 'Oleksii', 1, null, '2025-10-04T00:00:00.000Z', default);",
 		params: [],
 	});
@@ -62,7 +62,7 @@ test('sql.values array type test', () => {
 		+ '[1,2,3], [1.5,2.6,3.9], [true,false,true], [9007199254740993,9007199254740995,9007199254740997], '
 		+ "['2024-10-31T14:25:29.425Z','2024-10-30T14:25:29.425Z','2024-10-29T14:25:29.425Z']);";
 
-	expect(query.toSQL().query).toStrictEqual(expectedQuery);
+	expect(query.toSQL().sql).toStrictEqual(expectedQuery);
 });
 
 // errors

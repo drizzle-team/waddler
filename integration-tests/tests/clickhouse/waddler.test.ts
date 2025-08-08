@@ -1144,7 +1144,7 @@ test('sql query api test', async () => {
 	const query = sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
 
 	expect(query.toSQL()).toStrictEqual({
-		query: 'select * from `users` where id = {param1:Int32} or id = {param2:Int32} and email = {param3:String};',
+		sql: 'select * from `users` where id = {param1:Int32} or id = {param2:Int32} and email = {param3:String};',
 		params: { param1: 1, param2: 2, param3: 'hello@test.com' },
 	});
 	expect(filter.toSQL()).toStrictEqual({
@@ -1170,24 +1170,32 @@ order by id;
 	}`.command();
 
 	await sql`select * from ${sql.identifier('users')};`;
-	// console.log(res);
 
 	const query1 = sql`select * from ${sql.identifier('users')} where ${filter1({ id: 1, name: 'a' })};`;
-	// console.log(query1.toSQL());
-	// console.log(await query1);
+	expect(query1.toSQL()).toStrictEqual({
+		sql: 'select * from `users` where id = {param1:Int32} and name = {param2:String};',
+		params: { param1: 1, param2: 'a' },
+	});
+
 	const res1 = await query1;
 	expect(res1.length).not.toBe(0);
 
 	const query2 = sql`select * from ${sql.identifier('users')} where ${filter2({ id: 1, name: 'a' })};`;
-	// console.log(query2.toSQL());
-	// console.log(await query2);
+	expect(query2.toSQL()).toStrictEqual({
+		sql: 'select * from `users` where id = {param1:Int32} and name = {param2:String};',
+		params: { param1: 1, param2: 'a' },
+	});
+
 	const res2 = await query2;
 	expect(res2.length).not.toBe(0);
 
 	const query3 = sql`select * from ${sql.identifier('users')} where ${sql`id = ${sql.param(1, 'Int32')}`};`;
-	// console.log(query3.toSQL());
+	expect(query3.toSQL()).toStrictEqual({
+		sql: 'select * from `users` where id = {param1:Int32};',
+		params: { param1: 1 },
+	});
+
 	const res3 = await query3;
-	// console.log(res3);
 	expect(res3.length).not.toBe(0);
 
 	await sql.unsafe(`drop table if exists users;`).command();
@@ -1205,10 +1213,10 @@ order by id;
 
 	console.time('insert');
 	const query = sql`insert into ${sql.identifier('tests')} values ${sql.values(valuesIds)};`.command();
-	// const { query: rawSql, params } = query.toSQL();
+	// const { sql: rawSql, params } = query.toSQL();
 	await query;
 	// const rawSqlNew = rawSql.slice(0, -1) + ' FORMAT JSONEachRow;';
-	// await clickHouseClient.command({ query: rawSql, query_params: params as Record<string, any> });
+	// await clickHouseClient.command({ sql: rawSql, query_params: params as Record<string, any> });
 	// await clickHouseClient.insert({
 	// 	table: 'tests',
 	// 	query_params: params as Record<string, any>,
@@ -1239,7 +1247,7 @@ order by id;
 	// case0
 	const query0 = sql`select * from tests where path in ${['/', '/watch']};`;
 	expect(query0.toSQL()).toStrictEqual({
-		query: 'select * from tests where path in {param1:Array(String)};',
+		sql: 'select * from tests where path in {param1:Array(String)};',
 		params: { param1: ['/', '/watch'] },
 	});
 
@@ -1249,7 +1257,7 @@ order by id;
 	// case1 (datetime)
 	const query1 = sql`select toDateTime(${1754055760745}, 3) as some_datetime;`;
 	expect(query1.toSQL()).toStrictEqual({
-		query: 'select toDateTime({param1:Int64}, 3) as some_datetime;',
+		sql: 'select toDateTime({param1:Int64}, 3) as some_datetime;',
 		params: { param1: 1754055760745 },
 	});
 
@@ -1259,7 +1267,7 @@ order by id;
 	// case2 (int32 max)
 	const query2 = sql`select ${2_147_483_647} as max_int32;`;
 	expect(query2.toSQL()).toStrictEqual({
-		query: 'select {param1:Int32} as max_int32;',
+		sql: 'select {param1:Int32} as max_int32;',
 		params: { param1: 2147483647 },
 	});
 
@@ -1269,7 +1277,7 @@ order by id;
 	// case3 (int32 min)
 	const query3 = sql`select ${-2_147_483_648} as min_int32;`;
 	expect(query3.toSQL()).toStrictEqual({
-		query: 'select {param1:Int32} as min_int32;',
+		sql: 'select {param1:Int32} as min_int32;',
 		params: { param1: -2147483648 },
 	});
 
@@ -1279,7 +1287,7 @@ order by id;
 	// case4 (float)
 	const query4 = sql`select ${-2_147_483_648.123} as some_float;`;
 	expect(query4.toSQL()).toStrictEqual({
-		query: 'select {param1:String} as some_float;',
+		sql: 'select {param1:String} as some_float;',
 		params: { param1: -2147483648.123 },
 	});
 
@@ -1345,12 +1353,13 @@ test('logger test', async () => {
 	await loggerSql`select ${1};`;
 });
 
-test('sql standalone test', async () => {
+test('standalone sql test', async () => {
 	const timestampSelector = sqlQuery`toStartOfHour(${sqlQuery.identifier('test')})`;
-	const timestampFilter = sqlQuery`${timestampSelector} >= from and ${timestampSelector} < to`;
+	const timestampFilter =
+		sqlQuery`${sqlQuery``}${timestampSelector} >= from and ${timestampSelector} < to${sqlQuery``}${sqlQuery`;`}`;
 
 	expect(timestampFilter.toSQL()).toStrictEqual({
-		sql: 'toStartOfHour(`test`) >= from and toStartOfHour(`test`) < to',
+		sql: 'toStartOfHour(`test`) >= from and toStartOfHour(`test`) < to;',
 		params: {},
 	});
 });

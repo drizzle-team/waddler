@@ -78,7 +78,7 @@ export const createSqlTemplate = <
 			options = options ?? { rowMode: 'object' };
 
 			const sql = new SQLWrapper();
-			sql.with({ rawParams: { query, params } });
+			sql.with({ rawParams: { sql: query, params } });
 
 			const unsafeDriver = new LibsqlSQLTemplate(sql, client, dialect, { logger }, options);
 			const unsafePromise = new UnsafePromise(unsafeDriver);

@@ -29,7 +29,7 @@ export class ExpoSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
 		this.logger.logQuery(query, params);
 
 		const stmt = this.client.prepareSync(query);
@@ -54,7 +54,7 @@ export class ExpoSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async *stream() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
 		this.logger.logQuery(query, params);
 
 		const stmt = this.client.prepareSync(query);

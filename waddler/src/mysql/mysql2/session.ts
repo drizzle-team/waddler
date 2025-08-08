@@ -17,10 +17,10 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 		configOptions: SQLTemplateConfigOptions,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 		private queryConfig: QueryOptions = {
-			sql: sqlWrapper.getQuery(dialect).query,
+			sql: sqlWrapper.getQuery(dialect).sql,
 		},
 		private rawQueryConfig: QueryOptions = {
-			sql: sqlWrapper.getQuery(dialect).query,
+			sql: sqlWrapper.getQuery(dialect).sql,
 			rowsAsArray: true,
 		},
 	) {

@@ -116,7 +116,7 @@ const createSqlTemplate = (
 			options = options ?? { rowMode: 'object' };
 
 			const sqlWrapper = new SQLWrapper();
-			sqlWrapper.with({ rawParams: { query, params } });
+			sqlWrapper.with({ rawParams: { sql: query, params } });
 
 			const unsafeDriver = new ClickHouseSQLTemplate(sqlWrapper, client, dialect, { logger }, options);
 			const unsafePromise = new UnsafePromise(unsafeDriver);

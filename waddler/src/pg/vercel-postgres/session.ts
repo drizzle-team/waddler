@@ -30,7 +30,7 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
 		super(sqlWrapper, dialect, configOptions);
-		const query = this.sqlWrapper.getQuery(this.dialect).query;
+		const query = this.sqlWrapper.getQuery(this.dialect).sql;
 		this.queryConfig = {
 			rowMode: 'array',
 			text: query,
@@ -76,7 +76,7 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 				);
 			}
 
-			({ query, params } = this.sqlWrapper.getQuery(this.dialect));
+			({ sql: query, params } = this.sqlWrapper.getQuery(this.dialect));
 			this.logger.logQuery(this.queryConfig.text, params);
 
 			const queryStream = new queryStreamObj.constructor(query, params, { types: this.queryConfig.types });

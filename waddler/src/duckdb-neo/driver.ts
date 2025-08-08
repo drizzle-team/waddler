@@ -68,7 +68,7 @@ const createSqlTemplate = (
 			options = options ?? { rowMode: 'default' };
 
 			const sqlWrapper = new SQLWrapper();
-			sqlWrapper.with({ rawParams: { query, params } });
+			sqlWrapper.with({ rawParams: { sql: query, params } });
 
 			const unsafeDriver = new DuckdbNeoSQLTemplate(sqlWrapper, pool, dialect, { logger }, options);
 			return await unsafeDriver.execute();
