@@ -53,26 +53,20 @@ export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		let finalRes, finalMetadata: any | undefined;
 
 		// wrapping neon-serverless driver error in new js error to add stack trace to it
 		try {
-			if (this.options.rowMode === 'array') {
-				const queryResult = await this.client.query(
-					this.queryConfig,
-					params,
-				);
-				return queryResult.rows as T[];
-			} else {
-				const queryResult = await this.client.query(
-					this.rawQueryConfig,
-					params,
-				);
-				return queryResult.rows as T[];
-			}
+			const queryResult = await ((this.options.rowMode === 'array')
+				? this.client.query(this.queryConfig, params)
+				: await this.client.query(this.rawQueryConfig, params));
+			({ rows: finalRes, ...finalMetadata } = queryResult);
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+		return finalRes as T[];
 	}
 
 	async *stream() {

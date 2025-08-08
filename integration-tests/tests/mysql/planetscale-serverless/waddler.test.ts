@@ -46,15 +46,41 @@ test('logger test', async () => {
 	const loggerParams = [1];
 	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
 
+	// metadata example:
+	// {
+	// 	headers: [ ':vtg1 /* INT64 */' ],
+	// 	types: { ':vtg1 /* INT64 */': 'INT64' },
+	// 	fields: [
+	// 	  {
+	// 	    name: ':vtg1 /* INT64 */',
+	// 	    type: 'INT64',
+	// 	    charset: 63,
+	// 	    flags: 32768
+	// 	  }
+	// 	],
+	// 	rowsAffected: 0,
+	// 	insertId: '0',
+	// 	size: 1,
+	// 	statement: 'select 1;',
+	// 	time: 1.23636
+	// }
 	const logger = {
-		logQuery: (query: string, params: unknown[]) => {
+		logQuery: (query: string, params: unknown[], metadata: any) => {
 			expect(query).toEqual(loggerQuery);
 			expect(params).toStrictEqual(loggerParams);
+			expect(Object.keys(metadata)).toStrictEqual([
+				'headers',
+				'types',
+				'fields',
+				'rowsAffected',
+				'insertId',
+				'size',
+				'statement',
+				'time',
+			]);
 		},
 	};
-
 	let loggerSql: SQL;
-	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 	const connectionString = process.env['PLANETSCALE_CONNECTION_STRING'];
 	if (!connectionString) {
@@ -66,9 +92,10 @@ test('logger test', async () => {
 	loggerSql = waddler({ client, logger });
 	await loggerSql`select ${1};`;
 
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 	loggerSql = waddler({ client, logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler({ client, logger: false });
 	await loggerSql`select ${1};`;
@@ -79,10 +106,12 @@ test('logger test', async () => {
 
 	loggerSql = waddler(connectionString, { logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler(connectionString, { logger: false });
 	await loggerSql`select ${1};`;
+
+	consoleMock.mockRestore();
 });
 
 commonTests();

@@ -30,32 +30,41 @@ export class ExpoSqliteSQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		let finalRes, finalMetadata: any | undefined;
 
 		const stmt = this.client.prepareSync(query);
 		// wrapping expo-sqlite driver error in new js error to add stack trace to it
 		try {
-			if (this.returningData === false) {
-				return await stmt.executeAsync(params) as any;
-			}
-
 			if (this.returningData === true) {
 				if (this.options.rowMode === 'array') {
-					const rows = stmt.executeForRawResultSync(params as any[]).getAllSync();
-					return rows as T[];
+					const queryResult = stmt.executeForRawResultSync(params as any[]);
+
+					finalRes = queryResult.getAllSync();
+					finalMetadata = { changes: queryResult.changes, lastInsertRowId: queryResult.lastInsertRowId };
+				} else {
+					const queryResult = stmt.executeSync(params as any[]);
+
+					finalRes = queryResult.getAllSync();
+					finalMetadata = { changes: queryResult.changes, lastInsertRowId: queryResult.lastInsertRowId };
 				}
-				return stmt.executeSync(params as any[]).getAllSync() as T[];
+			} else {
+				const queryResult = await stmt.executeAsync(params);
+				finalMetadata = { changes: queryResult.changes, lastInsertRowId: queryResult.lastInsertRowId };
+				finalRes = queryResult;
 			}
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		} finally {
 			await stmt.finalizeAsync();
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+
+		return finalRes as T[];
 	}
 
 	async *stream() {
 		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
 
 		const stmt = this.client.prepareSync(query);
 

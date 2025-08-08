@@ -66,7 +66,6 @@ test('logger test', async () => {
 	};
 
 	let loggerSql: LibsqlSQL;
-	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 	// case 0
 	const client = createClient({
@@ -75,9 +74,10 @@ test('logger test', async () => {
 	loggerSql = waddler({ client, logger });
 	await loggerSql`select ${1};`;
 
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 	loggerSql = waddler({ client, logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler({ client, logger: false });
 	await loggerSql`select ${1};`;
@@ -88,10 +88,12 @@ test('logger test', async () => {
 
 	loggerSql = waddler(':memory:', { logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler(':memory:', { logger: false });
 	await loggerSql`select ${1};`;
+
+	consoleMock.mockRestore();
 });
 
 libsqlTests('wasm');

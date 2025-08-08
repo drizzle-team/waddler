@@ -21,19 +21,21 @@ export class PlanetscaleServerlessSQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		let finalRes;
+		let finalMetadata: any | undefined;
 
 		try {
-			if (this.options.rowMode === 'array') {
-				const { rows } = await this.client.execute(query, params, this.queryConfig);
-				return rows as T[];
-			}
+			const rawRes = await ((this.options.rowMode === 'array')
+				? this.client.execute(query, params, this.queryConfig)
+				: this.client.execute(query, params, this.rawQueryConfig));
 
-			const res = await this.client.execute(query, params, this.rawQueryConfig);
-			return res.rows as T[];
+			({ rows: finalRes, ...finalMetadata } = rawRes);
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+		return finalRes as T[];
 	}
 
 	/**

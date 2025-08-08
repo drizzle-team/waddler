@@ -48,7 +48,6 @@ test('logger test', async () => {
 	};
 
 	let loggerSql: D1SQL;
-	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 	// case 0
 	const sqliteDb = await createSQLiteDB(':memory:');
@@ -56,9 +55,10 @@ test('logger test', async () => {
 	loggerSql = waddler({ client, config: { logger } });
 	await loggerSql`select ${1};`;
 
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 	loggerSql = waddler({ client, config: { logger: true } });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler({ client, config: { logger: false } });
 	await loggerSql`select ${1};`;

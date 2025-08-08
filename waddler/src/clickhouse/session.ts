@@ -1,4 +1,4 @@
-import type { ClickHouseClient } from '@clickhouse/client/';
+import type { ClickHouseClient, CommandResult } from '@clickhouse/client/';
 import type { ClickHouseDialect } from '../clickhouse-core/dialect.ts';
 import { WaddlerQueryError } from '../errors/index.ts';
 import type { SQLTemplateConfigOptions } from '../sql-template.ts';
@@ -30,7 +30,8 @@ export class ClickHouseSQLTemplate<T> extends SQLTemplate<T, ClickHouseDialect> 
 
 	async execute() {
 		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		let finalRes: T[];
+		let finalMetadata: any | undefined;
 
 		try {
 			if (this.returningData) {
@@ -42,21 +43,30 @@ export class ClickHouseSQLTemplate<T> extends SQLTemplate<T, ClickHouseDialect> 
 				});
 
 				const jsonRes = await rawRes.json();
-				return jsonRes.data as T[];
+
+				const { data, ...metadata } = jsonRes;
+
+				finalRes = data as T[];
+				finalMetadata = metadata;
 			} else {
-				return await this.client.command({
+				const rawRes: CommandResult = await this.client.command({
 					query,
 					query_params: params,
-				}) as any;
+				});
+
+				finalRes = rawRes as any;
+				finalMetadata = rawRes;
 			}
 		} catch (error) {
 			throw new WaddlerQueryError(query, JSON.stringify(params), error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+		return finalRes;
 	}
 
 	async *stream() {
 		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
 
 		// wrapping clickhouse driver error in new js error to add stack trace to it
 		try {

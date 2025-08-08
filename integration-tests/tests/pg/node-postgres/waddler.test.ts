@@ -116,15 +116,15 @@ test('logger test', async () => {
 	};
 
 	let loggerSql: SQL;
-	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 	// case 0
 	loggerSql = waddler({ client: pgClient, logger });
 	await loggerSql`select ${1};`;
 
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 	loggerSql = waddler({ client: pgClient, logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler({ client: pgClient, logger: false });
 	await loggerSql`select ${1};`;
@@ -142,6 +142,8 @@ test('logger test', async () => {
 
 	// loggerSql = waddler(connectionString, { logger: false });
 	// await loggerSql`select ${1};`;
+
+	consoleMock.mockRestore();
 });
 
 nodePgTests();

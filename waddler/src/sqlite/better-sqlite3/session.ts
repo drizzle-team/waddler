@@ -30,28 +30,28 @@ export class BetterSqlite3SQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		let finalRes, finalMetadata: any | undefined;
 
 		// wrapping better-sqlite3 driver error in new js error to add stack trace to it
 		try {
 			const stmt = this.client.prepare(query);
 			if (this.returningData) {
-				if (this.options.rowMode === 'array') {
-					return stmt.raw().all(...params) as T[];
-				}
-
-				return stmt.all(...params) as T[];
+				finalRes = this.options.rowMode === 'array' ? stmt.raw().all(...params) as T[] : stmt.all(...params) as T[];
 			} else {
-				return stmt.run(...params) as any;
+				finalRes = stmt.run(...params);
+				finalMetadata = finalRes;
 			}
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+
+		return finalRes as T[];
 	}
 
 	async *stream() {
 		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
 
 		// wrapping better-sqlite3 driver error in new js error to add stack trace to it
 		try {

@@ -1,5 +1,5 @@
 export interface Logger {
-	logQuery(query: string, params: unknown[] | Record<string, unknown>): void;
+	logQuery(query: string, params: unknown[] | Record<string, unknown>, metadata?: any): void;
 }
 
 export interface LogWriter {
@@ -19,7 +19,7 @@ export class DefaultLogger implements Logger {
 		this.writer = config?.writer ?? new ConsoleLogWriter();
 	}
 
-	logQuery(query: string, params: unknown[] | Record<string, unknown>): void {
+	logQuery(query: string, params: unknown[] | Record<string, unknown>, metadata?: any): void {
 		let paramsStr: string = '';
 		if (Array.isArray(params)) {
 			const stringifiedParams = params.map((p) => {
@@ -46,7 +46,9 @@ export class DefaultLogger implements Logger {
 			paramsStr = paramsCount ? ` -- params: ${JSON.stringify(stringifiedParams)}` : '';
 		}
 
-		this.writer.write(`Query: ${query}${paramsStr}`);
+		const metadataStr = metadata === undefined ? '' : ` --metadata: ${JSON.stringify(metadata)}`;
+
+		this.writer.write(`Query: ${query}${paramsStr}${metadataStr}`);
 	}
 }
 

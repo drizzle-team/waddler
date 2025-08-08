@@ -1303,10 +1303,19 @@ test('logger test', async () => {
 	const loggerParams = { param1: 1 };
 	const loggerText = `Query: ${loggerQuery} -- params: {"param1":"1"}`;
 
+	// metadata example:
+	// {
+	// 	meta: [ { name: "_CAST(1, 'Int32')", type: 'Int32' } ],
+	// 	rows: 1,
+	// 	statistics: { elapsed: 0.013193458, rows_read: 1, bytes_read: 1 }
+	// }
 	const logger = {
-		logQuery: (query: string, params: Record<string, unknown>) => {
+		logQuery: (query: string, params: Record<string, unknown>, metadata: any) => {
 			expect(query).toEqual(loggerQuery);
 			expect(params).toStrictEqual(loggerParams);
+
+			expect(Object.keys(metadata)).toStrictEqual(['meta', 'rows', 'statistics']);
+			expect(Object.keys(metadata.statistics)).toStrictEqual(['elapsed', 'rows_read', 'bytes_read']);
 		},
 	};
 
@@ -1320,7 +1329,7 @@ test('logger test', async () => {
 
 	loggerSql = waddler({ client, logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler({ client, logger: false });
 	await loggerSql`select ${1};`;
@@ -1333,7 +1342,7 @@ test('logger test', async () => {
 
 	loggerSql = waddler({ connection: filteredParams, logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler({ connection: filteredParams, logger: false });
 	await loggerSql`select ${1};`;
@@ -1347,10 +1356,12 @@ test('logger test', async () => {
 
 	loggerSql = waddler(url, { logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler(url, { logger: false });
 	await loggerSql`select ${1};`;
+
+	consoleMock.mockRestore();
 });
 
 test('standalone sql test', async () => {

@@ -45,23 +45,26 @@ export class NodePgSQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(this.queryConfig.text, params);
+		let finalRes, finalMetadata: any | undefined;
 		try {
 			const queryResult = this.options.rowMode === 'array'
 				? await (this.client.query(this.rawQueryConfig, params))
 				: await (this.client.query(this.queryConfig, params));
 
-			return queryResult.rows;
+			({ rows: finalRes, ...finalMetadata } = queryResult);
 		} catch (error) {
 			throw new WaddlerQueryError(this.queryConfig.text, params, error as Error);
 		}
+
+		this.logger.logQuery(this.queryConfig.text, params, finalMetadata);
+
+		return finalRes as T[];
 	}
 
 	// TODO: revise: maybe I should override chunked method because we can use QueryStream with option 'batchSize' in QueryStreamConfig
 	async *stream() {
 		let conn: ClientT | PoolT | PoolClient | undefined;
 		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(this.queryConfig.text, params);
 
 		// wrapping node-postgres driver error in new js error to add stack trace to it
 		try {

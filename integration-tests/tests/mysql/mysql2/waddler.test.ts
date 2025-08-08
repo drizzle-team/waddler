@@ -117,24 +117,43 @@ test('logger test', async () => {
 	const loggerParams = [1];
 	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
 
+	// metadata example:
+	// [
+	// 	{
+	// 		catalog: 'def',
+	// 		schema: '',
+	// 		name: '1',
+	// 		orgName: '',
+	// 		table: '',
+	// 		orgTable: '',
+	// 		characterSet: 63,
+	// 		encoding: 'binary',
+	// 		columnLength: 2,
+	// 		type: 8,
+	// 		flags: [ 'NOT NULL' ],
+	// 		decimals: 0,
+	// 		typeName: 'LONGLONG'
+	// 	}
+	// ]
 	const logger = {
-		logQuery: (query: string, params: unknown[]) => {
+		logQuery: (query: string, params: unknown[], metadata: any) => {
 			expect(query).toEqual(loggerQuery);
 			expect(params).toStrictEqual(loggerParams);
+			expect(Array.isArray(metadata)).toBe(true);
 		},
 	};
 
 	let loggerSql: SQL;
-	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 	// case 0
 	const pool = mysql.createPool({ ...mysqlConnectionParams });
 	loggerSql = waddler({ client: pool, logger });
 	await loggerSql`select ${1};`;
 
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 	loggerSql = waddler({ client: pool, logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler({ client: pool, logger: false });
 	await loggerSql`select ${1};`;
@@ -150,10 +169,12 @@ test('logger test', async () => {
 
 	loggerSql = waddler(url, { logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler(url, { logger: false });
 	await loggerSql`select ${1};`;
+
+	consoleMock.mockRestore();
 });
 
 commonTests();

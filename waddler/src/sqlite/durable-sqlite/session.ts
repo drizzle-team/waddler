@@ -31,7 +31,7 @@ export class DurableSqliteSQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		let finalRes, finalMetadata: any | undefined;
 
 		// wrapping durable-sqlite driver error in new js error to add stack trace to it
 		try {
@@ -41,24 +41,33 @@ export class DurableSqliteSQLTemplate<T> extends SQLTemplate<T> {
 						? this.client.sql.exec(query, ...params)
 						: this.client.sql.exec(query);
 
+					finalMetadata = { columnNames: res.columnNames, rowsRead: res.rowsRead, rowsWritten: res.rowsWritten };
 					// @ts-ignore .raw().toArray() exists
-					return res.raw().toArray();
-				}
+					finalRes = res.raw().toArray();
+				} else {
+					const res = params.length > 0
+						? this.client.sql.exec(query, ...params)
+						: this.client.sql.exec(query);
 
-				return params.length > 0
-					? this.client.sql.exec(query, ...params).toArray() as T[]
-					: this.client.sql.exec(query).toArray() as T[];
+					finalMetadata = { columnNames: res.columnNames, rowsRead: res.rowsRead, rowsWritten: res.rowsWritten };
+					finalRes = res.toArray();
+				}
 			} else {
-				return params.length > 0 ? this.client.sql.exec(query, ...params) : this.client.sql.exec(query);
+				const res = params.length > 0 ? this.client.sql.exec(query, ...params) : this.client.sql.exec(query);
+				finalMetadata = { columnNames: res.columnNames, rowsRead: res.rowsRead, rowsWritten: res.rowsWritten };
+				finalRes = res;
 			}
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+
+		return finalRes as T[];
 	}
 
 	async *stream() {
 		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
 
 		// wrapping durable-sqlite driver error in new js error to add stack trace to it
 		try {

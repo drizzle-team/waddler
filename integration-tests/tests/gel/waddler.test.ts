@@ -447,6 +447,7 @@ test('logger test', async () => {
 	const loggerParams = ['1'];
 	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
 
+	// driver does not return metadata
 	const logger = {
 		logQuery: (query: string, params: unknown[]) => {
 			expect(query).toEqual(loggerQuery);
@@ -482,6 +483,8 @@ test('logger test', async () => {
 
 	loggerSql = waddler({ connection: { ...gelConnectionParams, tlsSecurity: 'insecure' }, logger: false });
 	await loggerSql`select ${'1'};`;
+
+	consoleMock.mockRestore();
 });
 
 test('standalone sql test', async () => {

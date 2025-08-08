@@ -42,16 +42,16 @@ test('logger test', async () => {
 	};
 
 	let loggerSql: BunSqliteSQL;
-	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 	// case 0
 	const client = new Database();
 	loggerSql = waddler({ client, logger });
 	await loggerSql`select ${1};`;
 
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 	loggerSql = waddler({ client, logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler({ client, logger: false });
 	await loggerSql`select ${1};`;
@@ -62,7 +62,7 @@ test('logger test', async () => {
 
 	loggerSql = waddler('', { logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler('', { logger: false });
 	await loggerSql`select ${1};`;

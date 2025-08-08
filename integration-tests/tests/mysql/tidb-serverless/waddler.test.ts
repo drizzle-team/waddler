@@ -46,15 +46,23 @@ test('logger test', async () => {
 	const loggerParams = [1];
 	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
 
+	// metadata example:
+	// {
+	// 	statement: 'select 1;',
+	// 	types: { '1': 'BIGINT' },
+	// 	rowsAffected: null,
+	// 	lastInsertId: null,
+	// 	rowCount: 1
+	// }
 	const logger = {
-		logQuery: (query: string, params: unknown[]) => {
+		logQuery: (query: string, params: unknown[], metadata: any) => {
 			expect(query).toEqual(loggerQuery);
 			expect(params).toStrictEqual(loggerParams);
+			expect(Object.keys(metadata)).toStrictEqual(['statement', 'types', 'rowsAffected', 'lastInsertId', 'rowCount']);
 		},
 	};
 
 	let loggerSql: SQL;
-	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 	const connectionString = process.env['TIDB_CONNECTION_STRING'];
 	if (!connectionString) {
@@ -66,9 +74,10 @@ test('logger test', async () => {
 	loggerSql = waddler({ client, logger });
 	await loggerSql`select ${1};`;
 
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 	loggerSql = waddler({ client, logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler({ client, logger: false });
 	await loggerSql`select ${1};`;
@@ -79,10 +88,12 @@ test('logger test', async () => {
 
 	loggerSql = waddler(connectionString, { logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler(connectionString, { logger: false });
 	await loggerSql`select ${1};`;
+
+	consoleMock.mockRestore();
 });
 
 commonTests();

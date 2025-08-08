@@ -29,23 +29,28 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(this.queryConfig.sql, params);
+		let finalResult;
+		let finalMetadata: any | undefined;
 
 		try {
 			const queryResult = await (this.options.rowMode === 'array'
 				? (this.client as Pool | Connection).query(this.rawQueryConfig, params)
 				: (this.client as Pool | Connection).query(this.queryConfig, params));
 
-			return queryResult[0] as T[];
+			finalResult = queryResult[0];
+			// TODO: is this really metadata?
+			finalMetadata = queryResult[1];
 		} catch (error) {
 			throw new WaddlerQueryError(this.queryConfig.sql, params, error as Error);
 		}
+
+		this.logger.logQuery(this.queryConfig.sql, params, finalMetadata);
+		return finalResult as T[];
 	}
 
 	async *stream() {
 		let conn: CallbackConnection | undefined;
 		const { params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(this.queryConfig.sql, params);
 
 		// wrapping mysql2 driver error in new js error to add stack trace to it
 		try {

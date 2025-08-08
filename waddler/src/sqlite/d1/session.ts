@@ -31,23 +31,29 @@ export class D1SQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		let finalRes, finalMetadata: any | undefined;
 
 		// wrapping d1 driver error in new js error to add stack trace to it
 		try {
 			const stmt = this.client.prepare(query);
 			if (this.returningData) {
 				if (this.options.rowMode === 'array') {
-					return (await stmt.bind(...params).raw()) as T[];
+					finalRes = await stmt.bind(...params).raw();
+				} else {
+					const queryResult = await stmt.bind(...params).all();
+					({ results: finalRes, ...finalMetadata } = queryResult);
 				}
-
-				return await stmt.bind(...params).all().then(({ results }) => results as T[]);
 			} else {
-				return (await stmt.bind(...params).run()) as any;
+				const queryResult = await stmt.bind(...params).run();
+				({ results: finalRes, ...finalMetadata } = queryResult);
 			}
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+
+		return finalRes as T[];
 	}
 
 	/**

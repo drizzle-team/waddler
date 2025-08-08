@@ -840,10 +840,13 @@ test('logger test', async () => {
 	const loggerParams = [1];
 	const loggerText = `Query: select $1; -- params: [1]`;
 
+	// metadata example:
+	// { columnCount: 1, returnType: 3, rowsChanged: 0, statementType: 1 }
 	const logger = {
-		logQuery: (query: string, params: unknown[]) => {
+		logQuery: (query: string, params: unknown[], metadata: any) => {
 			expect(query).toEqual(loggerQuery);
 			expect(params).toStrictEqual(loggerParams);
+			expect(Object.keys(metadata)).toStrictEqual(['columnCount', 'returnType', 'rowsChanged', 'statementType']);
 		},
 	};
 
@@ -860,6 +863,8 @@ test('logger test', async () => {
 
 	loggerSql = waddler({ url: ':memory:', max: 10, accessMode: 'read_write', logger: false });
 	await loggerSql`select ${1};`;
+
+	consoleMock.mockRestore();
 });
 
 test('standalone sql test', async () => {

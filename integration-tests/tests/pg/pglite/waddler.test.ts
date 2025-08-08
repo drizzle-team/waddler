@@ -18,7 +18,7 @@ import { filter1 } from './test-filters1.ts';
 import { filter2 } from './test-filters2.ts';
 
 let pgClient: PGlite;
-
+const dataDir = './tests/pg/pglite/waddler-pglite-test.db';
 let sql: SQL;
 beforeAll(async () => {
 	pgClient = new PGlite();
@@ -27,10 +27,12 @@ beforeAll(async () => {
 
 afterAll(async () => {
 	await pgClient?.close().catch(console.error);
+	if (fs.existsSync(dataDir)) fs.rmSync(dataDir, { recursive: true });
 });
 
 beforeEach<{ sql: SQL }>((ctx) => {
 	ctx.sql = sql;
+	if (fs.existsSync(dataDir)) fs.rmSync(dataDir, { recursive: true });
 });
 
 commonTests();
@@ -40,7 +42,6 @@ test('connection test', async () => {
 	const sql1 = waddler();
 	await sql1`select 1;`;
 
-	const dataDir = './tests/pg/pglite/waddler-pglite-test.db';
 	const sql2 = waddler(dataDir);
 	await sql2`select 2;`;
 	if (fs.existsSync(dataDir)) fs.rmSync(dataDir, { recursive: true });
@@ -70,16 +71,16 @@ test('logger test', async () => {
 	};
 
 	let loggerSql: SQL;
-	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 	// case 0
 	const client = new PGlite();
 	loggerSql = waddler({ client, logger });
 	await loggerSql`select ${1};`;
 
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 	loggerSql = waddler({ client, logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler({ client, logger: false });
 	await loggerSql`select ${1};`;
@@ -91,11 +92,13 @@ test('logger test', async () => {
 
 	loggerSql = waddler(dataDir, { logger: true });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler(dataDir, { logger: false });
 	await loggerSql`select ${1};`;
 	if (fs.existsSync(dataDir)) fs.rmSync(dataDir, { recursive: true });
+
+	consoleMock.mockRestore();
 });
 
 // UNSAFE-------------------------------------------------------------------
