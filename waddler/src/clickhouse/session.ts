@@ -5,7 +5,7 @@ import type { SQLTemplateConfigOptions } from '../sql-template.ts';
 import { SQLTemplate } from '../sql-template.ts';
 import type { SQLWrapper } from '../sql.ts';
 
-export class ClickHouseSQLTemplate<T> extends SQLTemplate<T> {
+export class ClickHouseSQLTemplate<T> extends SQLTemplate<T, ClickHouseDialect> {
 	public returningData: boolean = true;
 
 	constructor(

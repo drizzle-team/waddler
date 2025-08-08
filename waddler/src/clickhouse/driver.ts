@@ -72,7 +72,7 @@ export interface ClickHouseSQL extends Omit<SQL, 'unsafe' | 'values'> {
 export interface ClickHouseSQLQuery
 	extends Pick<ClickHouseSQL, 'values' | 'param'>, Pick<SQL, 'identifier' | 'raw' | 'default'>
 {
-	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery<ClickHouseDialect>;
 }
 
 const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {

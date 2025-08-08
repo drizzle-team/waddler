@@ -81,7 +81,7 @@ export const commonSqliteTests = () => {
 		});
 
 		// sql.append
-		test('sql.append test.', (ctx) => {
+		test<{ sql: LibsqlSQL }>('sql.append test.', (ctx) => {
 			const query = ctx.sql<undefined>`select * from users where id = ${1}`;
 
 			query.append(ctx.sql` or id = ${3}`);

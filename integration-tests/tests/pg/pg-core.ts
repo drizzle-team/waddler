@@ -172,7 +172,7 @@ export const commonPgTests = () => {
 		});
 
 		// sql.append
-		test('sql.append test.', (ctx) => {
+		test<{ sql: SQL }>('sql.append test.', (ctx) => {
 			const query = ctx.sql<undefined>`select * from users where id = ${1}`;
 
 			query.append(ctx.sql` or id = ${3}`);
