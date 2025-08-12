@@ -108,10 +108,37 @@ test('logger test', async () => {
 	const loggerParams = [1];
 	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
 
+	// metadata example:
+	// 	{
+	//   command: 'SELECT',
+	//   rowCount: 1,
+	//   oid: null,
+	//   fields: [
+	//     Field {
+	//       name: '?column?',
+	//       tableID: 0,
+	//       columnID: 0,
+	//       dataTypeID: 25,
+	//       dataTypeSize: -1,
+	//       dataTypeModifier: -1,
+	//       format: 'text'
+	//     }
+	//   ],
+	//   _parsers: [ [Function: noParse] ],
+	//   _types: { getTypeParser: [Function: getTypeParser] },
+	//   RowCtor: null,
+	//   rowAsArray: false,
+	//   _prebuiltEmptyResultObject: { '?column?': null }
+	// }
 	const logger = {
-		logQuery: (query: string, params: unknown[]) => {
+		logQuery: (query: string, params: unknown[], metadata: any) => {
 			expect(query).toEqual(loggerQuery);
 			expect(params).toStrictEqual(loggerParams);
+			const metadataKeys = Object.keys(metadata);
+			const predicate = ['command', 'rowCount', 'oid', 'fields'].map((key) => metadataKeys.includes(key)).every(
+				(value) => value === true,
+			);
+			expect(predicate).toBe(true);
 		},
 	};
 

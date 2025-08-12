@@ -1361,6 +1361,62 @@ test('logger test', async () => {
 	loggerSql = waddler(url, { logger: false });
 	await loggerSql`select ${1};`;
 
+	// case 3
+	const loggerQueryCommand = 'create table logger_command_test(id Int32) engine = MergeTree order by id;';
+	const loggerParamsCommand = {};
+	const loggerTextCommand = `Query: ${loggerQueryCommand}`;
+
+	// metadata example:
+	// 	{
+	//   query_id: '4e8e2236-149f-4a33-a475-ecfe988374ed',
+	//   summary: {
+	//     read_rows: '0',
+	//     read_bytes: '0',
+	//     written_rows: '0',
+	//     written_bytes: '0',
+	//     total_rows_to_read: '0',
+	//     result_rows: '0',
+	//     result_bytes: '0',
+	//     elapsed_ns: '11163000'
+	//   },
+	//   response_headers: {
+	//     'x-clickhouse-summary': '{"read_rows":"0","read_bytes":"0","written_rows":"0","written_bytes":"0","total_rows_to_read":"0","result_rows":"0","result_bytes":"0","elapsed_ns":"11163000"}',
+	//     date: 'Tue, 12 Aug 2025 01:57:59 GMT',
+	//     connection: 'Keep-Alive',
+	//     'content-type': 'text/plain; charset=UTF-8',
+	//     'access-control-expose-headers': 'X-ClickHouse-Query-Id,X-ClickHouse-Summary,X-ClickHouse-Server-Display-Name,X-ClickHouse-Format,X-ClickHouse-Timezone,X-ClickHouse-Exception-Code',
+	//     'x-clickhouse-server-display-name': 'b1fb20216212',
+	//     'transfer-encoding': 'chunked',
+	//     'x-clickhouse-query-id': '4e8e2236-149f-4a33-a475-ecfe988374ed',
+	//     'x-clickhouse-timezone': 'UTC',
+	//     'keep-alive': 'timeout=10, max=9999'
+	//   }
+	// }
+	const loggerCommand = {
+		logQuery: (query: string, params: Record<string, unknown>, metadata: any) => {
+			expect(query).toEqual(loggerQueryCommand);
+			expect(params).toStrictEqual(loggerParamsCommand);
+
+			console.log(metadata);
+		},
+	};
+
+	const client1 = createClient(filteredParams);
+	loggerSql = waddler({ client: client1, logger: loggerCommand });
+	await loggerSql`create table logger_command_test(id Int32) engine = MergeTree order by id;`.command();
+	await sql`drop table logger_command_test;`.command();
+
+	loggerSql = waddler({ client: client1, logger: true });
+	await loggerSql`create table logger_command_test(id Int32) engine = MergeTree order by id;`.command();
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerTextCommand));
+	await sql`drop table logger_command_test;`.command();
+
+	loggerSql = waddler({ client: client1, logger: false });
+	await loggerSql`create table logger_command_test(id Int32) engine = MergeTree order by id;`.command();
+	await sql`drop table logger_command_test;`.command();
+
+	await client1.close();
+
 	consoleMock.mockRestore();
 });
 

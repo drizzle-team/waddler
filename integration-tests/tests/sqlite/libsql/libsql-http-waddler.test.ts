@@ -82,9 +82,17 @@ test('logger test', async () => {
 	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
 
 	const logger = {
-		logQuery: (query: string, params: unknown[]) => {
+		logQuery: (query: string, params: unknown[], metadata: any) => {
 			expect(query).toEqual(loggerQuery);
 			expect(params).toStrictEqual(loggerParams);
+
+			const metadataKeys = Object.keys(metadata);
+			const predicate = ['columnTypes', 'columns', 'lastInsertRowid', 'rowsAffected'].map((key) =>
+				metadataKeys.includes(key)
+			).every(
+				(value) => value === true,
+			);
+			expect(predicate).toBe(true);
 		},
 	};
 

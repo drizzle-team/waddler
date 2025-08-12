@@ -27,7 +27,7 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
-		let result;
+		let finalRes;
 		let finalMetadata: any | undefined;
 
 		const connObj = await this.pool.acquire();
@@ -46,7 +46,7 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 				statementType: duckDbResult.statementType,
 			};
 
-			result = this.options.rowMode === 'default'
+			finalRes = this.options.rowMode === 'default'
 				? (await transformResultToObjects(duckDbResult))
 				: (await transformResultToArrays(duckDbResult));
 		} catch (error) {
@@ -59,7 +59,7 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 
 		this.logger.logQuery(query, params, finalMetadata);
 
-		return result as T[];
+		return finalRes as T[];
 	}
 
 	async *stream() {

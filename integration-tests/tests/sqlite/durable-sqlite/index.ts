@@ -26,10 +26,17 @@ export class MyDurableObject extends DurableObject {
 		const loggerParams = [1];
 		this.loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
 
+		// metadata example
+		// { columnNames: [ '?' ], rowsRead: 0, rowsWritten: 0 }
 		const logger = {
-			logQuery: (query: string, params: unknown[]) => {
+			logQuery: (query: string, params: unknown[], metadata: any) => {
 				expect(query).equal(loggerQuery);
 				expect(params).deep.equal(loggerParams);
+				const metadataKeys = Object.keys(metadata);
+				const predicate = ['columnNames', 'rowsRead', 'rowsWritten'].map((key) => metadataKeys.includes(key)).every(
+					(value) => value === true,
+				);
+				expect(predicate).equal(true);
 			},
 		};
 

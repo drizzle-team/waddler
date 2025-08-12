@@ -45,11 +45,21 @@ test('logger test', async () => {
 	const loggerQuery = 'select ?;';
 	const loggerParams = [1];
 	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+	const loggerQueryRun = 'create table test(id integer default 1);';
+	const loggerParamsRun: any[] = [];
 
+	// metadata example
+	// { changes: 0, lastInsertRowid: 0 }
 	const logger = {
-		logQuery: (query: string, params: unknown[]) => {
-			expect(query).toEqual(loggerQuery);
-			expect(params).toStrictEqual(loggerParams);
+		logQuery: (query: string, params: unknown[], metadata: any) => {
+			expect(query).toEqual(loggerQueryRun);
+			expect(params).toStrictEqual(loggerParamsRun);
+
+			const metadataKeys = Object.keys(metadata);
+			const predicate = ['changes', 'lastInsertRowid'].map((key) => metadataKeys.includes(key)).every(
+				(value) => value === true,
+			);
+			expect(predicate).toBe(true);
 		},
 	};
 
@@ -58,7 +68,7 @@ test('logger test', async () => {
 	// case 0
 	const client = new Database();
 	loggerSql = waddler({ client, logger });
-	await loggerSql`select ${1};`;
+	await loggerSql`create table test(id integer default ${loggerSql.raw(1)});`.run();
 
 	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 	loggerSql = waddler({ client, logger: true });
@@ -70,7 +80,7 @@ test('logger test', async () => {
 
 	// case 1
 	loggerSql = waddler('', { logger });
-	await loggerSql`select ${1};`;
+	await loggerSql`create table test(id integer default ${loggerSql.raw(1)});`.run();
 
 	loggerSql = waddler('', { logger: true });
 	await loggerSql`select ${1};`;

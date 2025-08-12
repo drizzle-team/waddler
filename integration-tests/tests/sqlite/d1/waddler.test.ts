@@ -40,10 +40,27 @@ test('logger test', async () => {
 	const loggerParams = [1];
 	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
 
+	// metadata example
+	// {
+	//   success: true,
+	//   meta: {
+	//     duration: 0.0382080000000542,
+	//     last_row_id: 0,
+	//     changes: 0,
+	//     served_by: 'miniflare.db',
+	//     internal_stats: null
+	//   }
+	// }
 	const logger = {
-		logQuery: (query: string, params: unknown[]) => {
+		logQuery: (query: string, params: unknown[], metadata: any) => {
 			expect(query).toEqual(loggerQuery);
 			expect(params).toStrictEqual(loggerParams);
+
+			const metadataKeys = Object.keys(metadata);
+			const predicate = ['success', 'meta'].map((key) => metadataKeys.includes(key)).every(
+				(value) => value === true,
+			);
+			expect(predicate).toBe(true);
 		},
 	};
 
@@ -62,6 +79,8 @@ test('logger test', async () => {
 
 	loggerSql = waddler({ client, config: { logger: false } });
 	await loggerSql`select ${1};`;
+
+	consoleMock.mockRestore();
 });
 
 // UNSAFE-------------------------------------------------------------------
