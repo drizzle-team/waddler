@@ -5,6 +5,7 @@ on: workflow_dispatch
 jobs:
   test:
     runs-on: ubuntu-22.04
+    services:
       singlestore:
         image: ghcr.io/singlestore-labs/singlestoredb-dev:latest
         env:
