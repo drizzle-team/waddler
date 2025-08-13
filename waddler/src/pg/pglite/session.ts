@@ -1,0 +1,71 @@
+import type { PGlite, QueryOptions } from '@electric-sql/pglite';
+import type { Dialect } from '../../sql-template-params.ts';
+import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
+import { SQLTemplate } from '../../sql-template.ts';
+import type { SQLWrapper } from '../../sql.ts';
+
+import { types } from '@electric-sql/pglite';
+import { WaddlerQueryError } from '../../errors/index.ts';
+
+export class PGliteSQLTemplate<T> extends SQLTemplate<T> {
+	private rawQueryConfig: QueryOptions;
+	private queryConfig: QueryOptions;
+
+	constructor(
+		override sqlWrapper: SQLWrapper,
+		protected readonly client: PGlite,
+		dialect: Dialect,
+		configOptions: SQLTemplateConfigOptions,
+		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
+	) {
+		super(sqlWrapper, dialect, configOptions);
+
+		this.rawQueryConfig = {
+			rowMode: 'object',
+			parsers: {
+				// [types.TIMESTAMP]: (value) => value,
+				// [types.TIMESTAMPTZ]: (value) => value,
+				[types.INTERVAL]: (value) => value,
+				// [types.DATE]: (value) => value,
+			},
+		};
+		this.queryConfig = {
+			rowMode: 'array',
+			parsers: {
+				// [types.TIMESTAMP]: (value) => value,
+				// [types.TIMESTAMPTZ]: (value) => value,
+				[types.INTERVAL]: (value) => value,
+				// [types.DATE]: (value) => value,
+			},
+		};
+	}
+
+	async execute() {
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
+		let finalRes, finalMetadata: any | undefined;
+
+		try {
+			const queryResult = await (this.options.rowMode === 'array'
+				? this.client.query(query, params, this.queryConfig)
+				: this.client.query(query, params, this.rawQueryConfig));
+
+			({ rows: finalRes, ...finalMetadata } = queryResult);
+		} catch (error) {
+			throw new WaddlerQueryError(query, params, error as Error);
+		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+
+		return finalRes as T[];
+	}
+
+	/**
+	 * For now, throws the Error.
+	 * Current implementation (a placeholder) will be replaced once PGlite acquires streaming support or when a suitable third-party solution is found.
+	 */
+	// eslint-disable-next-line require-yield
+	async *stream() {
+		// TODO not implemented yet
+		throw new Error('stream is not implemented for pglite yet.');
+	}
+}

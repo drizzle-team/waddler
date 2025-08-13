@@ -36,13 +36,10 @@
 		"checkJs": true,
 		"noEmit": true,
 		"allowImportingTsExtensions": true,
-		"outDir": "dist",
-		"baseUrl": ".",
-		"declaration": true,
-		"paths": {
-			"~/*": ["src/*"]
-		}
+		"declaration": true
 	},
-	"exclude": ["dist", "db", "src/test.ts", "src/db-test.ts"],
-	"include": ["src", "*.ts", "scripts/build.ts", "tests"]
+	"exclude": ["node_modules"],
+	"include": [
+		"./**/*.ts"
+	]
 }

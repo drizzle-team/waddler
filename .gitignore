@@ -1,9 +1,10 @@
 node_modules
 .env
 db
-src/test.ts
-src/db-test.ts
+dev
 dist
+dist-dts
+dist.new
 package.tgz
 .DS_Store
 seedFromParquet.ts
@@ -11,3 +12,4 @@ storage
 nodejs_connection_pool_*
 Limitations.md
 waddlerChangelog.md
+.wrangler
