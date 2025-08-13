@@ -73,12 +73,20 @@ export interface SQL {
 	default: SQLDefault;
 }
 
+export type OverridesType = { SQLCommonParam?: typeof SQLCommonParam };
+
 export class SQLWrapper {
+	public overrides: OverridesType = {};
+
 	constructor(
 		public queryChunks: SQLChunk[] = [],
 		public sql?: string,
 		public params?: UnsafeParamType[] | Record<string, UnsafeParamType>,
 	) {}
+
+	setOverrides(overrides: OverridesType) {
+		Object.assign(this.overrides, overrides);
+	}
 
 	with({ templateParams, rawParams }: {
 		templateParams?: { strings?: TemplateStringsArray; params: SQLParamType[] };
@@ -98,7 +106,10 @@ export class SQLWrapper {
 				} else if (param instanceof SQLChunk) this.queryChunks.push(param, new SQLString(strings[paramIndex + 1]!));
 				else {
 					paramsCheck(param);
-					this.queryChunks.push(new SQLCommonParam(param), new SQLString(strings[paramIndex + 1]!));
+					this.queryChunks.push(
+						new (this.overrides.SQLCommonParam ?? SQLCommonParam)(param),
+						new SQLString(strings[paramIndex + 1]!),
+					);
 				}
 			}
 		} else if (rawParams) {
