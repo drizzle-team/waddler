@@ -77,7 +77,7 @@ export class DuckdbDialect extends Dialect {
 		}
 
 		if (typeof value === 'string') {
-			return `'${value}'`;
+			return `'${value.replaceAll("'", "''")}'`;
 		}
 
 		if (Array.isArray(value)) {
@@ -85,10 +85,12 @@ export class DuckdbDialect extends Dialect {
 		}
 
 		if (typeof value === 'object') {
+			return `'${JSON.stringify(value)}'`;
+			// TODO: revise
 			// object case
-			throw new Error(
-				"value can't be object. you can't specify [ [ {...}, ...], ...] as parameter for sql.values.",
-			);
+			// throw new Error(
+			// 	"value can't be object. you can't specify [ [ {...}, ...], ...] as parameter for sql.values.",
+			// );
 		}
 
 		if (value === undefined) {

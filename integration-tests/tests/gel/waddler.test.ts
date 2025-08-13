@@ -190,7 +190,7 @@ test('all types in sql.values, sql.raw in select test', async () => {
 	await createAllDataTypesTable(gelConnectionString, tlsSecurity);
 
 	const allDataTypesValues = [
-		'qwerty',
+		"qwe'rty",
 		true,
 		32767,
 		2147483647,
@@ -220,7 +220,7 @@ test('all types in sql.values, sql.raw in select test', async () => {
 	];
 
 	const expectedRes = [
-		'qwerty',
+		"qwe'rty",
 		true,
 		32767,
 		2147483647,

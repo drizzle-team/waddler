@@ -45,7 +45,7 @@ test('all types test', async () => {
 			10,
 			BigInt('9007199254740992') + BigInt(1),
 			20.4,
-			'qwerty',
+			"qwe'rty",
 			true,
 			date,
 			date,
@@ -66,7 +66,7 @@ test('all types test', async () => {
 		integer_: 10,
 		bigint_: BigInt('9007199254740993'),
 		double_: 20.4,
-		varchar_: 'qwerty',
+		varchar_: "qwe'rty",
 		boolean_: true,
 		time_: '14:25:29.425',
 		date_: dateWithoutTime,
@@ -125,6 +125,73 @@ test('all types test', async () => {
 	expect(res[0]).toStrictEqual({ map_: expectedMap });
 
 	// TODO: add tests for select when the columns are of type: map, struct, union, ...
+});
+
+test('sql.values test', async () => {
+	await sql.unsafe(`create table all_data_types (
+    smallint_ smallint,
+    integer_ integer,
+	bigint_ bigint,
+    double_ double,
+    varchar_ varchar,
+	boolean_ boolean,
+	time_ time,
+	date_ date,
+	timestamp_ timestamp,
+	json_ json,
+    arrayInt integer[3],
+    listInt integer[]
+    );`);
+
+	const date = new Date('2024-10-31T14:25:29.425Z');
+	const valuesToInsert = [
+		1,
+		10,
+		BigInt('9007199254740992') + BigInt(1),
+		20.4,
+		"qwe'rty",
+		true,
+		date,
+		date,
+		date,
+		{ name: 'alex', age: 26, bookIds: [1, 2, 3], vacationRate: 2.5, aliases: ['sasha', 'sanya'], isMarried: true },
+		[1, 2, 3],
+		[1, 2, 3, 4, 5],
+	];
+	await sql`insert into all_data_types values ${sql.values([valuesToInsert])};`;
+
+	let res = await sql.unsafe(`select * from all_data_types;`);
+
+	const dateWithoutTime = new Date(date);
+	dateWithoutTime.setUTCHours(0, 0, 0, 0);
+	const expectedRes = {
+		smallint_: 1,
+		integer_: 10,
+		bigint_: BigInt('9007199254740993'),
+		double_: 20.4,
+		varchar_: "qwe'rty",
+		boolean_: true,
+		time_: '14:25:29.425',
+		date_: dateWithoutTime,
+		timestamp_: date,
+		json_: {
+			name: 'alex',
+			age: 26,
+			bookIds: [1, 2, 3],
+			vacationRate: 2.5,
+			aliases: ['sasha', 'sanya'],
+			isMarried: true,
+		},
+		arrayInt: [1, 2, 3],
+		listInt: [1, 2, 3, 4, 5],
+	};
+	expect(res[0]).toStrictEqual(expectedRes);
+
+	// same as select query as above but with rowMode: "array"
+	res = await sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'array' });
+	expect(res[0]).toStrictEqual(Object.values(expectedRes));
+
+	await sql.unsafe('drop table if exists all_data_types;');
 });
 
 test('array type test', async () => {

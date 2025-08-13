@@ -317,8 +317,8 @@ test('all types in sql.values test', async () => {
 		100.23, // decimal64(15) P from [ 10 : 18 ]
 		1000.23, // decimal128(34) P from [ 19 : 38 ]
 		10000.23, // decimal256(71) P from [ 39 : 76 ]
-		'qwerty', // string
-		'qwerty1234', // string(10)
+		`qwe'"rty`, // string
+		`qwe'"rty12`, // string(10)
 		'2024-10-31', // date ; TODO revise: seems like driver does not support Date type
 		'2024-10-31', // date32 '2024-10-31'
 		new Date('2024-10-31T14:25:29'), // datetime
@@ -378,8 +378,8 @@ test('all types in sql.values test', async () => {
 		decimal64: 100.23,
 		decimal128: 1000.23,
 		decimal256: 10000.23,
-		string: 'qwerty',
-		fixed_string: 'qwerty1234',
+		string: `qwe'"rty`,
+		fixed_string: `qwe'"rty12`,
 		date: '2024-10-31',
 		date32: '2024-10-31',
 		date_time: '2024-10-31 12:25:29',
@@ -523,8 +523,8 @@ test('all array types in sql.values test', async () => {
 		[1.234, -2.345], // Array(Decimal64(15))
 		[3.456, -4.567], // Array(Decimal128(34))
 		[5.678, -6.789], // Array(Decimal256(71))
-		['qwerty1', 'qwerty2'], // Array(String)
-		['qwerty1234', 'qwerty2345'], // Array(FixedString(10))
+		[`qwe'"rty1`, `qwe'"rty2`], // Array(String)
+		[`qwe'"rty12`, `qwe'"rty23`], // Array(FixedString(10))
 		['2024-10-31', '2024-11-31'], // Array(Date)
 		['2024-10-30', '2024-11-30'], // Array(Date32)
 		['2024-10-31 14:25:29', '2024-11-31 14:25:29'], // Array(DateTime)
@@ -586,8 +586,8 @@ test('all array types in sql.values test', async () => {
 		decimal64_array: [1.234, -2.345],
 		decimal128_array: [3.456, -4.567],
 		decimal256_array: [5.678, -6.789],
-		string_array: ['qwerty1', 'qwerty2'],
-		fixed_string_array: ['qwerty1234', 'qwerty2345'],
+		string_array: [`qwe'"rty1`, `qwe'"rty2`],
+		fixed_string_array: [`qwe'"rty12`, `qwe'"rty23`],
 		date_array: ['2024-10-31', '2024-12-01'],
 		date32_array: ['2024-10-30', '2024-11-30'],
 		date_time_array: ['2024-10-31 14:25:29', '2024-12-01 14:25:29'],
