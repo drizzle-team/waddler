@@ -40,15 +40,31 @@ test('logger test', async () => {
 	const loggerParams = [1];
 	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
 
+	// metadata example
+	// {
+	//   success: true,
+	//   meta: {
+	//     duration: 0.0382080000000542,
+	//     last_row_id: 0,
+	//     changes: 0,
+	//     served_by: 'miniflare.db',
+	//     internal_stats: null
+	//   }
+	// }
 	const logger = {
-		logQuery: (query: string, params: unknown[]) => {
+		logQuery: (query: string, params: unknown[], metadata: any) => {
 			expect(query).toEqual(loggerQuery);
 			expect(params).toStrictEqual(loggerParams);
+
+			const metadataKeys = Object.keys(metadata);
+			const predicate = ['success', 'meta'].map((key) => metadataKeys.includes(key)).every(
+				(value) => value === true,
+			);
+			expect(predicate).toBe(true);
 		},
 	};
 
 	let loggerSql: D1SQL;
-	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 	// case 0
 	const sqliteDb = await createSQLiteDB(':memory:');
@@ -56,12 +72,15 @@ test('logger test', async () => {
 	loggerSql = waddler({ client, config: { logger } });
 	await loggerSql`select ${1};`;
 
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 	loggerSql = waddler({ client, config: { logger: true } });
 	await loggerSql`select ${1};`;
-	expect(consoleMock).toBeCalledWith(loggerText);
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler({ client, config: { logger: false } });
 	await loggerSql`select ${1};`;
+
+	consoleMock.mockRestore();
 });
 
 // UNSAFE-------------------------------------------------------------------
@@ -212,7 +231,7 @@ test('sql query api test', async () => {
 	const query = sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
 
 	expect(query.toSQL()).toStrictEqual({
-		query: 'select * from "users" where id = ? or id = ? and email = ?',
+		sql: 'select * from "users" where id = ? or id = ? and email = ?;',
 		params: [1, 2, 'hello@test.com'],
 	});
 	expect(filter.toSQL()).toStrictEqual({
@@ -221,7 +240,7 @@ test('sql query api test', async () => {
 	});
 });
 
-test('embeding SQLQuery and SQLTemplate test', async () => {
+test('embeding SQLQuery and SQLTemplate test #1', async () => {
 	await dropUsersTable(sql);
 	await createUsersTable(sql);
 
@@ -230,25 +249,44 @@ test('embeding SQLQuery and SQLTemplate test', async () => {
 	}`.run();
 
 	await sql`select * from ${sql.identifier('users')};`;
-	// console.log(res);
 
 	const query1 = sql`select * from ${sql.identifier('users')} where ${filter1({ id: 1, name: 'a' })};`;
-	// console.log(query1.toSQL());
-	// console.log(await query1);
+	expect(query1.toSQL()).toStrictEqual({
+		sql: 'select * from "users" where id = ? and name = ?;',
+		params: [1, 'a'],
+	});
+
 	const res1 = await query1;
 	expect(res1.length).not.toBe(0);
 
 	const query2 = sql`select * from ${sql.identifier('users')} where ${filter2({ id: 1, name: 'a' })};`;
-	// console.log(query2.toSQL());
-	// console.log(await query2);
+	expect(query2.toSQL()).toStrictEqual({
+		sql: 'select * from "users" where id = ? and name = ?;',
+		params: [1, 'a'],
+	});
+
 	const res2 = await query2;
 	expect(res2.length).not.toBe(0);
 
 	const query3 = sql`select * from ${sql.identifier('users')} where ${sql`id = ${1}`};`;
-	// console.log(query3.toSQL());
+	expect(query3.toSQL()).toStrictEqual({
+		sql: 'select * from "users" where id = ?;',
+		params: [1],
+	});
+
 	const res3 = await query3;
-	// console.log(res3);
 	expect(res3.length).not.toBe(0);
 
 	await dropUsersTable(sql);
+});
+
+test('standalone sql test', async () => {
+	const timestampSelector = sqlQuery`toStartOfHour(${sqlQuery.identifier('test')})`;
+	const timestampFilter =
+		sqlQuery`${sqlQuery``}${timestampSelector} >= from and ${timestampSelector} < to${sqlQuery``}${sqlQuery`;`}`;
+
+	expect(timestampFilter.toSQL()).toStrictEqual({
+		sql: 'toStartOfHour("test") >= from and toStartOfHour("test") < to;',
+		params: [],
+	});
 });

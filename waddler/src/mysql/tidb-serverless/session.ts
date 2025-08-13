@@ -20,20 +20,24 @@ export class TidbServerlessSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
+		let finalRes;
+		let finalMetadata: any | undefined;
 
 		try {
 			if (this.options.rowMode === 'array') {
 				const rows = await this.client.execute(query, params, queryConfig) as T[];
-				return rows;
+				finalRes = rows;
+			} else {
+				const res = await this.client.execute(query, params, executeRawConfig) as FullResult;
+				({ rows: finalRes, ...finalMetadata } = res);
 			}
-
-			const res = await this.client.execute(query, params, executeRawConfig) as FullResult;
-			return res.rows as T[];
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+		return finalRes as T[];
 	}
 
 	/**

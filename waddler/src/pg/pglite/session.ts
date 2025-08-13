@@ -41,17 +41,22 @@ export class PGliteSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
+		let finalRes, finalMetadata: any | undefined;
+
 		try {
 			const queryResult = await (this.options.rowMode === 'array'
 				? this.client.query(query, params, this.queryConfig)
 				: this.client.query(query, params, this.rawQueryConfig));
 
-			return queryResult.rows as T[];
+			({ rows: finalRes, ...finalMetadata } = queryResult);
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+
+		return finalRes as T[];
 	}
 
 	/**

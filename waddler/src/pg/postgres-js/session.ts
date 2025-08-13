@@ -17,8 +17,8 @@ export class PostgresSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
+		let finalRes, finalMetadata: any | undefined;
 
 		// wrapping postgres-js driver error in new js error to add stack trace to it
 		try {
@@ -27,10 +27,14 @@ export class PostgresSQLTemplate<T> extends SQLTemplate<T> {
 				: this.client.unsafe(query, params as any[]));
 
 			// TODO check if cast to RowList<T[]> is valid
-			return queryResult as RowList<T[]> as T[];
+			finalRes = queryResult as RowList<T[]>;
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+
+		return finalRes as T[];
 	}
 
 	/**

@@ -30,8 +30,8 @@ export class LibsqlSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
+		let finalRes, finalMetadata: any | undefined;
 
 		// wrapping libsql driver error in new js error to add stack trace to it
 		try {
@@ -40,16 +40,40 @@ export class LibsqlSQLTemplate<T> extends SQLTemplate<T> {
 				if (this.options.rowMode === 'array') {
 					const queryResult = await this.client.execute(stmt);
 					// TODO revise: should I map array of objects to array of arrays manually if driver doesn't support it?
-					const rows = queryResult.rows.map((row) => queryResult.columns.map((col) => row[col]));
-					return rows as T[];
+					finalRes = queryResult.rows.map((row) => queryResult.columns.map((col) => row[col]));
+					finalMetadata = {
+						columnTypes: queryResult.columnTypes,
+						columns: queryResult.columns,
+						lastInsertRowid: queryResult.lastInsertRowid,
+						rowsAffected: queryResult.rowsAffected,
+					};
+				} else {
+					const queryResult = await this.client.execute(stmt);
+					finalRes = queryResult.rows;
+					finalMetadata = {
+						columnTypes: queryResult.columnTypes,
+						columns: queryResult.columns,
+						lastInsertRowid: queryResult.lastInsertRowid,
+						rowsAffected: queryResult.rowsAffected,
+					};
 				}
-				return (await this.client.execute(stmt).then(({ rows }) => rows)) as T[];
 			} else {
-				return (await this.client.execute(stmt)) as any;
+				const queryResult = await this.client.execute(stmt);
+				finalMetadata = {
+					columnTypes: queryResult.columnTypes,
+					columns: queryResult.columns,
+					lastInsertRowid: queryResult.lastInsertRowid,
+					rowsAffected: queryResult.rowsAffected,
+				};
+				finalRes = queryResult;
 			}
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+
+		return finalRes as T[];
 	}
 
 	/**

@@ -117,8 +117,7 @@ export class DuckdbSQLTemplate<T> extends SQLTemplate<T> {
 		// Implement your actual DB execution logic here
 		// This could be a fetch or another async operation
 		// gets connection from pool, runs query, release connection
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
 		let result;
 
 		prepareParams(params);
@@ -138,14 +137,14 @@ export class DuckdbSQLTemplate<T> extends SQLTemplate<T> {
 		}
 
 		await this.pool.release(db);
+		this.logger.logQuery(query, params);
 
 		return result;
 	}
 
 	async *stream() {
 		let row: T;
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
 
 		prepareParams(params);
 
@@ -171,5 +170,6 @@ export class DuckdbSQLTemplate<T> extends SQLTemplate<T> {
 		}
 
 		await this.pool.release(db);
+		this.logger.logQuery(query, params);
 	}
 }

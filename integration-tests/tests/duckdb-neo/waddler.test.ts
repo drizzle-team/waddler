@@ -779,23 +779,7 @@ test('sql template types test', async () => {
 	expect(res[0]).toStrictEqual(expectedRes);
 });
 
-test('sql query api test', async () => {
-	const filter = sqlQuery`id = ${1} or ${sqlQuery`id = ${2}`}`;
-	filter.append(sqlQuery` and email = ${'hello@test.com'}`);
-
-	const query = sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
-
-	expect(query.toSQL()).toStrictEqual({
-		query: 'select * from "users" where id = $1 or id = $2 and email = $3',
-		params: [1, 2, 'hello@test.com'],
-	});
-	expect(filter.toSQL()).toStrictEqual({
-		sql: 'id = $1 or id = $2 and email = $3',
-		params: [1, 2, 'hello@test.com'],
-	});
-});
-
-test('embeding SQLQuery and SQLTemplate test', async () => {
+test('embeding SQLQuery and SQLTemplate test #1', async () => {
 	await dropUsersTable(sql);
 	await createUsersTable(sql);
 
@@ -804,27 +788,51 @@ test('embeding SQLQuery and SQLTemplate test', async () => {
 	}`;
 
 	await sql`select * from ${sql.identifier('users')};`;
-	// console.log(res);
 
 	const query1 = sql`select * from ${sql.identifier('users')} where ${filter1({ id: 1, name: 'a' })};`;
-	// console.log(query1.toSQL());
-	// console.log(await query1);
+	expect(query1.toSQL()).toStrictEqual({
+		sql: 'select * from "users" where id = $1 and name = $2;',
+		params: [1, 'a'],
+	});
+
 	const res1 = await query1;
 	expect(res1.length).not.toBe(0);
 
 	const query2 = sql`select * from ${sql.identifier('users')} where ${filter2({ id: 1, name: 'a' })};`;
-	// console.log(query2.toSQL());
-	// console.log(await query2);
+	expect(query2.toSQL()).toStrictEqual({
+		sql: 'select * from "users" where id = $1 and name = $2;',
+		params: [1, 'a'],
+	});
+
 	const res2 = await query2;
 	expect(res2.length).not.toBe(0);
 
 	const query3 = sql`select * from ${sql.identifier('users')} where ${sql`id = ${1}`};`;
-	// console.log(query3.toSQL());
+	expect(query3.toSQL()).toStrictEqual({
+		sql: 'select * from "users" where id = $1;',
+		params: [1],
+	});
+
 	const res3 = await query3;
-	// console.log(res3);
 	expect(res3.length).not.toBe(0);
 
 	await dropUsersTable(sql);
+});
+
+test('embeding SQLQuery and SQLTemplate test #2', async () => {
+	const filter = sqlQuery`id = ${1} or ${sqlQuery`id = ${2}`}`;
+	filter.append(sqlQuery` and email = ${'hello@test.com'}`);
+
+	const query = sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
+
+	expect(query.toSQL()).toStrictEqual({
+		sql: 'select * from "users" where id = $1 or id = $2 and email = $3;',
+		params: [1, 2, 'hello@test.com'],
+	});
+	expect(filter.toSQL()).toStrictEqual({
+		sql: 'id = $1 or id = $2 and email = $3',
+		params: [1, 2, 'hello@test.com'],
+	});
 });
 
 test('logger test', async () => {
@@ -832,10 +840,13 @@ test('logger test', async () => {
 	const loggerParams = [1];
 	const loggerText = `Query: select $1; -- params: [1]`;
 
+	// metadata example:
+	// { columnCount: 1, returnType: 3, rowsChanged: 0, statementType: 1 }
 	const logger = {
-		logQuery: (query: string, params: unknown[]) => {
+		logQuery: (query: string, params: unknown[], metadata: any) => {
 			expect(query).toEqual(loggerQuery);
 			expect(params).toStrictEqual(loggerParams);
+			expect(Object.keys(metadata)).toStrictEqual(['columnCount', 'returnType', 'rowsChanged', 'statementType']);
 		},
 	};
 
@@ -852,4 +863,17 @@ test('logger test', async () => {
 
 	loggerSql = waddler({ url: ':memory:', max: 10, accessMode: 'read_write', logger: false });
 	await loggerSql`select ${1};`;
+
+	consoleMock.mockRestore();
+});
+
+test('standalone sql test', async () => {
+	const timestampSelector = sqlQuery`toStartOfHour(${sqlQuery.identifier('test')})`;
+	const timestampFilter =
+		sqlQuery`${sqlQuery``}${timestampSelector} >= from and ${timestampSelector} < to${sqlQuery``}${sqlQuery`;`}`;
+
+	expect(timestampFilter.toSQL()).toStrictEqual({
+		sql: 'toStartOfHour("test") >= from and toStartOfHour("test") < to;',
+		params: [],
+	});
 });

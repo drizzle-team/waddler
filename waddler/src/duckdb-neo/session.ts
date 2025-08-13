@@ -26,9 +26,9 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
-		let result;
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
+		let finalRes;
+		let finalMetadata: any | undefined;
 
 		const connObj = await this.pool.acquire();
 
@@ -38,7 +38,15 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 			bindParams(prepared, params);
 
 			const duckDbResult = await prepared.run().finally();
-			result = this.options.rowMode === 'default'
+
+			finalMetadata = {
+				columnCount: duckDbResult.columnCount,
+				returnType: duckDbResult.returnType,
+				rowsChanged: duckDbResult.rowsChanged,
+				statementType: duckDbResult.statementType,
+			};
+
+			finalRes = this.options.rowMode === 'default'
 				? (await transformResultToObjects(duckDbResult))
 				: (await transformResultToArrays(duckDbResult));
 		} catch (error) {
@@ -49,12 +57,13 @@ export class DuckdbNeoSQLTemplate<T> extends SQLTemplate<T> {
 
 		await this.pool.release(connObj);
 
-		return result as T[];
+		this.logger.logQuery(query, params, finalMetadata);
+
+		return finalRes as T[];
 	}
 
 	async *stream() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
 
 		const connObj = await this.pool.acquire();
 

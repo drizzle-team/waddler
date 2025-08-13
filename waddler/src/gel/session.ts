@@ -17,20 +17,19 @@ export class GelSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
+		let rows;
 
 		try {
-			if (this.options.rowMode === 'array') {
-				const rows = await this.client.withSQLRowMode('array').querySQL(query, params.length ? params : undefined);
-				return rows as T[];
-			}
-
-			const rows = await this.client.querySQL(query, params.length ? params : undefined);
-			return rows as T[];
+			rows = await (this.options.rowMode === 'array'
+				? this.client.withSQLRowMode('array').querySQL(query, params.length ? params : undefined)
+				: this.client.querySQL(query, params.length ? params : undefined));
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		}
+
+		this.logger.logQuery(query, params);
+		return rows as T[];
 	}
 
 	/**

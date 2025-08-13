@@ -26,10 +26,17 @@ export class MyDurableObject extends DurableObject {
 		const loggerParams = [1];
 		this.loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
 
+		// metadata example
+		// { columnNames: [ '?' ], rowsRead: 0, rowsWritten: 0 }
 		const logger = {
-			logQuery: (query: string, params: unknown[]) => {
+			logQuery: (query: string, params: unknown[], metadata: any) => {
 				expect(query).equal(loggerQuery);
 				expect(params).deep.equal(loggerParams);
+				const metadataKeys = Object.keys(metadata);
+				const predicate = ['columnNames', 'rowsRead', 'rowsWritten'].map((key) => metadataKeys.includes(key)).every(
+					(value) => value === true,
+				);
+				expect(predicate).equal(true);
 			},
 		};
 
@@ -298,7 +305,7 @@ export class MyDurableObject extends DurableObject {
 			const query = this.sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
 
 			expect(query.toSQL()).deep.equal({
-				query: 'select * from "users" where id = ? or id = ? and email = ?',
+				sql: 'select * from "users" where id = ? or id = ? and email = ?;',
 				params: [1, 2, 'hello@test.com'],
 			});
 			expect(filter.toSQL()).deep.equal({
@@ -324,27 +331,54 @@ export class MyDurableObject extends DurableObject {
 			}`.run();
 
 			await this.sql`select * from ${this.sql.identifier('users')};`;
-			// console.log(res);
 
 			const query1 = this.sql`select * from ${this.sql.identifier('users')} where ${filter1({ id: 1, name: 'a' })};`;
-			// console.log(query1.toSQL());
-			// console.log(await query1);
+			expect(query1.toSQL()).deep.equal({
+				sql: 'select * from "users" where id = ? and name = ?;',
+				params: [1, 'a'],
+			});
+
 			const res1 = await query1;
 			expect(res1.length).not.equal(0);
 
 			const query2 = this.sql`select * from ${this.sql.identifier('users')} where ${filter2({ id: 1, name: 'a' })};`;
-			// console.log(query2.toSQL());
-			// console.log(await query2);
+			expect(query2.toSQL()).deep.equal({
+				sql: 'select * from "users" where id = ? and name = ?;',
+				params: [1, 'a'],
+			});
+
 			const res2 = await query2;
 			expect(res2.length).not.equal(0);
 
 			const query3 = this.sql`select * from ${this.sql.identifier('users')} where ${this.sql`id = ${1}`};`;
-			// console.log(query3.toSQL());
+			expect(query3.toSQL()).deep.equal({
+				sql: 'select * from "users" where id = ?;',
+				params: [1],
+			});
+
 			const res3 = await query3;
-			// console.log(res3);
 			expect(res3.length).not.equal(0);
 
 			await dropUsersTable(this.sql);
+
+			this.testsPassed += 1;
+		} catch (error) {
+			console.error(error);
+			this.testsFailed += 1;
+			// throw new Error('sql.stream test error.');
+		}
+	}
+
+	async standaloneSqlTest() {
+		try {
+			const timestampSelector = sqlQuery`toStartOfHour(${sqlQuery.identifier('test')})`;
+			const timestampFilter =
+				sqlQuery`${sqlQuery``}${timestampSelector} >= from and ${timestampSelector} < to${sqlQuery``}${sqlQuery`;`}`;
+
+			expect(timestampFilter.toSQL()).deep.equal({
+				sql: 'toStartOfHour("test") >= from and toStartOfHour("test") < to;',
+				params: [],
+			});
 
 			this.testsPassed += 1;
 		} catch (error) {
@@ -392,6 +426,7 @@ export default {
 		await stub.sqlStream();
 		await stub.sqlQueryApi();
 		await stub.embedingSQLQueryAndSQLTemplate();
+		await stub.standaloneSqlTest();
 		await stub.loggerTest();
 
 		const greeting = await stub.sayHello() as string;

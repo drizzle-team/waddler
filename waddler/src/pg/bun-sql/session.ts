@@ -17,21 +17,21 @@ export class BunSqlSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
+		let finalRes, finalMetadata: any | undefined;
 
 		// wrapping bun-sql driver error in new js error to add stack trace to it
 		try {
-			if (this.options.rowMode === 'array') {
-				const queryResult = await this.client.unsafe(query, params).values();
-				return queryResult as T[];
-			}
-
-			const queryResult = await this.client.unsafe(query, params);
-			return queryResult as T[];
+			const queryResult = await ((this.options.rowMode === 'array')
+				? this.client.unsafe(query, params).values()
+				: this.client.unsafe(query, params));
+			finalRes = queryResult;
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+		return finalRes as T[];
 	}
 
 	/**

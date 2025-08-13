@@ -29,28 +29,32 @@ export class BunSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
+		let finalRes, finalMetadata: any | undefined;
 
 		// wrapping bun-sqlite driver error in new js error to add stack trace to it
 		try {
 			const stmt = this.client.prepare(query);
 			if (this.returningData) {
-				if (this.options.rowMode === 'array') {
-					return stmt.values(...params as any[]) as T[];
-				}
-
-				return stmt.all(...params as any) as T[];
+				finalRes = this.options.rowMode === 'array'
+					? stmt.values(...params as any[])
+					: stmt.all(...params as any) as T[];
 			} else {
-				return stmt.run(...params as any[]) as any;
+				// TODO revise: it might cause unexpected behavior because finalRes and finalMetadata store the same reference of object
+				finalRes = stmt.run(...params as any[]);
+				finalMetadata = finalRes;
 			}
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+
+		return finalRes as T[];
 	}
 
 	async *stream() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
 		this.logger.logQuery(query, params);
 
 		// wrapping bun-sqlite driver error in new js error to add stack trace to it

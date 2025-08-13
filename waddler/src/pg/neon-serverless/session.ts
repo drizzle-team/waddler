@@ -39,7 +39,7 @@ export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
 	) {
 		super(sqlWrapper, dialect, configOptions);
 
-		const query = this.sqlWrapper.getQuery(this.dialect).query;
+		const query = this.sqlWrapper.getQuery(this.dialect).sql;
 		this.rawQueryConfig = {
 			text: query,
 			types: pgTypeConfig,
@@ -52,27 +52,21 @@ export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
+		let finalRes, finalMetadata: any | undefined;
 
 		// wrapping neon-serverless driver error in new js error to add stack trace to it
 		try {
-			if (this.options.rowMode === 'array') {
-				const queryResult = await this.client.query(
-					this.queryConfig,
-					params,
-				);
-				return queryResult.rows as T[];
-			} else {
-				const queryResult = await this.client.query(
-					this.rawQueryConfig,
-					params,
-				);
-				return queryResult.rows as T[];
-			}
+			const queryResult = await ((this.options.rowMode === 'array')
+				? this.client.query(this.queryConfig, params)
+				: await this.client.query(this.rawQueryConfig, params));
+			({ rows: finalRes, ...finalMetadata } = queryResult);
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+		return finalRes as T[];
 	}
 
 	async *stream() {
@@ -84,7 +78,7 @@ export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
 			);
 		}
 
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
 		const queryStream = new queryStreamObj.constructor(query, params, {
 			types: this.queryConfig.types,
 			// rowMode: 'array',

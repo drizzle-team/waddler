@@ -2,7 +2,7 @@ import type { BuildQueryConfig, SQLWrapper } from './sql';
 import type { Identifier, IdentifierObject, Raw, UnsafeParamType, Value } from './types';
 
 export abstract class Dialect implements BuildQueryConfig {
-	abstract escapeParam(lastParamIdx: number, typeToCast: string): string;
+	abstract escapeParam(lastParamIdx?: number, typeToCast?: string): string;
 	createEmptyParams(): any[] | Record<string, any>;
 	createEmptyParams() {
 		return [];
@@ -40,15 +40,14 @@ export abstract class SQLChunk {
 	): { sql: string; params?: any[] | Record<string, any> };
 }
 
-export class SQLQuery extends SQLChunk {
-	constructor(readonly sqlWrapper: SQLWrapper, readonly dialect: Dialect) {
+export class SQLQuery<DialectT extends Dialect = Dialect> extends SQLChunk {
+	constructor(readonly sqlWrapper: SQLWrapper, readonly dialect: DialectT) {
 		super();
 	}
 
 	override generateSQL() {
 		this.sqlWrapper.prepareQuery(this.dialect);
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		return { sql: query, params };
+		return this.sqlWrapper.getQuery<DialectT>(this.dialect);
 	}
 
 	append(other: SQLQuery) {

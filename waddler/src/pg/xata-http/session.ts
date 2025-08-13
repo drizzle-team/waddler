@@ -21,20 +21,25 @@ export class XataHttpSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
+		let finalRes, finalMetadata: any | undefined;
+
 		// wrapping xata-http driver error in new js error to add stack trace to it
 		try {
 			if (this.options.rowMode === 'array') {
 				const queryResult = await this.client.sql({ statement: query, params, responseType: 'array' });
-				return queryResult.rows as T[];
+				({ rows: finalRes, ...finalMetadata } = queryResult);
+			} else {
+				const queryResult = await this.client.sql({ statement: query, params, responseType: 'json' });
+				({ records: finalRes, ...finalMetadata } = queryResult);
 			}
-
-			const queryResult = await this.client.sql({ statement: query, params, responseType: 'json' });
-			return queryResult.records as T[];
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+
+		return finalRes as T[];
 	}
 
 	/**

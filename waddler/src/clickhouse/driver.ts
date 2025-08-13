@@ -72,7 +72,7 @@ export interface ClickHouseSQL extends Omit<SQL, 'unsafe' | 'values'> {
 export interface ClickHouseSQLQuery
 	extends Pick<ClickHouseSQL, 'values' | 'param'>, Pick<SQL, 'identifier' | 'raw' | 'default'>
 {
-	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery<ClickHouseDialect>;
 }
 
 const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
@@ -116,7 +116,7 @@ const createSqlTemplate = (
 			options = options ?? { rowMode: 'object' };
 
 			const sqlWrapper = new SQLWrapper();
-			sqlWrapper.with({ rawParams: { query, params } });
+			sqlWrapper.with({ rawParams: { sql: query, params } });
 
 			const unsafeDriver = new ClickHouseSQLTemplate(sqlWrapper, client, dialect, { logger }, options);
 			const unsafePromise = new UnsafePromise(unsafeDriver);

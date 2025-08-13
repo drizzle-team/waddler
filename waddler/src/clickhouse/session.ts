@@ -1,11 +1,11 @@
-import type { ClickHouseClient } from '@clickhouse/client/';
+import type { ClickHouseClient, CommandResult } from '@clickhouse/client/';
 import type { ClickHouseDialect } from '../clickhouse-core/dialect.ts';
 import { WaddlerQueryError } from '../errors/index.ts';
 import type { SQLTemplateConfigOptions } from '../sql-template.ts';
 import { SQLTemplate } from '../sql-template.ts';
 import type { SQLWrapper } from '../sql.ts';
 
-export class ClickHouseSQLTemplate<T> extends SQLTemplate<T> {
+export class ClickHouseSQLTemplate<T> extends SQLTemplate<T, ClickHouseDialect> {
 	public returningData: boolean = true;
 
 	constructor(
@@ -29,8 +29,9 @@ export class ClickHouseSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
+		let finalRes: T[];
+		let finalMetadata: any | undefined;
 
 		try {
 			if (this.returningData) {
@@ -42,21 +43,30 @@ export class ClickHouseSQLTemplate<T> extends SQLTemplate<T> {
 				});
 
 				const jsonRes = await rawRes.json();
-				return jsonRes.data as T[];
+
+				const { data, ...metadata } = jsonRes;
+
+				finalRes = data as T[];
+				finalMetadata = metadata;
 			} else {
-				return await this.client.command({
+				const rawRes: CommandResult = await this.client.command({
 					query,
 					query_params: params,
-				}) as any;
+				});
+
+				finalRes = rawRes as any;
+				finalMetadata = rawRes;
 			}
 		} catch (error) {
 			throw new WaddlerQueryError(query, JSON.stringify(params), error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+		return finalRes;
 	}
 
 	async *stream() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
 
 		// wrapping clickhouse driver error in new js error to add stack trace to it
 		try {

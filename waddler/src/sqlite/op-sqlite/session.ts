@@ -29,21 +29,25 @@ export class OpSqliteSQLTemplate<T> extends SQLTemplate<T> {
 	}
 
 	async execute() {
-		const { query, params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(query, params);
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
+		let finalRes, finalMetadata: any | undefined;
 
 		// TODO: do I really need branching to all and run here?
 		// wrapping op-sqlite driver error in new js error to add stack trace to it
 		try {
 			if (this.options.rowMode === 'array') {
-				const rows = await this.client.executeRaw(query, params);
-				return rows as T[];
+				finalRes = await this.client.executeRaw(query, params);
+			} else {
+				const queryResult = await this.client.execute(query, params);
+				({ rows: finalRes, ...finalMetadata } = queryResult);
 			}
-			const queryResult = await this.client.execute(query, params);
-			return queryResult.rows as T[];
 		} catch (error) {
 			throw new WaddlerQueryError(query, params, error as Error);
 		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+
+		return finalRes as T[];
 	}
 
 	/**

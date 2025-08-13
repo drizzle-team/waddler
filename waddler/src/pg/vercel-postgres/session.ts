@@ -30,7 +30,7 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 	) {
 		super(sqlWrapper, dialect, configOptions);
-		const query = this.sqlWrapper.getQuery(this.dialect).query;
+		const query = this.sqlWrapper.getQuery(this.dialect).sql;
 		this.queryConfig = {
 			rowMode: 'array',
 			text: query,
@@ -44,7 +44,7 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 
 	async execute() {
 		const { params } = this.sqlWrapper.getQuery(this.dialect);
-		this.logger.logQuery(this.queryConfig.text, params);
+		let finalRes, finalMetadata: any | undefined;
 
 		// wrapping vercel-postgres driver error in new js error to add stack trace to it
 		try {
@@ -52,10 +52,14 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 				? this.client.query(this.queryConfig, params)
 				: this.client.query(this.rawQueryConfig, params));
 
-			return queryResult.rows;
+			({ rows: finalRes, ...finalMetadata } = queryResult);
 		} catch (error) {
 			throw new WaddlerQueryError(this.queryConfig.text, params, error as Error);
 		}
+
+		this.logger.logQuery(this.queryConfig.text, params, finalMetadata);
+
+		return finalRes as T[];
 	}
 
 	// TODO: revise: maybe I should override chunked method because we can use QueryStream with option 'batchSize' in QueryStreamConfig
@@ -76,7 +80,7 @@ export class VercelPgSQLTemplate<T> extends SQLTemplate<T> {
 				);
 			}
 
-			({ query, params } = this.sqlWrapper.getQuery(this.dialect));
+			({ sql: query, params } = this.sqlWrapper.getQuery(this.dialect));
 			this.logger.logQuery(this.queryConfig.text, params);
 
 			const queryStream = new queryStreamObj.constructor(query, params, { types: this.queryConfig.types });

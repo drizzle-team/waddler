@@ -56,7 +56,7 @@ const createSqlTemplate = (
 			options = options ?? { rowMode: 'object' as RowMode };
 
 			const sql = new SQLWrapper();
-			sql.with({ rawParams: { query, params } });
+			sql.with({ rawParams: { sql: query, params } });
 
 			const unsafeDriver = new NeonHttpSQLTemplate(sql, client, dialect, { logger }, options);
 			return await unsafeDriver.execute();
