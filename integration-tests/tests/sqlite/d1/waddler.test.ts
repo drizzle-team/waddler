@@ -167,7 +167,7 @@ test('all types in sql.values test', async () => {
 		2147483647,
 		9007199254740992, // BigInt('9007199254740992') + BigInt(1),
 		101.23,
-		'qwerty',
+		`qwe'"rty`,
 		JSON.stringify({
 			name: 'alex',
 			age: 26,
@@ -193,7 +193,7 @@ test('all types in sql.values test', async () => {
 		2147483647,
 		9007199254740992,
 		101.23,
-		'qwerty',
+		`qwe'"rty`,
 		JSON.stringify({
 			name: 'alex',
 			age: 26,

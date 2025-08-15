@@ -1,13 +1,13 @@
-import { Dialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
-import type { Identifier, IdentifierObject, Raw, Values } from '../types.ts';
+import { Dialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
+import type { Identifier, IdentifierObject, Raw, Value, Values } from '../../types.ts';
 
-export class DuckdbDialect extends Dialect {
+export class MsSqlDialect extends Dialect {
 	escapeParam(lastParamIdx: number): string {
-		return `$${lastParamIdx}`;
+		return `@par${lastParamIdx}`;
 	}
 
 	escapeIdentifier(identifier: string): string {
-		return `"${identifier}"`;
+		return `[${identifier}]`;
 	}
 
 	checkIdentifierObject(object: IdentifierObject) {
@@ -58,7 +58,13 @@ export class DuckdbDialect extends Dialect {
 	}
 
 	// SQLValues
-	valueToSQL<DuckdbValue>({ value }: { value: DuckdbValue }): string {
+	valueToSQL(
+		{ value, params, lastParamIdx }: {
+			value: Value;
+			params: Value[] | Record<string, any>;
+			lastParamIdx: number;
+		},
+	): string {
 		if (value instanceof SQLDefault) {
 			return value.generateSQL().sql;
 		}
@@ -67,30 +73,18 @@ export class DuckdbDialect extends Dialect {
 			typeof value === 'number'
 			|| typeof value === 'bigint'
 			|| typeof value === 'boolean'
+			|| typeof value === 'string'
 			|| value === null
+			|| value instanceof Date
+			|| Buffer.isBuffer(value)
 		) {
-			return `${value}`;
-		}
-
-		if (value instanceof Date) {
-			return `'${value.toISOString()}'`;
-		}
-
-		if (typeof value === 'string') {
-			return `'${value.replaceAll("'", "''")}'`;
-		}
-
-		if (Array.isArray(value)) {
-			return `[${value.map((arrayValue) => this.valueToSQL({ value: arrayValue }))}]`;
+			params.push(value);
+			return this.escapeParam(lastParamIdx);
 		}
 
 		if (typeof value === 'object') {
-			return `'${JSON.stringify(value)}'`;
-			// TODO: revise
-			// object case
-			// throw new Error(
-			// 	"value can't be object. you can't specify [ [ {...}, ...], ...] as parameter for sql.values.",
-			// );
+			params.push(JSON.stringify(value));
+			return this.escapeParam(lastParamIdx);
 		}
 
 		if (value === undefined) {
@@ -100,10 +94,6 @@ export class DuckdbDialect extends Dialect {
 		throw new Error(`you can't specify ${typeof value} as value.`);
 	}
 }
-
-// export type DuckdbValue = Exclude<Value, Buffer | JSONArray>;
-
-// export type DuckdbValues = Value[][];
 
 export const SQLFunctions = {
 	identifier: (value: Identifier<IdentifierObject>) => {

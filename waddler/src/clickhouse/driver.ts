@@ -1,11 +1,11 @@
 import type { ClickHouseClient } from '@clickhouse/client';
 import { createClient } from '@clickhouse/client';
 import type { NodeClickHouseClientConfigOptions } from '@clickhouse/client/dist/config';
-import type { SQLCommonParam, SQLValues } from '~/sql-template-params.ts';
+import type { SQLValues } from '~/sql-template-params.ts';
 import { SQLQuery } from '~/sql-template-params.ts';
 import { isConfig } from '~/utils.ts';
 import type { DbType } from '../clickhouse-core/index.ts';
-import { ClickHouseDialect, SQLFunctions, UnsafePromise } from '../clickhouse-core/index.ts';
+import { ClickHouseDialect, ClickHouseSQLCommonParam, SQLFunctions, UnsafePromise } from '../clickhouse-core/index.ts';
 import type { Logger } from '../logger.ts';
 import { DefaultLogger } from '../logger.ts';
 import { type SQL, SQLWrapper } from '../sql.ts';
@@ -66,7 +66,7 @@ export interface ClickHouseSQL extends Omit<SQL, 'unsafe' | 'values'> {
 	 * ```
 	 */
 	values(value: Values, types?: DbType[]): SQLValues;
-	param(value: any, type: DbType): SQLCommonParam;
+	param(value: any, type: DbType): ClickHouseSQLCommonParam;
 }
 
 export interface ClickHouseSQLQuery
@@ -77,6 +77,7 @@ export interface ClickHouseSQLQuery
 
 const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
 	const sqlWrapper = new SQLWrapper();
+	sqlWrapper.setOverrides({ SQLCommonParam: ClickHouseSQLCommonParam });
 	sqlWrapper.with({ templateParams: { strings, params } });
 	const dialect = new ClickHouseDialect();
 
@@ -101,6 +102,7 @@ const createSqlTemplate = (
 
 	const fn = <T>(strings: TemplateStringsArray, ...params: SQLParamType[]): ClickHouseSQLTemplate<T> => {
 		const sqlWrapper = new SQLWrapper();
+		sqlWrapper.setOverrides({ SQLCommonParam: ClickHouseSQLCommonParam });
 		sqlWrapper.with({ templateParams: { strings, params } }).prepareQuery(dialect);
 		return new ClickHouseSQLTemplate<T>(sqlWrapper, client, dialect, { logger });
 	};

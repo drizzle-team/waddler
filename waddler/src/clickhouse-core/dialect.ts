@@ -1,7 +1,7 @@
 import { TupleParam } from '@clickhouse/client';
 import type { ClickHouseSQLTemplate } from '../clickhouse/session.ts';
 import { Dialect, SQLCommonParam, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
-import type { Identifier, IdentifierObject, Raw, Value, Values } from '../types.ts';
+import type { Identifier, IdentifierObject, Raw, UnsafeParamType, Value, Values } from '../types.ts';
 import { getArrayDepth, makeClickHouseArray } from './utils.ts';
 
 export class ClickHouseDialect extends Dialect {
@@ -148,6 +148,47 @@ export class ClickHouseDialect extends Dialect {
 	}
 }
 
+export class ClickHouseSQLCommonParam extends SQLCommonParam {
+	INT32_MAX = 2_147_483_647;
+	INT32_MIN = -2_147_483_648;
+
+	constructor(
+		value: UnsafeParamType,
+		public type: string = 'String',
+	) {
+		super(value);
+	}
+
+	override generateSQL(
+		{ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number },
+	) {
+		// bigint case
+		if (typeof this.value === 'bigint') this.type = 'Int64';
+
+		// integer case
+		if (typeof this.value === 'number' && this.value % 1 === 0) {
+			this.type = 'Int32';
+			if (this.value > this.INT32_MAX || this.value < this.INT32_MIN) {
+				this.type = 'Int64';
+			}
+		}
+
+		// array case
+		if (Array.isArray(this.value)) {
+			const nodeType = typeof this.value[0];
+			if (nodeType === 'string') this.type = 'Array(String)';
+		}
+
+		const params = dialect.createEmptyParams();
+		dialect.pushParams(params, this.value, lastParamIdx + 1, 'single');
+		return {
+			sql: dialect.escapeParam(lastParamIdx + 1, this.type),
+			params,
+			paramsCount: 1,
+		};
+	}
+}
+
 export class UnsafePromise<
 	T,
 	DriverT extends ClickHouseSQLTemplate<T>,
@@ -241,7 +282,7 @@ export const SQLFunctions = {
 		return new SQLValues(value, types);
 	},
 	param: (value: any, type?: DbType) => {
-		return new SQLCommonParam(value, type);
+		return new ClickHouseSQLCommonParam(value, type);
 	},
 	raw: (value: Raw) => {
 		return new SQLRaw(value);

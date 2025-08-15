@@ -2,9 +2,9 @@ import type { Connection as CallbackConnection } from 'mysql2';
 import type { Connection, Pool, PoolConnection, QueryOptions } from 'mysql2/promise';
 import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
-import type { Dialect } from '../../sql-template-params.ts';
 import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
+import type { MySQLDialect } from '../mysql-core/dialect.ts';
 import { isPool } from './utils.ts';
 
 // CallbackConnection will be used in stream method
@@ -13,7 +13,7 @@ export class MySql2SQLTemplate<T> extends SQLTemplate<T> {
 	constructor(
 		override sqlWrapper: SQLWrapper,
 		protected readonly client: Pool | Connection,
-		dialect: Dialect,
+		dialect: MySQLDialect,
 		configOptions: SQLTemplateConfigOptions,
 		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
 		private queryConfig: QueryOptions = {

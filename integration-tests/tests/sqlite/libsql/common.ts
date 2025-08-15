@@ -101,7 +101,7 @@ export const libsqlTests = (driver?: string) => {
 				2147483647,
 				9007199254740991, // BigInt('9007199254740992') + BigInt(1), // if you want to work with bigint, you should set client option intMode to 'bigint',
 				101.23,
-				'qwerty',
+				`qwe'"rty`,
 				JSON.stringify({
 					name: 'alex',
 					age: 26,
@@ -130,7 +130,7 @@ export const libsqlTests = (driver?: string) => {
 				2147483647,
 				9007199254740991,
 				101.23,
-				'qwerty',
+				`qwe'"rty`,
 				JSON.stringify({
 					name: 'alex',
 					age: 26,

@@ -29,6 +29,7 @@
 		"@types/better-sqlite3": "^7.6.13",
 		"@types/bun": "^1.2.9",
 		"@types/dockerode": "^3.3.35",
+		"@types/mssql": "^9.1.7",
 		"@types/node": "^22.15.3",
 		"@types/pg": "^8.11.11",
 		"@vercel/postgres": "^0.10.0",
@@ -45,6 +46,7 @@
 		"gel": "2.1.0",
 		"get-port": "^7.1.0",
 		"glob": "^11.0.2",
+		"mssql": "^11.0.1",
 		"mysql2": "^3.14.0",
 		"pg": "^8.14.0",
 		"postgres": "^3.4.5",
@@ -53,6 +55,7 @@
 		"zx": "^8.1.9"
 	},
 	"peerDependencies": {
+		"@clickhouse/client": "^1.11.2",
 		"@duckdb/node-api": "^1.1.2-alpha.4",
 		"@electric-sql/pglite": "^0.2.17",
 		"@libsql/client": "^0.15.4",
@@ -70,7 +73,8 @@
 		"pg": "^8.14.0",
 		"pg-query-stream": "^4.8.0",
 		"postgres": "^3.4.5",
-		"@clickhouse/client": "^1.11.2"
+		"@types/mssql": "^9.1.7",
+		"mssql": "^11.0.1"
 	},
 	"peerDependenciesMeta": {
 		"duckdb": {
@@ -131,6 +135,12 @@
 			"optional": true
 		},
 		"@clickhouse/client": {
+			"optional": true
+		},
+		"mssql": {
+			"optional": true
+		},
+		"@types/mssql": {
 			"optional": true
 		}
 	}

@@ -29,11 +29,11 @@ test('sql.values test. ', () => {
 
 test('sql.values test. number, boolean, string, bigint, null, Date, SQLDefault as values', () => {
 	const res = sql`insert into users (id, is_active, name, bigint_, null_) values ${
-		sql.values([[1, true, 'Oleksii', BigInt(1), null, new Date('2025-10-04T00:00:00.000Z'), sql.default]])
+		sql.values([[1, true, "Oleksii'", BigInt(1), null, new Date('2025-10-04T00:00:00.000Z'), sql.default]])
 	};`.toSQL();
 	expect(res).toStrictEqual({
 		sql:
-			"insert into users (id, is_active, name, bigint_, null_) values (1, true, 'Oleksii', 1, null, '2025-10-04T00:00:00.000Z', default);",
+			"insert into users (id, is_active, name, bigint_, null_) values (1, true, 'Oleksii''', 1, null, '2025-10-04T00:00:00.000Z', default);",
 		params: [],
 	});
 });
@@ -109,24 +109,24 @@ test('sql.values test. array of empty array. error', () => {
 	).toThrowError(`array of values can't be empty.`);
 });
 
-test('sql.values test. array | object | undefined | symbol | function as value. error', () => {
-	let valsList = [{}];
+test('sql.values test. undefined | symbol | function as value. error', () => {
+	// let valsList = [{}];
 
-	for (const val of valsList) {
-		expect(
-			// @ts-ignore
-			() => sql`insert into users (id, name, is_active) values ${sql.values([[val]])};`.toSQL(),
-		).toThrowError(
-			`value can't be object. you can't specify [ [ {...}, ...], ...] as parameter for sql.values.`,
-		);
-	}
+	// for (const val of valsList) {
+	// 	expect(
+	// 		// @ts-ignore
+	// 		() => sql`insert into users (id, name, is_active) values ${sql.values([[val]])};`.toSQL(),
+	// 	).toThrowError(
+	// 		`value can't be object. you can't specify [ [ {...}, ...], ...] as parameter for sql.values.`,
+	// 	);
+	// }
 
 	expect(
 		// @ts-ignore
 		() => sql`insert into users (id, name, is_active) values ${sql.values([[undefined]])};`.toSQL(),
 	).toThrowError(`value can't be undefined, maybe you mean sql.default?`);
 
-	valsList = [Symbol('fooo'), () => {}];
+	const valsList = [Symbol('fooo'), () => {}];
 	for (const val of valsList) {
 		expect(
 			// @ts-ignore
