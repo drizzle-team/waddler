@@ -26,6 +26,25 @@ export abstract class SQLTemplate<T, DialectT extends Dialect = Dialect> {
 		return this.sqlWrapper.getQuery<DialectT>(this.dialect);
 	}
 
+	catch<TResult = never>(
+		onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined,
+	): Promise<T[] | TResult> {
+		return this.then(undefined, onRejected);
+	}
+
+	finally(onFinally?: (() => void) | null | undefined): Promise<T[]> {
+		return this.then(
+			(value) => {
+				onFinally?.();
+				return value;
+			},
+			(reason) => {
+				onFinally?.();
+				throw reason;
+			},
+		);
+	}
+
 	// Allow it to be awaited (like a Promise)
 	then<TResult1 = T[], TResult2 = never>(
 		onfulfilled?:

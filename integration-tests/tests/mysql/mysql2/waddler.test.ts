@@ -101,7 +101,7 @@ test('connection test', async () => {
 	await sql2`select 2;`;
 
 	const url =
-		`postgres://${mysqlConnectionParams.user}:${mysqlConnectionParams.password}@${mysqlConnectionParams.host}:${mysqlConnectionParams.port}/${mysqlConnectionParams.database}`;
+		`mysql://${mysqlConnectionParams.user}:${mysqlConnectionParams.password}@${mysqlConnectionParams.host}:${mysqlConnectionParams.port}/${mysqlConnectionParams.database}`;
 	const sql21 = waddler({ connection: url });
 	await sql21`select 21;`;
 
