@@ -15,3 +15,5 @@ export class AutoPool {
 		return this.pool;
 	}
 }
+
+// TODO Should AutoPool have close method?

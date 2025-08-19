@@ -3,6 +3,7 @@ import type { Client as ClientT } from 'pg';
 import pg from 'pg';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
+import type { CockroachSQL } from 'waddler/cockroach';
 import { sql as sqlQuery, waddler } from 'waddler/cockroach';
 import { queryStream } from 'waddler/extensions/pg-query-stream';
 import { commonTests } from '../common.test.ts';
@@ -34,7 +35,7 @@ let cockroachConnectionParams: {
 };
 let cockroachConnectionString: string;
 
-let sql: SQL;
+let sql: CockroachSQL;
 beforeAll(async () => {
 	const { connectionString, container, connectionParams } = await createCockroachDockerDB();
 	cockroachConnectionString = connectionString;
@@ -71,12 +72,12 @@ afterAll(async () => {
 	await cockroachContainer?.stop().catch(console.error);
 });
 
-beforeEach<{ sql: SQL }>((ctx) => {
+beforeEach<{ sql: CockroachSQL }>((ctx) => {
 	ctx.sql = sql;
 });
 
 commonTests();
-commonPgTests();
+commonPgTests('cockroach');
 
 test('connection test', async () => {
 	const client = new Client({ ...cockroachConnectionParams });
@@ -101,7 +102,7 @@ test('connection test', async () => {
 });
 
 test('logger test', async () => {
-	const loggerQuery = 'select $1::int;';
+	const loggerQuery = 'select $1::int4;';
 	const loggerParams = [1];
 	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
 
@@ -143,26 +144,26 @@ test('logger test', async () => {
 
 	// case 0
 	loggerSql = waddler({ client: cockroachClient, logger });
-	await loggerSql`select ${1}::int;`;
+	await loggerSql`select ${1};`;
 
 	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 	loggerSql = waddler({ client: cockroachClient, logger: true });
-	await loggerSql`select ${1}::int;`;
+	await loggerSql`select ${1};`;
 	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler({ client: cockroachClient, logger: false });
-	await loggerSql`select ${1}::int;`;
+	await loggerSql`select ${1};`;
 
 	// case 1
 	loggerSql = waddler(cockroachConnectionString, { logger });
-	await loggerSql`select ${1}::int;`;
+	await loggerSql`select ${1};`;
 
 	loggerSql = waddler(cockroachConnectionString, { logger: true });
-	await loggerSql`select ${1}::int;`;
+	await loggerSql`select ${1};`;
 	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
 
 	loggerSql = waddler(cockroachConnectionString, { logger: false });
-	await loggerSql`select ${1}::int;`;
+	await loggerSql`select ${1};`;
 
 	consoleMock.mockRestore();
 });
@@ -350,52 +351,56 @@ test('all array types in sql.values test', async () => {
 
 	const date = new Date('2024-10-31T14:25:29.425');
 	const allArrayDataTypesValues = [
-		[2],
-		[4],
-		[BigInt('9007199254740992') + BigInt(1)],
-		[10.1],
-		[100.12],
-		[1000.123],
-		[10000.1234],
-		[true],
-		[`qwe'"\`rty`],
-		[`qwe'"\`rty`],
-		[`qwe'"\`rty`],
-		['10101'],
-		['14:25:29.425'],
-		[date],
-		['2024-10-31'],
-		['1 day'],
-		[`no,'"\`rm`],
-		['550e8400-e29b-41d4-a716-446655440000'],
-		['192.168.0.2/10'],
-		['SRID=4326;POINT(1 2)'],
+		[2, 2],
+		[4, 4],
+		[BigInt('9007199254740992') + BigInt(1), BigInt('9007199254740992') + BigInt(1)],
+		[10.1, 10.1],
+		[100.12, 100.12],
+		[1000.123, 1000.123],
+		[10000.1234, 10000.1234],
+		[true, true],
+		[`qwe'"\`rty`, `qwe'"\`rty`],
+		[`qwe'"\`rty`, `qwe'"\`rty`],
+		[`qwe'"\`rty`, `qwe'"\`rty`],
+		['10101', '10101'],
+		['14:25:29.425', '14:25:29.425'],
+		[date, date],
+		['2024-10-31', '2024-10-31'],
+		['1 day', '1 day'],
+		[`no,'"\`rm`, `no,'"\`rm`],
+		['550e8400-e29b-41d4-a716-446655440000', '550e8400-e29b-41d4-a716-446655440000'],
+		['192.168.0.2/10', '192.168.0.2/10'],
+		['SRID=4326;POINT(1 2)', 'SRID=4326;POINT(1 2)'], // TODO can't insert if array has more than 1 point
 	];
 
 	const expectedRes = [
-		[2],
-		[4],
-		[`${BigInt('9007199254740992') + BigInt(1)}`],
-		[10.1],
-		[100.12],
-		[1000.123],
-		[10000.1234],
-		[true],
-		[`qwe'"\`rty`],
-		[`qwe'"\`rty`],
-		[`qwe'"\`rty`],
-		'{10101}', // ['10101'],
-		['14:25:29.425'],
-		[date],
-		['2024-10-31'],
-		'{"1 day"}', // ['1 day'],
-		'{"no,\'\\"`rm"}', // [`no,'"\`rm`],
-		['550e8400-e29b-41d4-a716-446655440000'],
-		['192.168.0.2/10'],
-		'{0101000020E6100000000000000000F03F0000000000000040}', // [[1,2]],
+		[2, 2],
+		[4, 4],
+		[`${BigInt('9007199254740992') + BigInt(1)}`, `${BigInt('9007199254740992') + BigInt(1)}`],
+		[10.1, 10.1],
+		[100.12, 100.12],
+		[1000.123, 1000.123],
+		[10000.1234, 10000.1234],
+		[true, true],
+		[`qwe'"\`rty`, `qwe'"\`rty`],
+		[`qwe'"\`rty`, `qwe'"\`rty`],
+		[`qwe'"\`rty`, `qwe'"\`rty`],
+		'{10101,10101}', // ['10101'],
+		['14:25:29.425', '14:25:29.425'],
+		[date, date],
+		['2024-10-31', '2024-10-31'],
+		'{"1 day","1 day"}', // ['1 day'],
+		'{"no,\'\\"`rm","no,\'\\"`rm"}', // [`no,'"\`rm`],
+		['550e8400-e29b-41d4-a716-446655440000', '550e8400-e29b-41d4-a716-446655440000'],
+		['192.168.0.2/10', '192.168.0.2/10'],
+		'{0101000020E6100000000000000000F03F0000000000000040:0101000020E6100000000000000000F03F0000000000000040}', // [[1,2]],
 	];
 
-	await sql`insert into ${sql.identifier('all_array_data_types')} values ${sql.values([allArrayDataTypesValues])};`;
+	const types = [];
+	types[19] = 'string[]';
+	await sql`insert into ${sql.identifier('all_array_data_types')} values ${
+		sql.values([allArrayDataTypesValues], types)
+	};`;
 
 	const res = await sql.unsafe(`select * from all_array_data_types;`, [], { rowMode: 'array' });
 
@@ -516,11 +521,11 @@ test('sql query api test', async () => {
 	const query = sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
 
 	expect(query.toSQL()).toStrictEqual({
-		sql: 'select * from "users" where id = $1 or id = $2 and email = $3;',
+		sql: 'select * from "users" where id = $1::int4 or id = $2::int4 and email = $3;',
 		params: [1, 2, 'hello@test.com'],
 	});
 	expect(filter.toSQL()).toStrictEqual({
-		sql: 'id = $1 or id = $2 and email = $3',
+		sql: 'id = $1::int4 or id = $2::int4 and email = $3',
 		params: [1, 2, 'hello@test.com'],
 	});
 });
@@ -537,7 +542,7 @@ test('embeding SQLQuery and SQLTemplate test #1', async () => {
 
 	const query1 = sql`select * from ${sql.identifier('users')} where ${filter1({ id: 1, name: 'a' })};`;
 	expect(query1.toSQL()).toStrictEqual({
-		sql: 'select * from "users" where id = $1 and name = $2;',
+		sql: 'select * from "users" where id = $1::int4 and name = $2;',
 		params: [1, 'a'],
 	});
 
@@ -546,7 +551,7 @@ test('embeding SQLQuery and SQLTemplate test #1', async () => {
 
 	const query2 = sql`select * from ${sql.identifier('users')} where ${filter2({ id: 1, name: 'a' })};`;
 	expect(query2.toSQL()).toStrictEqual({
-		sql: 'select * from "users" where id = $1 and name = $2;',
+		sql: 'select * from "users" where id = $1::int4 and name = $2;',
 		params: [1, 'a'],
 	});
 
@@ -555,7 +560,7 @@ test('embeding SQLQuery and SQLTemplate test #1', async () => {
 
 	const query3 = sql`select * from ${sql.identifier('users')} where ${sql`id = ${1}`};`;
 	expect(query3.toSQL()).toStrictEqual({
-		sql: 'select * from "users" where id = $1;',
+		sql: 'select * from "users" where id = $1::int4;',
 		params: [1],
 	});
 

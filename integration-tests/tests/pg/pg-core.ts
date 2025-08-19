@@ -121,7 +121,7 @@ export const dropUsersTable = async (sql: SQL) => {
 	await sql.unsafe(`drop table if exists users;`);
 };
 
-export const commonPgTests = () => {
+export const commonPgTests = (dialect?: string) => {
 	describe('common_pg_tests', () => {
 		// default ------------------------------------------------------------------------------
 		test<{ sql: SQL }>('sql.default test using with sql.values.', (ctx) => {
@@ -138,7 +138,7 @@ export const commonPgTests = () => {
 		test('base test with number param', (ctx) => {
 			const res = ctx.sql`select ${1};`.toSQL();
 
-			expect(res).toStrictEqual({ sql: `select $1;`, params: [1] });
+			expect(res).toStrictEqual({ sql: `select $1${dialect === 'cockroach' ? '::int4' : ''};`, params: [1] });
 		});
 
 		test('base test with bigint param', (ctx) => {
@@ -173,6 +173,7 @@ export const commonPgTests = () => {
 
 		// sql.append
 		test<{ sql: SQL }>('sql.append test.', (ctx) => {
+			const typeCast = dialect === 'cockroach' ? '::int4' : '';
 			const query = ctx.sql<undefined>`select * from users where id = ${1}`;
 
 			query.append(ctx.sql` or id = ${3}`);
@@ -180,7 +181,7 @@ export const commonPgTests = () => {
 
 			const res = query.toSQL();
 			expect(res).toStrictEqual({
-				sql: 'select * from users where id = $1 or id = $2 or id = $3;',
+				sql: `select * from users where id = $1${typeCast} or id = $2${typeCast} or id = $3${typeCast};`,
 				params: [1, 3, 4],
 			});
 		});

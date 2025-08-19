@@ -31,7 +31,7 @@ export class NodeMsSqlSQLTemplate<T> extends SQLTemplate<T> {
 
 		const request = queryClient.request() as Request & { arrayRowMode: boolean };
 		for (const [index, param] of params.entries()) {
-			request.input(this.dialect.escapeParam(index + 1), param);
+			request.input(this.dialect.escapeParam(index + 1).slice(1), param);
 		}
 
 		if (this.options.rowMode === 'array') request.arrayRowMode = true;
@@ -40,7 +40,7 @@ export class NodeMsSqlSQLTemplate<T> extends SQLTemplate<T> {
 			const queryResult = await request.query(sql);
 
 			finalResult = queryResult.recordset;
-			// finalMetadata = queryResult[1];
+			finalMetadata = { output: queryResult.output, rowsAffected: queryResult.rowsAffected };
 		} catch (error) {
 			throw new WaddlerQueryError(sql, params, error as Error);
 		}

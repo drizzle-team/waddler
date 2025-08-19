@@ -76,7 +76,7 @@ export function waddler<TClient extends NodeMsSqlClient = mssql.ConnectionPool>(
 		(
 			& WaddlerConfig
 			& ({
-				connection: string | mssql.ConnectionPool; // TODO maybe connection should be of type string | mssql.config?
+				connection: string | mssql.config; // string | mssql.ConnectionPool; // TODO maybe connection should be of type string | mssql.config?
 			} | {
 				client: TClient;
 			})

@@ -23,7 +23,7 @@ export const createAllDataTypesTable = async (sql: SQL) => {
 				"int4" int4,
 				"int8" int8,
 				"numeric" numeric,
-				"decimal" numeric,
+				"decimal" decimal,
 				"real" real,
 				"double_precision" double precision,
 				"boolean" boolean,

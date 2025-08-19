@@ -1,9 +1,9 @@
 import { Dialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
-import type { Identifier, IdentifierObject, Raw, Value, Values } from '../../types.ts';
+import type { Identifier, IdentifierObject, Raw, Values } from '../../types.ts';
 
 export class MsSqlDialect extends Dialect {
 	escapeParam(lastParamIdx: number): string {
-		return `@par${lastParamIdx}`;
+		return `@p${lastParamIdx}`;
 	}
 
 	escapeIdentifier(identifier: string): string {
@@ -59,10 +59,11 @@ export class MsSqlDialect extends Dialect {
 
 	// SQLValues
 	valueToSQL(
-		{ value, params, lastParamIdx }: {
-			value: Value;
-			params: Value[] | Record<string, any>;
+		{ value, params, lastParamIdx, paramsCount }: {
+			value: any;
+			params: any[] | Record<string, any>;
 			lastParamIdx: number;
+			paramsCount: number;
 		},
 	): string {
 		if (value instanceof SQLDefault) {
@@ -79,12 +80,12 @@ export class MsSqlDialect extends Dialect {
 			|| Buffer.isBuffer(value)
 		) {
 			params.push(value);
-			return this.escapeParam(lastParamIdx);
+			return this.escapeParam(lastParamIdx + paramsCount + 1);
 		}
 
 		if (typeof value === 'object') {
 			params.push(JSON.stringify(value));
-			return this.escapeParam(lastParamIdx);
+			return this.escapeParam(lastParamIdx + paramsCount + 1);
 		}
 
 		if (value === undefined) {

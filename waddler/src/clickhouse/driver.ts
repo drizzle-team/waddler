@@ -52,16 +52,16 @@ export interface ClickHouseSQL extends Omit<SQL, 'unsafe' | 'values'> {
 	 *
 	 * ```sql
 	 * INSERT INTO <tableIdentifier>
-	 * VALUES ({val1:Int32}, {val2:String}), ({val3:Int32}, {val4:String});
+	 * VALUES ({param1:Int32}, {param2:String}), ({param3:Int32}, {param4:String});
 	 * ```
 	 *
 	 * with these query parameters:
 	 * ```ts
 	 * {
-	 *   val1: 1,
-	 *   val2: 'qwerty1',
-	 *   val3: 2,
-	 *   val4: 'qwerty2'
+	 *   param1: 1,
+	 *   param2: 'qwerty1',
+	 *   param3: 2,
+	 *   param4: 'qwerty2'
 	 * }
 	 * ```
 	 */

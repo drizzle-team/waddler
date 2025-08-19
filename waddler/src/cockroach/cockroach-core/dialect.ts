@@ -1,10 +1,10 @@
-import { Dialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
-import type { Identifier, IdentifierObject, Raw, Value, Values } from '../../types.ts';
+import { Dialect, SQLCommonParam, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
+import type { Identifier, IdentifierObject, Raw, UnsafeParamType, Value, Values } from '../../types.ts';
 // import { makeCockroachArray } from './utils.ts';
 
 export class CockroachDialect extends Dialect {
-	escapeParam(lastParamIdx: number): string {
-		return `$${lastParamIdx}`;
+	escapeParam(lastParamIdx: number, typeToCast?: string): string {
+		return `$${lastParamIdx}${typeToCast ? `::${typeToCast}` : ''}`;
 	}
 
 	escapeIdentifier(identifier: string): string {
@@ -60,10 +60,12 @@ export class CockroachDialect extends Dialect {
 
 	// SQLValues
 	valueToSQL(
-		{ value, lastParamIdx, params }: {
+		{ value, lastParamIdx, params, types, colIdx }: {
 			value: Value;
 			lastParamIdx: number;
 			params: Value[] | Record<string, any>;
+			types: string[];
+			colIdx: number;
 		},
 	): string {
 		if (value instanceof SQLDefault) {
@@ -71,9 +73,8 @@ export class CockroachDialect extends Dialect {
 		}
 
 		if (Array.isArray(value)) {
-			// const mappedValue = makeCockroachArray(value);
 			params.push(value as any);
-			return this.escapeParam(lastParamIdx + params.length);
+			return this.escapeParam(lastParamIdx + params.length, types[colIdx]);
 		}
 
 		if (
@@ -86,7 +87,7 @@ export class CockroachDialect extends Dialect {
 			|| typeof value === 'object'
 		) {
 			params.push(value);
-			return this.escapeParam(lastParamIdx + params.length);
+			return this.escapeParam(lastParamIdx + params.length, types[colIdx]);
 		}
 
 		if (value === undefined) {
@@ -97,12 +98,71 @@ export class CockroachDialect extends Dialect {
 	}
 }
 
+export type DbType =
+	| 'int2'
+	| 'int4'
+	| 'int8'
+	| 'numeric'
+	| 'decimal'
+	| 'real'
+	| 'precision'
+	| 'boolean'
+	| 'char'
+	| 'varchar'
+	| 'string'
+	| 'bit'
+	| 'jsonb'
+	| 'time'
+	| 'timestamp'
+	| 'date'
+	| 'interval'
+	| 'uuid'
+	| 'inet'
+	| 'geometry'
+	| 'vector'
+	| (string & {});
+
+export class CockroachSQLCommonParam extends SQLCommonParam {
+	INT32_MAX = 2_147_483_647;
+	INT32_MIN = -2_147_483_648;
+
+	constructor(
+		value: UnsafeParamType,
+		public type?: string,
+	) {
+		super(value);
+	}
+
+	override generateSQL(
+		{ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number },
+	) {
+		// integer case
+		if (typeof this.value === 'number' && this.value % 1 === 0) {
+			this.type = 'int4';
+			if (this.value > this.INT32_MAX || this.value < this.INT32_MIN) {
+				this.type = 'int8';
+			}
+		}
+
+		const params = dialect.createEmptyParams();
+		dialect.pushParams(params, this.value, lastParamIdx + 1, 'single');
+		return {
+			sql: dialect.escapeParam(lastParamIdx + 1, this.type),
+			params,
+			paramsCount: 1,
+		};
+	}
+}
+
 export const SQLFunctions = {
 	identifier: (value: Identifier<IdentifierObject>) => {
 		return new SQLIdentifier(value);
 	},
-	values: (value: Values) => {
-		return new SQLValues(value);
+	values: (value: Values, types?: DbType[]) => {
+		return new SQLValues(value, types);
+	},
+	param: (value: any, type?: DbType) => {
+		return new CockroachSQLCommonParam(value, type);
 	},
 	raw: (value: Raw) => {
 		return new SQLRaw(value);
