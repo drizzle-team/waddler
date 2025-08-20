@@ -144,7 +144,7 @@ export const commonPgTests = (dialect?: string) => {
 		test('base test with bigint param', (ctx) => {
 			const res = ctx.sql`select ${BigInt(10)};`.toSQL();
 
-			expect(res).toStrictEqual({ sql: `select $1;`, params: [10n] });
+			expect(res).toStrictEqual({ sql: `select $1${dialect === 'cockroach' ? '::int8' : ''};`, params: [10n] });
 		});
 
 		test('base test with string param', (ctx) => {

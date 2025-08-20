@@ -104,8 +104,9 @@ export type DbType =
 	| 'int8'
 	| 'numeric'
 	| 'decimal'
+	| 'float'
 	| 'real'
-	| 'precision'
+	| 'double precision'
 	| 'boolean'
 	| 'char'
 	| 'varchar'
@@ -136,6 +137,9 @@ export class CockroachSQLCommonParam extends SQLCommonParam {
 	override generateSQL(
 		{ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number },
 	) {
+		// bigint case
+		if (typeof this.value === 'bigint') this.type = 'int8';
+
 		// integer case
 		if (typeof this.value === 'number' && this.value % 1 === 0) {
 			this.type = 'int4';

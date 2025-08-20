@@ -597,3 +597,77 @@ test('insert benchmark', async () => {
 
 	await sql.unsafe(`drop table tests;`);
 });
+
+test('1d array of strings, integer as SQLCommonParam test', async () => {
+	await sql.unsafe(`create table tests(
+	id    int4,
+	path  string
+);
+  `);
+
+	const valuesToInsert = [[1, '/'], [2, '/watch'], [3, '/over_watch']];
+
+	await sql`insert into tests values ${sql.values(valuesToInsert)};`;
+
+	// case0
+	const query0 = sql`select * from tests where path = any(${['/', '/watch']});`;
+	expect(query0.toSQL()).toStrictEqual({
+		sql: 'select * from tests where path = any($1);',
+		params: [['/', '/watch']],
+	});
+
+	const res0 = await query0;
+	expect(res0).toStrictEqual([{ id: 1, path: '/' }, { id: 2, path: '/watch' }]);
+
+	// case1 (int32 max)
+	const query1 = sql`select ${2_147_483_647} as max_int32;`;
+	expect(query1.toSQL()).toStrictEqual({
+		sql: 'select $1::int4 as max_int32;',
+		params: [2147483647],
+	});
+
+	const res1 = await query1;
+	expect(res1).toStrictEqual([{ max_int32: 2147483647 }]);
+
+	// case2 (int32 min)
+	const query2 = sql`select ${-2_147_483_648} as min_int32;`;
+	expect(query2.toSQL()).toStrictEqual({
+		sql: 'select $1::int4 as min_int32;',
+		params: [-2147483648],
+	});
+
+	const res2 = await query2;
+	expect(res2).toStrictEqual([{ min_int32: -2147483648 }]);
+
+	// case3 (float)
+	const query3 = sql`select ${sql.param(-2_147_483_648.123, 'double precision')} as some_float;`;
+	expect(query3.toSQL()).toStrictEqual({
+		sql: 'select $1::double precision as some_float;',
+		params: [-2147483648.123],
+	});
+
+	const res3 = await query3;
+	expect(res3).toStrictEqual([{ some_float: -2147483648.123 }]);
+
+	await sql.unsafe(`drop table tests;`);
+
+	// case4 (int32 max + 1)
+	const query4 = sql`select ${2_147_483_647 + 1} as max_int32_plus_one;`;
+	expect(query4.toSQL()).toStrictEqual({
+		sql: 'select $1::int8 as max_int32_plus_one;',
+		params: [2147483648],
+	});
+
+	const res4 = await query4;
+	expect(res4).toStrictEqual([{ max_int32_plus_one: '2147483648' }]);
+
+	// case5 (bigint)
+	const query5 = sql`select ${BigInt(1)} as bigint_;`;
+	expect(query5.toSQL()).toStrictEqual({
+		sql: 'select $1::int8 as bigint_;',
+		params: [1n],
+	});
+
+	const res5 = await query5;
+	expect(res5).toStrictEqual([{ bigint_: '1' }]);
+});
