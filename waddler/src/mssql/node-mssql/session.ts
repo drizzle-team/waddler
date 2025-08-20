@@ -14,7 +14,9 @@ export class NodeMsSqlSQLTemplate<T> extends SQLTemplate<T> {
 		protected readonly client: NodeMsSqlClient,
 		dialect: MsSqlDialect,
 		configOptions: SQLTemplateConfigOptions,
-		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
+		private options: { rowMode: 'array' | 'object'; getParamName?: (lastParamNumber: number) => string } = {
+			rowMode: 'object',
+		},
 	) {
 		super(sqlWrapper, dialect, configOptions);
 	}
@@ -30,8 +32,12 @@ export class NodeMsSqlSQLTemplate<T> extends SQLTemplate<T> {
 		}
 
 		const request = queryClient.request() as Request & { arrayRowMode: boolean };
+
+		const getParamName = this.options.getParamName
+			?? ((lastParamNumber: number) => this.dialect.escapeParam(lastParamNumber).slice(1));
+
 		for (const [index, param] of params.entries()) {
-			request.input(this.dialect.escapeParam(index + 1).slice(1), param);
+			request.input(getParamName(index + 1), param);
 		}
 
 		if (this.options.rowMode === 'array') request.arrayRowMode = true;

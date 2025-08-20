@@ -14,6 +14,8 @@ export class AutoPool {
 		});
 		return this.pool;
 	}
-}
 
-// TODO Should AutoPool have close method?
+	async close() {
+		await this.pool.close();
+	}
+}

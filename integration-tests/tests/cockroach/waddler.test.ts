@@ -2,7 +2,6 @@ import type Docker from 'dockerode';
 import type { Client as ClientT } from 'pg';
 import pg from 'pg';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
-import type { SQL } from 'waddler';
 import type { CockroachSQL } from 'waddler/cockroach';
 import { sql as sqlQuery, waddler } from 'waddler/cockroach';
 import { queryStream } from 'waddler/extensions/pg-query-stream';
@@ -140,7 +139,7 @@ test('logger test', async () => {
 		},
 	};
 
-	let loggerSql: SQL;
+	let loggerSql: CockroachSQL;
 
 	// case 0
 	loggerSql = waddler({ client: cockroachClient, logger });
@@ -393,7 +392,7 @@ test('all array types in sql.values test', async () => {
 		'{"no,\'\\"`rm","no,\'\\"`rm"}', // [`no,'"\`rm`],
 		['550e8400-e29b-41d4-a716-446655440000', '550e8400-e29b-41d4-a716-446655440000'],
 		['192.168.0.2/10', '192.168.0.2/10'],
-		'{0101000020E6100000000000000000F03F0000000000000040:0101000020E6100000000000000000F03F0000000000000040}', // [[1,2]],
+		'{0101000020E6100000000000000000F03F0000000000000040:0101000020E6100000000000000000F03F0000000000000040}', // [[1,2],[1,2]],
 	];
 
 	const types = [];

@@ -1,7 +1,7 @@
 import type Docker from 'dockerode';
 import mssql from 'mssql';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
-import type { SQL } from 'waddler';
+import type { NodeMsSqlSQL } from 'waddler/node-mssql';
 import { AutoPool, sql as sqlQuery, waddler } from 'waddler/node-mssql';
 import { commonTests } from '../common.test.ts';
 import { createMsSqlDockerDB, vitestExpectSoftDate } from '../utils.ts';
@@ -21,7 +21,7 @@ let mssqlClient: mssql.ConnectionPool;
 let mssqlOptions: mssql.config;
 let mssqlConnectionString: string;
 
-let sql: SQL;
+let sql: NodeMsSqlSQL;
 beforeAll(async () => {
 	const { container, options, connectionString } = await createMsSqlDockerDB();
 	mssqlContainer = container;
@@ -58,7 +58,7 @@ afterAll(async () => {
 	await mssqlContainer?.stop().catch(console.error);
 });
 
-beforeEach<{ sql: SQL }>((ctx) => {
+beforeEach<{ sql: NodeMsSqlSQL }>((ctx) => {
 	ctx.sql = sql;
 });
 
@@ -110,7 +110,7 @@ test('logger test', async () => {
 		},
 	};
 
-	let loggerSql: SQL;
+	let loggerSql: NodeMsSqlSQL;
 
 	// case 0
 	loggerSql = waddler({ client: mssqlClient, logger });
@@ -173,6 +173,11 @@ test('all types in sql.unsafe test', async () => {
 	await sql.unsafe(
 		`insert into all_data_types values (@p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16, @p17, @p18, @p19, @p20, @p21, @p22, @p23, default);`,
 		values,
+		{
+			getParamName: (lastParamNumber: number) => {
+				return `p${lastParamNumber}`;
+			},
+		},
 	);
 
 	const res = await sql.unsafe(`select * from all_data_types;`, [], { rowMode: 'object' });

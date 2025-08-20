@@ -2,8 +2,8 @@ import { Dialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql
 import type { Identifier, IdentifierObject, Raw, Values } from '../../types.ts';
 
 export class MsSqlDialect extends Dialect {
-	escapeParam(lastParamIdx: number): string {
-		return `@p${lastParamIdx}`;
+	escapeParam(lastParamNumber: number): string {
+		return `@p${lastParamNumber}`;
 	}
 
 	escapeIdentifier(identifier: string): string {

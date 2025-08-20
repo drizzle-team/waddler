@@ -4,12 +4,68 @@ import { DefaultLogger } from '../../logger.ts';
 import { SQLQuery } from '../../sql-template-params.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
-import type { SQLParamType, UnsafeParamType, WaddlerConfig } from '../../types.ts';
+import type { RowData, SQLParamType, UnsafeParamType, WaddlerConfig } from '../../types.ts';
 import { isConfig } from '../../utils.ts';
 import { MsSqlDialect, SQLFunctions } from '../mssql-core/dialect.ts';
 import { AutoPool } from './pool.ts';
 import type { NodeMsSqlClient } from './session.ts';
 import { NodeMsSqlSQLTemplate } from './session.ts';
+
+export interface NodeMsSqlSQL extends Omit<SQL, 'unsafe'> {
+	<T = RowData>(
+		strings: TemplateStringsArray,
+		...params: SQLParamType[]
+	): NodeMsSqlSQLTemplate<T>;
+
+	/**
+	 * executes a query with parameters using the node-mssql driver
+	 * @param query SQL query string
+	 * @example
+	 * ```ts
+	 * `insert into users(id, name, age) values (@p1, @p2, @p3);`
+	 * ```
+	 *
+	 * @param params query parameters
+	 * @example
+	 * ```ts
+	 * [1, 'alex', 23]
+	 * ```
+	 *
+	 * @param options.rowMode format in which the query result should be returned;
+	 * defaults to 'object'
+	 * @example
+	 * ```ts
+	 * // rowMode = 'object'
+	 * [
+	 * 	{id: 1, name: 'alex', age: 23}
+	 * ]
+	 *
+	 * // rowMode = 'array'
+	 * [
+	 * 	[1, 'alex', 23]
+	 * ]
+	 * ```
+	 *
+	 * @param options.getParamName function that returns the parameter name based on its index;
+	 * default format is `p<number>`
+	 * @example
+	 * ```ts
+	 * // for a query like this
+	 * `insert into users(id, name, age) values (@p1, @p2, @p3);`
+	 *
+	 * // parameter names are 'p1', 'p2', 'p3'
+	 * ```
+	 */
+	unsafe<RowMode extends 'array' | 'object'>(
+		query: string,
+		params?: UnsafeParamType[],
+		options?: { rowMode?: RowMode; getParamName?: (lastParamNumber: number) => string },
+	): Promise<
+		RowMode extends 'array' ? any[][] : {
+			[columnName: string]: any;
+		}[]
+	>;
+}
 
 export interface NodeMsSqlSQLQuery extends Pick<SQL, 'identifier' | 'raw' | 'default' | 'values'> {
 	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
@@ -30,7 +86,7 @@ export { sql };
 const createSqlTemplate = (
 	client: NodeMsSqlClient,
 	configOptions: WaddlerConfig = {},
-): SQL => {
+): NodeMsSqlSQL => {
 	const dialect = new MsSqlDialect();
 	let logger: Logger | undefined;
 	if (configOptions.logger === true) {
@@ -50,15 +106,21 @@ const createSqlTemplate = (
 		unsafe: async (
 			query: string,
 			params?: UnsafeParamType[],
-			options?: { rowMode: 'array' | 'object' },
+			options?: { rowMode?: 'array' | 'object'; getParamName?: (lastParamNumber: number) => string },
 		) => {
 			params = params ?? [];
-			options = options ?? { rowMode: 'object' };
+			options = options ?? {};
+			options.rowMode = options.rowMode ?? 'object';
 
 			const sql = new SQLWrapper();
 			sql.with({ rawParams: { sql: query, params } });
-
-			const unsafeDriver = new NodeMsSqlSQLTemplate(sql, client, dialect, { logger }, options);
+			const unsafeDriver = new NodeMsSqlSQLTemplate(
+				sql,
+				client,
+				dialect,
+				{ logger },
+				options as Required<Pick<typeof options, 'rowMode'>> & Pick<typeof options, 'getParamName'>,
+			);
 			return await unsafeDriver.execute();
 		},
 	});
@@ -76,7 +138,7 @@ export function waddler<TClient extends NodeMsSqlClient = mssql.ConnectionPool>(
 		(
 			& WaddlerConfig
 			& ({
-				connection: string | mssql.config; // string | mssql.ConnectionPool; // TODO maybe connection should be of type string | mssql.config?
+				connection: string | mssql.config;
 			} | {
 				client: TClient;
 			})
