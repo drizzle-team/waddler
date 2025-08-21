@@ -1,4 +1,4 @@
-import { sql } from 'waddler/mysql2';
+import { sql } from 'waddler/mysql-core';
 
 export const filter1 = ({ id, name, email }: { id?: number; name?: string; email?: string }) => {
 	const filters = [];

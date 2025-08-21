@@ -1,8 +1,9 @@
 import type Docker from 'dockerode';
 import mssql from 'mssql';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import { sql as sqlQuery } from 'waddler/mssql-core';
 import type { NodeMsSqlSQL } from 'waddler/node-mssql';
-import { AutoPool, sql as sqlQuery, waddler } from 'waddler/node-mssql';
+import { AutoPool, waddler } from 'waddler/node-mssql';
 import { commonTests } from '../common.test.ts';
 import { createMsSqlDockerDB, vitestExpectSoftDate } from '../utils.ts';
 import {

@@ -13,3 +13,5 @@ nodejs_connection_pool_*
 Limitations.md
 waddlerChangelog.md
 .wrangler
+.madgerc
+graph.svg

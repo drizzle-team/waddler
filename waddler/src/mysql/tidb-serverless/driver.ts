@@ -2,34 +2,21 @@ import type { Config, Connection } from '@tidbcloud/serverless';
 import { connect } from '@tidbcloud/serverless';
 import type { Logger } from '../../logger.ts';
 import { DefaultLogger } from '../../logger.ts';
-import { SQLQuery } from '../../sql-template-params.ts';
+import { MySQLDialect, SQLFunctions } from '../../mysql-core/dialect.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
-import type { SQLParamType, UnsafeParamType, WaddlerConfig } from '../../types.ts';
+import type { RowData, SQLParamType, UnsafeParamType, WaddlerConfig } from '../../types.ts';
 import { isConfig } from '../../utils.ts';
-import { MySQLDialect, SQLFunctions } from '../mysql-core/dialect.ts';
 import { TidbServerlessSQLTemplate } from './session.ts';
 
-export interface TidbServerlessSQLQuery extends Pick<SQL, 'identifier' | 'raw' | 'default' | 'values'> {
-	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+export interface TidbServerlessSQL extends SQL {
+	<T = RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): TidbServerlessSQLTemplate<T>;
 }
-
-const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
-	const sqlWrapper = new SQLWrapper();
-	sqlWrapper.with({ templateParams: { strings, params } });
-	const dialect = new MySQLDialect();
-
-	return new SQLQuery(sqlWrapper, dialect);
-}) as TidbServerlessSQLQuery;
-
-Object.assign(sql, SQLFunctions);
-
-export { sql };
 
 const createSqlTemplate = (
 	client: Connection,
 	configOptions: WaddlerConfig = {},
-): SQL => {
+): TidbServerlessSQL => {
 	const dialect = new MySQLDialect();
 	let logger: Logger | undefined;
 	if (configOptions.logger === true) {

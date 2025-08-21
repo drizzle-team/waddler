@@ -2,7 +2,8 @@ import { PGlite } from '@electric-sql/pglite';
 import fs from 'fs';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
-import { sql as sqlQuery, waddler } from 'waddler/pglite';
+import { sql as sqlQuery } from 'waddler/pg-core';
+import { waddler } from 'waddler/pglite';
 import { commonTests } from '../../common.test.ts';
 import {
 	commonPgTests,

@@ -1,9 +1,9 @@
 import { type HTTPQueryOptions, type NeonQueryFunction, types } from '@neondatabase/serverless';
-import type { Dialect } from '~/sql-template-params.ts';
-import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
+import type { Dialect } from '../../sql-template-params.ts';
 import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
+import type { SQLWrapper } from '../../sql.ts';
 
 export type NeonHttpClient = NeonQueryFunction<any, any>;
 

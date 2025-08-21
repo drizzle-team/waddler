@@ -1,10 +1,10 @@
 import type { Client as ClientT, Pool as PoolT, PoolClient, QueryArrayConfig, QueryConfig } from 'pg';
 import pg from 'pg';
-import type { SQLWrapper } from '~/sql.ts';
+import type { CockroachDialect } from '../cockroach-core/index.ts';
 import { WaddlerQueryError } from '../errors/index.ts';
 import type { SQLTemplateConfigOptions } from '../sql-template.ts';
 import { SQLTemplate } from '../sql-template.ts';
-import type { CockroachDialect } from './cockroach-core/dialect.ts';
+import type { SQLWrapper } from '../sql.ts';
 import type { CockroachClient } from './driver.ts';
 
 const { Pool, types } = pg;

@@ -1,4 +1,4 @@
-import * as waddlerTools from 'waddler/libsql';
+import * as waddlerTools from 'waddler/sqlite-core';
 
 export const filter2 = ({ id, name, email }: { id?: number; name?: string; email?: string }) => {
 	const filters = [];

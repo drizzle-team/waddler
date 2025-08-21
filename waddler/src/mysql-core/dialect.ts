@@ -1,5 +1,6 @@
-import { Dialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
-import type { Identifier, Raw, Value, Values } from '../../types.ts';
+import { Dialect, SQLDefault, SQLIdentifier, SQLQuery, SQLRaw, SQLValues } from '../sql-template-params.ts';
+import { type SQL, SQLWrapper } from '../sql.ts';
+import type { Identifier, Raw, SQLParamType, Value, Values } from '../types.ts';
 
 export type MySQLIdentifierObject = {
 	table?: string;
@@ -93,3 +94,19 @@ export const SQLFunctions = {
 	},
 	default: new SQLDefault(),
 };
+
+export interface MySqlSQLQuery extends Pick<SQL, 'identifier' | 'raw' | 'default' | 'values'> {
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+}
+
+const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
+	const sqlWrapper = new SQLWrapper();
+	sqlWrapper.with({ templateParams: { strings, params } });
+	const dialect = new MySQLDialect();
+
+	return new SQLQuery(sqlWrapper, dialect);
+}) as MySqlSQLQuery;
+
+Object.assign(sql, SQLFunctions);
+
+export { sql };

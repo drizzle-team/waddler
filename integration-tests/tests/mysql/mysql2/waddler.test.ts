@@ -4,7 +4,9 @@ import type { Connection } from 'mysql2/promise';
 import mysql from 'mysql2/promise';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
-import { sql as sqlQuery, waddler } from 'waddler/mysql2';
+import { sql as sqlQuery } from 'waddler/mysql-core';
+import type { MySql2SQL } from 'waddler/mysql2';
+import { waddler } from 'waddler/mysql2';
 import { commonTests } from '../../common.test';
 import { createMysqlDockerDB } from '../../utils';
 import {
@@ -29,7 +31,7 @@ let mysqlConnectionParams: {
 	database: string;
 };
 
-let sql: ReturnType<typeof waddler>;
+let sql: MySql2SQL;
 beforeAll(async () => {
 	const dockerPayload = await createMysqlDockerDB();
 	const sleep = 1000;

@@ -1,17 +1,18 @@
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
-import type { SQL } from 'waddler/duckdb-neo';
-import { sql as sqlQuery, waddler } from 'waddler/duckdb-neo';
+import { sql as sqlQuery } from 'waddler/duckdb-core';
+import type { DuckdbNeoSQL } from 'waddler/duckdb-neo';
+import { waddler } from 'waddler/duckdb-neo';
 import { commonTests } from '../common.test';
 import { commonPgTests, createUsersTable, dropUsersTable } from '../pg/pg-core';
 import { filter1 } from './test-filters1';
 import { filter2 } from './test-filters2';
 
-let sql: ReturnType<typeof waddler>;
+let sql: DuckdbNeoSQL;
 beforeAll(async () => {
 	sql = waddler({ url: ':memory:', max: 10, accessMode: 'read_write' });
 });
 
-beforeEach<{ sql: SQL }>((ctx) => {
+beforeEach<{ sql: DuckdbNeoSQL }>((ctx) => {
 	ctx.sql = sql;
 });
 
@@ -917,7 +918,7 @@ test('logger test', async () => {
 		},
 	};
 
-	let loggerSql: SQL;
+	let loggerSql: DuckdbNeoSQL;
 	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
 
 	// case 0

@@ -1,9 +1,9 @@
 import type { SQLPluginResult } from '@xata.io/client';
-import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
+import type { PgDialect } from '../../pg-core/index.ts';
 import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
-import type { PgDialect } from '../pg-core/index.ts';
+import type { SQLWrapper } from '../../sql.ts';
 
 export type XataHttpClient = {
 	sql: SQLPluginResult;

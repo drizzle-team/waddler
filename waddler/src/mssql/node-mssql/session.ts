@@ -1,9 +1,9 @@
 import type { ConnectionPool, Request } from 'mssql';
-import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
+import type { MsSqlDialect } from '../../mssql-core/dialect.ts';
 import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
-import type { MsSqlDialect } from '../mssql-core/dialect.ts';
+import type { SQLWrapper } from '../../sql.ts';
 import { AutoPool } from './pool.ts';
 
 export type NodeMsSqlClient = Pick<ConnectionPool, 'request'> | AutoPool;

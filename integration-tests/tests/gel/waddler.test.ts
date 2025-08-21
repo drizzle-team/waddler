@@ -2,7 +2,9 @@ import type Docker from 'dockerode';
 import type { Client } from 'gel';
 import createClient, { DateDuration, Duration, LocalDate, LocalDateTime, LocalTime, RelativeDuration } from 'gel';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
-import { sql as sqlQuery, waddler } from 'waddler/gel';
+import type { GelSQL } from 'waddler/gel';
+import { waddler } from 'waddler/gel';
+import { sql as sqlQuery } from 'waddler/gel-core';
 import { commonTests } from '../common.test.ts';
 import { createGelDockerDB } from '../utils.ts';
 import {
@@ -31,7 +33,7 @@ let gelConnectionParams: {
 let gelConnectionString: string;
 const tlsSecurity = 'insecure' as const;
 
-let sql: SQL;
+let sql: GelSQL;
 beforeAll(async () => {
 	const dockerPayload = await createGelDockerDB();
 	const sleep = 1000;

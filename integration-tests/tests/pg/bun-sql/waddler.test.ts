@@ -3,7 +3,8 @@ import { afterAll, beforeAll, expect, test } from 'bun:test';
 import type Docker from 'dockerode';
 import { vi } from 'vitest';
 import type { SQL } from 'waddler';
-import { sql as sqlQuery, waddler } from 'waddler/bun-sql';
+import { waddler } from 'waddler/bun-sql';
+import { sql as sqlQuery } from 'waddler/pg-core';
 import {
 	createAllArrayDataTypesTable,
 	createAllDataTypesTable,

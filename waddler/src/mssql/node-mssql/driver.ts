@@ -1,12 +1,11 @@
 import type mssql from 'mssql';
 import type { Logger } from '../../logger.ts';
 import { DefaultLogger } from '../../logger.ts';
-import { SQLQuery } from '../../sql-template-params.ts';
+import { MsSqlDialect, SQLFunctions } from '../../mssql-core/dialect.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
 import type { RowData, SQLParamType, UnsafeParamType, WaddlerConfig } from '../../types.ts';
 import { isConfig } from '../../utils.ts';
-import { MsSqlDialect, SQLFunctions } from '../mssql-core/dialect.ts';
 import { AutoPool } from './pool.ts';
 import type { NodeMsSqlClient } from './session.ts';
 import { NodeMsSqlSQLTemplate } from './session.ts';
@@ -66,22 +65,6 @@ export interface NodeMsSqlSQL extends Omit<SQL, 'unsafe'> {
 		}[]
 	>;
 }
-
-export interface NodeMsSqlSQLQuery extends Pick<SQL, 'identifier' | 'raw' | 'default' | 'values'> {
-	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
-}
-
-const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
-	const sqlWrapper = new SQLWrapper();
-	sqlWrapper.with({ templateParams: { strings, params } });
-	const dialect = new MsSqlDialect();
-
-	return new SQLQuery(sqlWrapper, dialect);
-}) as NodeMsSqlSQLQuery;
-
-Object.assign(sql, SQLFunctions);
-
-export { sql };
 
 const createSqlTemplate = (
 	client: NodeMsSqlClient,

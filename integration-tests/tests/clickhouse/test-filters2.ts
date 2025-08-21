@@ -1,4 +1,4 @@
-import * as waddlerTools from 'waddler/clickhouse';
+import * as waddlerTools from 'waddler/clickhouse-core';
 
 export const filter2 = ({ id, name, email }: { id?: number; name?: string; email?: string }) => {
 	const filters = [];

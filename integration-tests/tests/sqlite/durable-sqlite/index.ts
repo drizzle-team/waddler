@@ -1,7 +1,8 @@
 /// <reference types="@cloudflare/workers-types" />
 import { expect } from 'chai';
 import { DurableObject } from 'cloudflare:workers';
-import { type DurableSqliteSQL, sql as sqlQuery, waddler } from 'waddler/durable-sqlite';
+import { type DurableSqliteSQL, waddler } from 'waddler/durable-sqlite';
+import { sql as sqlQuery } from 'waddler/sqlite-core';
 import { createAllDataTypesTable, createUsersTable, dropAllDataTypesTable, dropUsersTable } from '../sqlite-core';
 import { filter1 } from './test-filters1';
 import { filter2 } from './test-filters2';

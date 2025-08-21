@@ -1,7 +1,8 @@
 import { D1Database, D1DatabaseAPI } from '@miniflare/d1';
 import { createSQLiteDB } from '@miniflare/shared';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
-import { type D1SQL, sql as sqlQuery, waddler } from 'waddler/d1';
+import { type D1SQL, waddler } from 'waddler/d1';
+import { sql as sqlQuery } from 'waddler/sqlite-core';
 import { commonTests } from '../../common.test';
 import {
 	commonSqliteTests,

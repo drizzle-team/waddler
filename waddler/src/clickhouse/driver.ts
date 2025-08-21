@@ -1,18 +1,21 @@
 import type { ClickHouseClient } from '@clickhouse/client';
 import { createClient } from '@clickhouse/client';
 import type { NodeClickHouseClientConfigOptions } from '@clickhouse/client/dist/config';
-import type { SQLValues } from '~/sql-template-params.ts';
-import { SQLQuery } from '~/sql-template-params.ts';
-import { isConfig } from '~/utils.ts';
-import type { DbType } from '../clickhouse-core/index.ts';
-import { ClickHouseDialect, ClickHouseSQLCommonParam, SQLFunctions, UnsafePromise } from '../clickhouse-core/index.ts';
+import {
+	ClickHouseDialect,
+	ClickHouseSQLCommonParam,
+	SQLFunctions,
+	UnsafePromise,
+} from '../clickhouse-core/dialect.ts';
+import type { ClickHouseCoreSQL } from '../clickhouse-core/dialect.ts';
 import type { Logger } from '../logger.ts';
 import { DefaultLogger } from '../logger.ts';
 import { type SQL, SQLWrapper } from '../sql.ts';
-import type { RowData, SQLParamType, UnsafeParamType, Values, WaddlerConfig } from '../types.ts';
+import type { RowData, SQLParamType, UnsafeParamType, WaddlerConfig } from '../types.ts';
+import { isConfig } from '../utils.ts';
 import { ClickHouseSQLTemplate } from './session.ts';
 
-export interface ClickHouseSQL extends Omit<SQL, 'unsafe' | 'values'> {
+export interface ClickHouseSQL extends Omit<SQL, 'unsafe' | 'values'>, ClickHouseCoreSQL {
 	<T = RowData>(
 		strings: TemplateStringsArray,
 		...params: SQLParamType[]
@@ -28,65 +31,7 @@ export interface ClickHouseSQL extends Omit<SQL, 'unsafe' | 'values'> {
 		},
 		ClickHouseSQLTemplate<any>
 	>;
-
-	/**
-	 * @param values - A two-dimensional array of rows to insert; each inner array represents one row of values.
-	 * @param types - (Optional) An array of ClickHouse data types (e.g. ['Int32', 'String']) used to cast each column value.
-	 *
-	 * If omitted, or if there are fewer types than columns, any missing types default to 'String'.
-	 *
-	 * For full list of types, see https://clickhouse.com/docs/sql-reference/data-types
-	 *
-	 * @example
-	 * ```ts
-	 * const rows = [
-	 *   [1, 'qwerty1'],
-	 *   [2, 'qwerty2']
-	 * ];
-	 * const types = ['Int32', 'String'];
-	 *
-	 * sql`INSERT INTO <tableIdentifier> VALUES ${sql.values(rows, types)};`
-	 * ```
-	 *
-	 * This generates and executes:
-	 *
-	 * ```sql
-	 * INSERT INTO <tableIdentifier>
-	 * VALUES ({param1:Int32}, {param2:String}), ({param3:Int32}, {param4:String});
-	 * ```
-	 *
-	 * with these query parameters:
-	 * ```ts
-	 * {
-	 *   param1: 1,
-	 *   param2: 'qwerty1',
-	 *   param3: 2,
-	 *   param4: 'qwerty2'
-	 * }
-	 * ```
-	 */
-	values(value: Values, types?: DbType[]): SQLValues;
-	param(value: any, type: DbType): ClickHouseSQLCommonParam;
 }
-
-export interface ClickHouseSQLQuery
-	extends Pick<ClickHouseSQL, 'values' | 'param'>, Pick<SQL, 'identifier' | 'raw' | 'default'>
-{
-	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery<ClickHouseDialect>;
-}
-
-const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
-	const sqlWrapper = new SQLWrapper();
-	sqlWrapper.setOverrides({ SQLCommonParam: ClickHouseSQLCommonParam });
-	sqlWrapper.with({ templateParams: { strings, params } });
-	const dialect = new ClickHouseDialect();
-
-	return new SQLQuery(sqlWrapper, dialect);
-}) as ClickHouseSQLQuery;
-
-Object.assign(sql, SQLFunctions);
-
-export { sql };
 
 const createSqlTemplate = (
 	client: ClickHouseClient,

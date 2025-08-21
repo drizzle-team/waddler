@@ -1,5 +1,5 @@
 import duckdb from 'duckdb';
-import { WaddlerQueryError } from '~/errors/index.ts';
+import { WaddlerQueryError } from '../errors/index.ts';
 import type { RecyclingPool } from '../recycling-pool.ts';
 import type { Dialect } from '../sql-template-params.ts';
 import type { SQLTemplateConfigOptions } from '../sql-template.ts';

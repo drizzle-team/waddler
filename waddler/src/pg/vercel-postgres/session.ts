@@ -1,10 +1,10 @@
 import type { QueryArrayConfig, QueryConfig, VercelClient, VercelPoolClient } from '@vercel/postgres';
 import { types, VercelPool } from '@vercel/postgres';
-import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
+import type { PgDialect } from '../../pg-core/dialect.ts';
 import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
-import type { PgDialect } from '../pg-core/index.ts';
+import type { SQLWrapper } from '../../sql.ts';
 
 export type VercelPgClient = VercelPool | VercelClient | VercelPoolClient;
 

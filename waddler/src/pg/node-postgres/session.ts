@@ -1,10 +1,10 @@
 import type { Client as ClientT, Pool as PoolT, PoolClient, QueryArrayConfig, QueryConfig } from 'pg';
 import pg from 'pg';
-import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
+import type { PgDialect } from '../../pg-core/dialect.ts';
 import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
-import type { PgDialect } from '../pg-core/dialect.ts';
+import type { SQLWrapper } from '../../sql.ts';
 import type { NodePgClient } from './driver.ts';
 
 const { Pool, types } = pg;

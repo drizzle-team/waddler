@@ -3,7 +3,8 @@ import { beforeAll, expect, test } from 'bun:test';
 import { createAllDataTypesTable, createUsersTable, dropAllDataTypesTable, dropUsersTable } from '../sqlite-core';
 
 import { vi } from 'vitest';
-import { type BunSqliteSQL, sql as sqlQuery, waddler } from 'waddler/bun-sqlite';
+import { type BunSqliteSQL, waddler } from 'waddler/bun-sqlite';
+import { sql as sqlQuery } from 'waddler/sqlite-core';
 import { filter1 } from './test-filters1';
 import { filter2 } from './test-filters2';
 

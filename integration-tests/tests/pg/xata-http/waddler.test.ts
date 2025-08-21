@@ -3,8 +3,9 @@ import 'dotenv/config';
 import retry from 'async-retry';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
+import { sql as sqlQuery } from 'waddler/pg-core';
 import type { XataHttpClient } from 'waddler/xata-http';
-import { sql as sqlQuery, waddler } from 'waddler/xata-http';
+import { waddler } from 'waddler/xata-http';
 import { commonTests } from '../../common.test.ts';
 import { vitestExpectSoftDate } from '../../utils.ts';
 import {

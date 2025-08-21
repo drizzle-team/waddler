@@ -4,7 +4,8 @@ import { createClient, createPool } from '@vercel/postgres';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
 import { queryStream } from 'waddler/extensions/pg-query-stream';
-import { sql as sqlQuery, waddler } from 'waddler/vercel-postgres';
+import { sql as sqlQuery } from 'waddler/pg-core';
+import { waddler } from 'waddler/vercel-postgres';
 import { commonTests } from '../../common.test.ts';
 import { vitestExpectSoftDate } from '../../utils.ts';
 import {

@@ -1,15 +1,15 @@
 import { beforeAll, beforeEach, expect, test } from 'vitest';
-import type { SQL } from 'waddler/duckdb';
+import type { DuckdbSQL } from 'waddler/duckdb';
 import { waddler } from 'waddler/duckdb';
 import { commonTests } from '../common.test';
 import { commonPgTests } from '../pg/pg-core';
 
-let sql: SQL;
+let sql: DuckdbSQL;
 beforeAll(() => {
 	sql = waddler({ url: ':memory:', max: 10, accessMode: 'read_write' });
 });
 
-beforeEach<{ sql: SQL }>((ctx) => {
+beforeEach<{ sql: DuckdbSQL }>((ctx) => {
 	ctx.sql = sql;
 });
 

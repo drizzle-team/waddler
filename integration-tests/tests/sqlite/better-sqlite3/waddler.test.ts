@@ -1,6 +1,7 @@
 import Database from 'better-sqlite3';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
-import { type BetterSqlite3SQL, sql as sqlQuery, waddler } from 'waddler/better-sqlite3';
+import { type BetterSqlite3SQL, waddler } from 'waddler/better-sqlite3';
+import { sql as sqlQuery } from 'waddler/sqlite-core';
 import { commonTests } from '../../common.test';
 import {
 	commonSqliteTests,

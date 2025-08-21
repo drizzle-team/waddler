@@ -1,4 +1,4 @@
-import { sql } from 'waddler/node-postgres';
+import { sql } from 'waddler/pg-core';
 
 export const filter1 = ({ id, name, email }: { id?: number; name?: string; email?: string }) => {
 	const filters = [];

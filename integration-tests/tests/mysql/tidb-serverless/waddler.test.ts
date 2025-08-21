@@ -2,13 +2,15 @@ import 'dotenv/config';
 import { connect } from '@tidbcloud/serverless';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
-import { sql as sqlQuery, waddler } from 'waddler/tidb-serverless';
+import { sql as sqlQuery } from 'waddler/mysql-core';
+import type { TidbServerlessSQL } from 'waddler/tidb-serverless';
+import { waddler } from 'waddler/tidb-serverless';
 import { commonTests } from '../../common.test';
 import { commonMysqlAllTypesTests, commonMysqlTests, createUsersTable, dropUsersTable } from '../mysql-core';
 import { filter1 } from './test-filters1';
 import { filter2 } from './test-filters2';
 
-let sql: ReturnType<typeof waddler>;
+let sql: TidbServerlessSQL;
 beforeAll(async () => {
 	const connectionString = process.env['TIDB_CONNECTION_STRING'];
 	if (!connectionString) {

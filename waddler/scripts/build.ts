@@ -1,8 +1,11 @@
 import 'zx/globals';
 
 const entries: Array<string> = [
+	'src/duckdb-core/index.ts',
 	'src/duckdb/index.ts',
 	'src/duckdb-neo/index.ts',
+
+	'src/pg-core/index.ts',
 	'src/pg/node-postgres/index.ts',
 	'src/pg/postgres-js/index.ts',
 	'src/pg/pglite/index.ts',
@@ -11,10 +14,16 @@ const entries: Array<string> = [
 	'src/pg/vercel-postgres/index.ts',
 	'src/pg/xata-http/index.ts',
 	'src/pg/bun-sql/index.ts',
+
+	'src/gel-core/index.ts',
 	'src/gel/index.ts',
+
+	'src/mysql-core/index.ts',
 	'src/mysql/mysql2/index.ts',
 	'src/mysql/tidb-serverless/index.ts',
 	'src/mysql/planetscale-serverless/index.ts',
+
+	'src/sqlite-core/index.ts',
 	'src/sqlite/better-sqlite3/index.ts',
 	'src/sqlite/bun-sqlite/index.ts',
 	'src/sqlite/d1/index.ts',
@@ -28,8 +37,14 @@ const entries: Array<string> = [
 	'src/sqlite/durable-sqlite/index.ts',
 	'src/sqlite/op-sqlite/index.ts',
 	'src/sqlite/expo-sqlite/index.ts',
+
+	'src/clickhouse-core/index.ts',
 	'src/clickhouse/index.ts',
+
+	'src/cockroach-core/index.ts',
 	'src/cockroach/index.ts',
+
+	'src/mssql-core/index.ts',
 	'src/mssql/node-mssql/index.ts',
 
 	'src/index.ts',
@@ -64,7 +79,7 @@ const updateAndCopyPackageJson = async () => {
 				const requireEntry = `./${entry}.cjs`;
 				const exportsEntry = entry === 'index'
 					? '.'
-					: ['extensions', 'gel', 'duckdb', 'clickhouse', 'cockroach'].some((key) => entry.includes(key))
+					: ['extensions', 'gel', 'duckdb', 'clickhouse', 'cockroach', 'core'].some((key) => entry.includes(key))
 					? './' + entry.split('/').slice(0, -1).join('/')
 					: './' + entry.split('/').slice(1, -1).join('/');
 

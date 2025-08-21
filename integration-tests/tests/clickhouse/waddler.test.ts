@@ -2,7 +2,8 @@ import { type ClickHouseClient, createClient, TupleParam } from '@clickhouse/cli
 import type Docker from 'dockerode';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { ClickHouseSQL } from 'waddler/clickhouse';
-import { sql as sqlQuery, waddler } from 'waddler/clickhouse';
+import { waddler } from 'waddler/clickhouse';
+import { sql as sqlQuery } from 'waddler/clickhouse-core';
 import { commonTests } from '../common.test.ts';
 import { createClickHouseDockerDB, vitestExpectSoftDate } from '../utils.ts';
 import {

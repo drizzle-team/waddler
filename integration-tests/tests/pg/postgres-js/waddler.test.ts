@@ -3,7 +3,8 @@ import type { Sql } from 'postgres';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
-import { sql as sqlQuery, waddler } from 'waddler/postgres-js';
+import { sql as sqlQuery } from 'waddler/pg-core';
+import { waddler } from 'waddler/postgres-js';
 import { commonTests } from '../../common.test.ts';
 import { createPgDockerDB } from '../../utils.ts';
 import {
