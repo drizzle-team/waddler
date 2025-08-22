@@ -50,7 +50,7 @@ export interface BuildQueryConfig {
 			colIdx: number;
 			paramsCount: number;
 		},
-	): string;
+	): { sql: string; addParamsCount?: number };
 }
 
 export interface SQL {

@@ -57,18 +57,22 @@ export class SqliteDialect extends Dialect {
 			value: Value;
 			params: Value[] | Record<string, any>;
 		},
-	): string {
+	): { sql: string; addParamsCount?: number } {
 		if (value instanceof SQLDefault) {
-			return value.generateSQL().sql;
+			return { sql: value.generateSQL().sql };
+		}
+
+		if (value instanceof SQLRaw) {
+			return { sql: value.generateSQL().sql };
 		}
 
 		if (typeof value === 'object' && value.constructor.name === 'Object') {
 			params.push(JSON.stringify(value));
-			return this.escapeParam();
+			return { sql: this.escapeParam(), addParamsCount: 1 };
 		}
 
 		params.push(value);
-		return this.escapeParam();
+		return { sql: this.escapeParam(), addParamsCount: 1 };
 	}
 }
 

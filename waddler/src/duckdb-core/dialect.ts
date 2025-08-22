@@ -60,9 +60,13 @@ export class DuckdbDialect extends Dialect {
 	}
 
 	// SQLValues
-	valueToSQL<DuckdbValue>({ value }: { value: DuckdbValue }): string {
+	valueToSQL<DuckdbValue>({ value }: { value: DuckdbValue }): { sql: string; addParamsCount?: number } {
 		if (value instanceof SQLDefault) {
-			return value.generateSQL().sql;
+			return { sql: value.generateSQL().sql };
+		}
+
+		if (value instanceof SQLRaw) {
+			return { sql: value.generateSQL().sql };
 		}
 
 		if (
@@ -71,23 +75,23 @@ export class DuckdbDialect extends Dialect {
 			|| typeof value === 'boolean'
 			|| value === null
 		) {
-			return `${value}`;
+			return { sql: `${value}` };
 		}
 
 		if (value instanceof Date) {
-			return `'${value.toISOString()}'`;
+			return { sql: `'${value.toISOString()}'` };
 		}
 
 		if (typeof value === 'string') {
-			return `'${value.replaceAll("'", "''")}'`;
+			return { sql: `'${value.replaceAll("'", "''")}'` };
 		}
 
 		if (Array.isArray(value)) {
-			return `[${value.map((arrayValue) => this.valueToSQL({ value: arrayValue }))}]`;
+			return { sql: `[${value.map((arrayValue) => this.valueToSQL({ value: arrayValue }).sql)}]` };
 		}
 
 		if (typeof value === 'object') {
-			return `'${JSON.stringify(value)}'`;
+			return { sql: `'${JSON.stringify(value)}'` };
 			// TODO: revise
 			// object case
 			// throw new Error(

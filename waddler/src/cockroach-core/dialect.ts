@@ -76,14 +76,18 @@ export class CockroachDialect extends Dialect {
 			types: string[];
 			colIdx: number;
 		},
-	): string {
+	): { sql: string; addParamsCount?: number } {
 		if (value instanceof SQLDefault) {
-			return value.generateSQL().sql;
+			return { sql: value.generateSQL().sql };
+		}
+
+		if (value instanceof SQLRaw) {
+			return { sql: value.generateSQL().sql };
 		}
 
 		if (Array.isArray(value)) {
 			params.push(value as any);
-			return this.escapeParam(lastParamIdx + params.length, types[colIdx]);
+			return { sql: this.escapeParam(lastParamIdx + params.length, types[colIdx]), addParamsCount: 1 };
 		}
 
 		if (
@@ -96,7 +100,7 @@ export class CockroachDialect extends Dialect {
 			|| typeof value === 'object'
 		) {
 			params.push(value);
-			return this.escapeParam(lastParamIdx + params.length, types[colIdx]);
+			return { sql: this.escapeParam(lastParamIdx + params.length, types[colIdx]), addParamsCount: 1 };
 		}
 
 		if (value === undefined) {

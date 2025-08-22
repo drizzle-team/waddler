@@ -92,21 +92,21 @@ export class ClickHouseDialect extends Dialect {
 			colIdx: number;
 			paramsCount: number;
 		},
-	): string {
+	): { sql: string; addParamsCount?: number } {
 		// TODO: add mapValueToType
 
 		if (value instanceof SQLDefault) {
-			return value.generateSQL().sql;
+			return { sql: value.generateSQL().sql };
 		}
 
 		if (value instanceof SQLRaw) {
-			return value.generateSQL().sql;
+			return { sql: value.generateSQL().sql };
 		}
 
 		if (typeof value === 'bigint') {
 			this.pushParams(params, `${value}`, lastParamIdx + paramsCount + 1, 'single');
 			// params.push([`param${lastParamIdx + params.length + 1}`, `${value}`] as any);
-			return this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]);
+			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]), addParamsCount: 1 };
 		}
 
 		if (Array.isArray(value)) {
@@ -120,7 +120,10 @@ export class ClickHouseDialect extends Dialect {
 
 			this.pushParams(params, mappedValue, lastParamIdx + paramsCount + 1, 'single');
 			// params.push([`param${lastParamIdx + params.length + 1}`, mappedValue] as any);
-			return this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx] ?? arrayTypeToCast);
+			return {
+				sql: this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx] ?? arrayTypeToCast),
+				addParamsCount: 1,
+			};
 		}
 
 		if (
@@ -132,21 +135,21 @@ export class ClickHouseDialect extends Dialect {
 		) {
 			this.pushParams(params, value, lastParamIdx + paramsCount + 1, 'single');
 			// params.push([`param${lastParamIdx + params.length + 1}`, value] as any);
-			return this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]);
+			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]), addParamsCount: 1 };
 		}
 
 		if (value instanceof Map || value instanceof TupleParam) {
 			// Map, Tuple type
 			this.pushParams(params, value, lastParamIdx + paramsCount + 1, 'single');
 			// params.push([`param${lastParamIdx + params.length + 1}`, value] as any);
-			return this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]);
+			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]), addParamsCount: 1 };
 		}
 
 		if (typeof value === 'object') {
 			// should be JSON type
 			this.pushParams(params, JSON.stringify(value), lastParamIdx + paramsCount + 1, 'single');
 			// params.push([`param${lastParamIdx + params.length + 1}`, JSON.stringify(value)] as any);
-			return this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx] ?? 'JSON');
+			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx] ?? 'JSON'), addParamsCount: 1 };
 		}
 
 		if (value === undefined) {

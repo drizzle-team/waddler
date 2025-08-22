@@ -66,9 +66,13 @@ export class MsSqlDialect extends Dialect {
 			lastParamIdx: number;
 			paramsCount: number;
 		},
-	): string {
+	): { sql: string; addParamsCount?: number } {
 		if (value instanceof SQLDefault) {
-			return value.generateSQL().sql;
+			return { sql: value.generateSQL().sql };
+		}
+
+		if (value instanceof SQLRaw) {
+			return { sql: value.generateSQL().sql };
 		}
 
 		if (
@@ -81,12 +85,12 @@ export class MsSqlDialect extends Dialect {
 			|| Buffer.isBuffer(value)
 		) {
 			params.push(value);
-			return this.escapeParam(lastParamIdx + paramsCount + 1);
+			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1), addParamsCount: 1 };
 		}
 
 		if (typeof value === 'object') {
 			params.push(JSON.stringify(value));
-			return this.escapeParam(lastParamIdx + paramsCount + 1);
+			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1), addParamsCount: 1 };
 		}
 
 		if (value === undefined) {

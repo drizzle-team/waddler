@@ -45,7 +45,7 @@ export interface NodeMsSqlSQL extends Omit<SQL, 'unsafe'> {
 	 * ]
 	 * ```
 	 *
-	 * @param options.getParamName function that returns the parameter name based on its index;
+	 * @param options.getParamName function that returns the parameter name based on its number;
 	 * default format is `p<number>`
 	 * @example
 	 * ```ts

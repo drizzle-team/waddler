@@ -28,7 +28,7 @@ export abstract class Dialect implements BuildQueryConfig {
 		types: string[];
 		colIdx: number;
 		paramsCount: number;
-	}): string;
+	}): { sql: string; addParamsCount?: number };
 }
 
 export abstract class SQLChunk {
@@ -206,7 +206,7 @@ export class SQLValues extends SQLChunk {
 			return `(${
 				rowValues
 					.map((value, index) => {
-						const sql = dialect.valueToSQL({
+						const { sql, addParamsCount = 0 } = dialect.valueToSQL({
 							value,
 							lastParamIdx,
 							params: this.params,
@@ -214,7 +214,7 @@ export class SQLValues extends SQLChunk {
 							colIdx: index,
 							paramsCount: this.paramsCount,
 						});
-						this.paramsCount++;
+						this.paramsCount += addParamsCount;
 						return sql;
 					})
 					.join(', ')

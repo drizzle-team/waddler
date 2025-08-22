@@ -65,9 +65,13 @@ export class GelDialect extends Dialect {
 			lastParamIdx: number;
 			params: Value[] | Record<string, any>;
 		},
-	): string {
+	): { sql: string; addParamsCount?: number } {
 		if (value instanceof SQLDefault) {
-			return value.generateSQL().sql;
+			return { sql: value.generateSQL().sql };
+		}
+
+		if (value instanceof SQLRaw) {
+			return { sql: value.generateSQL().sql };
 		}
 
 		if (value === undefined) {
@@ -75,7 +79,7 @@ export class GelDialect extends Dialect {
 		}
 
 		params.push(value);
-		return this.escapeParam(lastParamIdx + params.length);
+		return { sql: this.escapeParam(lastParamIdx + params.length), addParamsCount: 1 };
 	}
 }
 

@@ -472,9 +472,43 @@ test('insert benchmark', async () => {
 	console.time('insert');
 	await sql`insert into ${sql.identifier('tests')} values ${sql.values(valuesIds)};`;
 	console.timeEnd('insert');
-	// console.log('New user created!');
 	// const ids = await sql`select * from ${sql.identifier('tests')};`.query();
-	// console.log('Getting all users from the database:', ids);
 
 	await sql.unsafe(`drop table tests;`);
+});
+
+test('query database doc example', async () => {
+	await sql.unsafe('drop table if exists users;');
+
+	await sql.unsafe('CREATE SEQUENCE user_id_seq START WITH 1 INCREMENT BY 1;');
+
+	await sql.unsafe(`CREATE TABLE [users] (
+		[id] int primary key DEFAULT NEXT VALUE FOR user_id_seq,
+		[name] varchar(255) NOT NULL,
+        [age] int NOT NULL,
+        [email] varchar(255) NOT NULL UNIQUE
+	);
+    `);
+
+	const user = [
+		'John',
+		30,
+		'john@example.com',
+	];
+	await sql`insert into ${sql.identifier('users')} values ${sql.values([[sql.default, ...user]])};`;
+
+	await sql`select * from ${sql.identifier('users')};`;
+	/*
+  const users: {
+    id: number;
+    name: string;
+    age: number;
+    email: string;
+  }[]
+  */
+	await sql`update ${sql.identifier('users')} set age = ${31} where email = ${user[2]};`;
+
+	await sql`delete from ${sql.identifier('users')} where email = ${user[2]};`;
+
+	await sql.unsafe('drop table if exists users;');
 });

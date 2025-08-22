@@ -66,15 +66,19 @@ export class PgDialect extends Dialect {
 			lastParamIdx: number;
 			params: Value[] | Record<string, any>;
 		},
-	): string {
+	): { sql: string; addParamsCount?: number } {
 		if (value instanceof SQLDefault) {
-			return value.generateSQL().sql;
+			return { sql: value.generateSQL().sql };
+		}
+
+		if (value instanceof SQLRaw) {
+			return { sql: value.generateSQL().sql };
 		}
 
 		if (Array.isArray(value)) {
 			const mappedValue = makePgArray(value);
 			params.push(mappedValue as any);
-			return this.escapeParam(lastParamIdx + params.length);
+			return { sql: this.escapeParam(lastParamIdx + params.length), addParamsCount: 1 };
 		}
 
 		if (
@@ -87,7 +91,7 @@ export class PgDialect extends Dialect {
 			|| typeof value === 'object'
 		) {
 			params.push(value);
-			return this.escapeParam(lastParamIdx + params.length);
+			return { sql: this.escapeParam(lastParamIdx + params.length), addParamsCount: 1 };
 		}
 
 		if (value === undefined) {
