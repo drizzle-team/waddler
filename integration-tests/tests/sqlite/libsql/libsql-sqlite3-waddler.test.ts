@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { LibsqlSQL } from 'waddler/libsql';
 import { waddler } from 'waddler/libsql/sqlite3';
 import { commonTests } from '../../common.test';
-import { commonSqliteTests } from '../sqlite-core.ts';
+import { commonSqliteTests, sqliteDocTests } from '../sqlite-core.ts';
 import { libsqlTests } from './common.ts';
 
 let sql: LibsqlSQL;
@@ -27,6 +27,7 @@ afterAll(() => {
 
 commonTests();
 commonSqliteTests();
+sqliteDocTests();
 
 test('connection test', async () => {
 	const client = createClient({

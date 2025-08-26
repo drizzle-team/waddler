@@ -9,6 +9,7 @@ import {
 	createUsersTable,
 	dropAllDataTypesTable,
 	dropUsersTable,
+	sqliteDocTests,
 } from '../sqlite-core';
 import { filter1 } from './test-filters1';
 import { filter2 } from './test-filters2';
@@ -26,6 +27,7 @@ beforeEach<{ sql: BetterSqlite3SQL }>((ctx) => {
 
 commonTests();
 commonSqliteTests();
+sqliteDocTests();
 
 test('connection test', async () => {
 	const sql1 = waddler();

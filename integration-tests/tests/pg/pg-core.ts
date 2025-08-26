@@ -719,3 +719,40 @@ export const nodePgTests = () => {
 		});
 	});
 };
+export const pgDocTests = () => {
+	describe('pg_doc_tests', () => {
+		test<{ sql: SQL }>('query database test from doc', async (ctx) => {
+			await ctx.sql.unsafe('drop table if exists users;');
+			await ctx.sql.unsafe(`create table users (
+    			id integer primary key generated always as identity,
+    			name varchar(255) not null,
+    			age integer not null,
+    			email varchar(255) not null unique
+			);
+  			`);
+
+			const user = [
+				'John',
+				30,
+				'john@example.com',
+			];
+			await ctx.sql`insert into ${ctx.sql.identifier('users')} values ${ctx.sql.values([[ctx.sql.default, ...user]])};`;
+
+			const _users = await ctx.sql`select * from ${ctx.sql.identifier('users')};`;
+
+			/*
+  			const users: {
+  			  id: number;
+  			  name: string;
+  			  age: number;
+  			  email: string;
+  			}[]
+  			*/
+			await ctx.sql`update ${ctx.sql.identifier('users')} set age = ${31} where email = ${user[2]};`;
+
+			await ctx.sql`delete from ${ctx.sql.identifier('users')} where email = ${user[2]};`;
+
+			await ctx.sql.unsafe('drop table if exists users;');
+		});
+	});
+};

@@ -1081,7 +1081,7 @@ test('sql.stream test', async () => {
 	}
 });
 
-test('query database test from documentation', async () => {
+test('query database test from doc', async () => {
 	await sql.unsafe(`drop table if exists users;`).command();
 	await sql.unsafe(`create table users(
     id    Int32,

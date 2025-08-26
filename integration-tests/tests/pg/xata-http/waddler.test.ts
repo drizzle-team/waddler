@@ -19,6 +19,7 @@ import {
 	dropAllDataTypesTable,
 	dropAllNdarrayDataTypesTable,
 	dropUsersTable,
+	pgDocTests,
 } from '../pg-core.ts';
 import { getXataClient } from '../xata/xata.ts';
 import { filter1 } from './test-filters1.ts';
@@ -99,6 +100,7 @@ test('logger test', async () => {
 
 commonTests();
 commonPgTests();
+pgDocTests();
 
 // There is no need for a connection test because the only connection setup is already handled in the beforeAll function.
 // test('connection test', async () => {});

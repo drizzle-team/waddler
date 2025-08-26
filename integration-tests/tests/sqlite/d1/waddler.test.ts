@@ -10,6 +10,7 @@ import {
 	createUsersTable,
 	dropAllDataTypesTable,
 	dropUsersTable,
+	sqliteDocTests,
 } from '../sqlite-core';
 import { filter1 } from './test-filters1';
 import { filter2 } from './test-filters2';
@@ -28,6 +29,7 @@ beforeEach<{ sql: D1SQL }>((ctx) => {
 
 commonTests();
 commonSqliteTests();
+sqliteDocTests();
 
 test('connection test', async () => {
 	const sqliteDb = await createSQLiteDB(':memory:');

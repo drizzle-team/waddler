@@ -672,3 +672,54 @@ test('1d array of strings, integer as SQLCommonParam test', async () => {
 	const res5 = await query5;
 	expect(res5).toStrictEqual([{ bigint_: '1' }]);
 });
+
+test('query database test from doc', async () => {
+	await sql.unsafe('drop table if exists users;');
+	await sql.unsafe(`create table users (
+    	id serial primary key,
+    	name string not null,
+    	age int4 not null,
+    	email string not null unique
+	);
+	`);
+
+	const user = [
+		'John',
+		30,
+		'john@example.com',
+	];
+
+	await sql`insert into ${sql.identifier('users')} values ${sql.values([[sql.default, ...user]])};`;
+	// console.log('New user created!');
+	const _users = await sql`select * from ${sql.identifier('users')};`;
+	// console.log('Getting all users from the database:', users);
+	/*
+  	const users: {
+  	  id: number;
+  	  name: string;
+  	  age: number;
+  	  email: string;
+  	}[]
+  	*/
+
+	await sql`update ${sql.identifier('users')} set age = ${31} where email = ${user[2]};`;
+	// console.log('User info updated!');
+	await sql`delete from ${sql.identifier('users')} where email = ${user[2]};`;
+
+	// streaming
+	const streamSql = waddler({ client: cockroachClient, extensions: [queryStream()] });
+	const stream = streamSql`select * from users;`.stream();
+	for await (const _user of stream) {
+		// console.log(user);
+		/*
+        const user: {
+          id: number;
+          name: string;
+          age: number;
+          email: string;
+        }
+        */
+	}
+
+	await sql.unsafe('drop table if exists users;');
+});

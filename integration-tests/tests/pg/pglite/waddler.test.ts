@@ -14,6 +14,7 @@ import {
 	defaultValue,
 	dropAllDataTypesTable,
 	dropUsersTable,
+	pgDocTests,
 } from '../pg-core.ts';
 import { filter1 } from './test-filters1.ts';
 import { filter2 } from './test-filters2.ts';
@@ -38,6 +39,7 @@ beforeEach<{ sql: SQL }>((ctx) => {
 
 commonTests();
 commonPgTests();
+pgDocTests();
 
 test('connection test', async () => {
 	const sql1 = waddler();

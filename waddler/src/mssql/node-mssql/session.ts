@@ -45,8 +45,13 @@ export class NodeMsSqlSQLTemplate<T> extends SQLTemplate<T> {
 		try {
 			const queryResult = await request.query(sql);
 
+			// TODO recordset contains columns field that has all columns types. Should I add this to metadata?
 			finalResult = queryResult.recordset;
-			finalMetadata = { output: queryResult.output, rowsAffected: queryResult.rowsAffected };
+			finalMetadata = {
+				output: queryResult.output,
+				rowsAffected: queryResult.rowsAffected,
+				columns: queryResult.recordset?.columns,
+			};
 		} catch (error) {
 			throw new WaddlerQueryError(sql, params, error as Error);
 		}

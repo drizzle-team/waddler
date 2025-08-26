@@ -359,3 +359,40 @@ test('standalone sql test', async () => {
 		params: [],
 	});
 });
+
+test('query database test from doc', async () => {
+	await sql.unsafe('drop table if exists users;').run();
+	await sql.unsafe(`create table if not exists users (
+    			id    integer primary key autoincrement,
+    			name  text    not null,
+    			age   integer not null,
+    			email text    not null unique
+    		);
+  			`).run();
+
+	const user = [
+		'John',
+		30,
+		'john@example.com',
+	];
+	await sql`
+		insert into ${sql.identifier('users')}(${sql.identifier(['name', 'age', 'email'])}) 
+		  values ${sql.values([user])};
+	`.run();
+
+	const _users = await sql`select * from ${sql.identifier('users')};`.all();
+
+	/*
+  	const users: {
+  	  id: number;
+  	  name: string;
+  	  age: number;
+  	  email: string;
+  	}[]
+  	*/
+	await sql`update ${sql.identifier('users')} set age = ${31} where email = ${user[2]};`.run();
+
+	await sql`delete from ${sql.identifier('users')} where email = ${user[2]};`.run();
+
+	await sql.unsafe('drop table if exists users;').run();
+});

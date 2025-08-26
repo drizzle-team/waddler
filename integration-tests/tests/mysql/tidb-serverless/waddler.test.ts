@@ -6,7 +6,13 @@ import { sql as sqlQuery } from 'waddler/mysql-core';
 import type { TidbServerlessSQL } from 'waddler/tidb-serverless';
 import { waddler } from 'waddler/tidb-serverless';
 import { commonTests } from '../../common.test';
-import { commonMysqlAllTypesTests, commonMysqlTests, createUsersTable, dropUsersTable } from '../mysql-core';
+import {
+	commonMysqlAllTypesTests,
+	commonMysqlTests,
+	createUsersTable,
+	dropUsersTable,
+	mysqlDocTests,
+} from '../mysql-core';
 import { filter1 } from './test-filters1';
 import { filter2 } from './test-filters2';
 
@@ -25,6 +31,10 @@ beforeAll(async () => {
 beforeEach<{ sql: SQL }>((ctx) => {
 	ctx.sql = sql;
 });
+
+commonTests();
+commonMysqlTests();
+mysqlDocTests();
 
 test('connection test', async () => {
 	const connectionString = process.env['TIDB_CONNECTION_STRING'];
@@ -97,9 +107,6 @@ test('logger test', async () => {
 
 	consoleMock.mockRestore();
 });
-
-commonTests();
-commonMysqlTests();
 
 // ALL TYPES with sql.unsafe and sql.values-------------------------------------------------------------------
 commonMysqlAllTypesTests('tidb-serverless');

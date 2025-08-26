@@ -104,7 +104,7 @@ test('logger test', async () => {
 			expect(query).toEqual(loggerQuery);
 			expect(params).toStrictEqual(loggerParams);
 			const metadataKeys = Object.keys(metadata);
-			const predicate = ['output', 'rowsAffected'].map((key) => metadataKeys.includes(key)).every(
+			const predicate = ['output', 'rowsAffected', 'columns'].map((key) => metadataKeys.includes(key)).every(
 				(value) => value === true,
 			);
 			expect(predicate).toBe(true);
@@ -170,14 +170,11 @@ test('all types in sql.unsafe test', async () => {
 		'14:25:29.425',
 	];
 
-	// TODO revise now param's placeholder should be named as waddler escapes param
 	await sql.unsafe(
-		`insert into all_data_types values (@p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16, @p17, @p18, @p19, @p20, @p21, @p22, @p23, default);`,
+		`insert into all_data_types values (@par1, @par2, @par3, @par4, @par5, @par6, @par7, @par8, @par9, @par10, @par11, @par12, @par13, @par14, @par15, @par16, @par17, @par18, @par19, @par20, @par21, @par22, @par23, default);`,
 		values,
 		{
-			getParamName: (lastParamNumber: number) => {
-				return `p${lastParamNumber}`;
-			},
+			getParamName: (lastParamNumber: number) => `par${lastParamNumber}`,
 		},
 	);
 
@@ -472,12 +469,12 @@ test('insert benchmark', async () => {
 	console.time('insert');
 	await sql`insert into ${sql.identifier('tests')} values ${sql.values(valuesIds)};`;
 	console.timeEnd('insert');
-	// const ids = await sql`select * from ${sql.identifier('tests')};`.query();
+	await sql`select * from ${sql.identifier('tests')};`;
 
 	await sql.unsafe(`drop table tests;`);
 });
 
-test('query database doc example', async () => {
+test('query database test from doc', async () => {
 	await sql.unsafe('drop table if exists users;');
 
 	await sql.unsafe('CREATE SEQUENCE user_id_seq START WITH 1 INCREMENT BY 1;');

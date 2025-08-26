@@ -17,6 +17,7 @@ import {
 	defaultValue,
 	dropAllDataTypesTable,
 	dropUsersTable,
+	mysqlDocTests,
 } from '../mysql-core';
 import { filter1 } from './test-filters1';
 import { filter2 } from './test-filters2';
@@ -70,6 +71,10 @@ afterAll(async () => {
 beforeEach<{ sql: SQL }>((ctx) => {
 	ctx.sql = sql;
 });
+
+commonTests();
+commonMysqlTests();
+mysqlDocTests();
 
 test('connection test', async () => {
 	// pool(promise)
@@ -178,9 +183,6 @@ test('logger test', async () => {
 
 	consoleMock.mockRestore();
 });
-
-commonTests();
-commonMysqlTests();
 
 // ALL TYPES with sql.unsafe and sql.values-------------------------------------------------------------------
 commonMysqlAllTypesTests('mysql2');

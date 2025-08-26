@@ -415,6 +415,51 @@ export class MyDurableObject extends DurableObject {
     );
   `).run();
 	}
+
+	async queryDatabaseTestFromDoc() {
+		try {
+			await this.sql.unsafe('drop table if exists users;').run();
+			await this.sql.unsafe(`create table if not exists users (
+    			id    integer primary key autoincrement,
+    			name  text    not null,
+    			age   integer not null,
+    			email text    not null unique
+    		);
+  			`).run();
+
+			const user = [
+				'John',
+				30,
+				'john@example.com',
+			];
+			await this.sql`
+  			  insert into ${this.sql.identifier('users')}(${this.sql.identifier(['name', 'age', 'email'])}) 
+  			    values ${this.sql.values([user])};
+  			`.run();
+
+			const _users = await this.sql`select * from ${this.sql.identifier('users')};`.all();
+
+			/*
+  			const users: {
+  			  id: number;
+  			  name: string;
+  			  age: number;
+  			  email: string;
+  			}[]
+  			*/
+			await this.sql`update ${this.sql.identifier('users')} set age = ${31} where email = ${user[2]};`.run();
+
+			await this.sql`delete from ${this.sql.identifier('users')} where email = ${user[2]};`.run();
+
+			await this.sql.unsafe('drop table if exists users;').run();
+
+			this.testsPassed += 1;
+		} catch (error) {
+			console.error(error);
+			this.testsFailed += 1;
+			// throw new Error('sql.stream test error.');
+		}
+	}
 }
 export default {
 	async fetch(request: Request, env: Env): Promise<Response> {
@@ -429,6 +474,7 @@ export default {
 		await stub.embedingSQLQueryAndSQLTemplate();
 		await stub.standaloneSqlTest();
 		await stub.loggerTest();
+		await stub.queryDatabaseTestFromDoc();
 
 		const greeting = await stub.sayHello() as string;
 

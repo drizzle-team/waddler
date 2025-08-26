@@ -10,6 +10,7 @@ import {
 	dropAllDataTypesTable,
 	dropUsersTable,
 	nodePgTests,
+	pgDocTests,
 } from '../pg-core.ts';
 
 import type { SQL } from 'waddler';
@@ -46,6 +47,7 @@ afterAll(async () => {
 
 commonTests();
 commonPgTests();
+pgDocTests();
 
 test('connection test', async () => {
 	const client = new Client(connectionString);
