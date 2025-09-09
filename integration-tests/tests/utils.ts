@@ -132,7 +132,7 @@ export const createGelDockerDB = async () => {
 export const createClickHouseDockerDB = async () => {
 	const docker = new Docker();
 	const port = await getPort();
-	const image = 'clickhouse/clickhouse-server:latest';
+	const image = 'clickhouse/clickhouse-server:25.7.4-alpine';
 
 	const pullStream = await docker.pull(image);
 	await new Promise((resolve, reject) =>

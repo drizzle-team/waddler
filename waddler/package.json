@@ -55,8 +55,8 @@
 		"zx": "^8.1.9"
 	},
 	"peerDependencies": {
-		"@clickhouse/client": ">=1.11.2",
-		"@duckdb/node-api": ">=1.1.2-alpha.4",
+		"@clickhouse/client": ">=1",
+		"@duckdb/node-api": ">=1",
 		"@electric-sql/pglite": ">=0.2.0",
 		"@libsql/client": ">=0.10.0",
 		"@libsql/client-wasm": ">=0.10.0",
