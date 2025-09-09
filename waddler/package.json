@@ -55,26 +55,28 @@
 		"zx": "^8.1.9"
 	},
 	"peerDependencies": {
-		"@clickhouse/client": "^1.11.2",
-		"@duckdb/node-api": "^1.1.2-alpha.4",
-		"@electric-sql/pglite": "^0.2.17",
-		"@libsql/client": "^0.15.4",
-		"@libsql/client-wasm": "^0.15.4",
-		"@neondatabase/serverless": "^1.0.0",
-		"@planetscale/database": "^1.19.0",
-		"@tidbcloud/serverless": "^0.2.0",
-		"@vercel/postgres": "^0.10.0",
-		"@xata.io/client": "^0.30.1",
-		"better-sqlite3": "^11.9.1",
+		"@clickhouse/client": ">=1.11.2",
+		"@duckdb/node-api": ">=1.1.2-alpha.4",
+		"@electric-sql/pglite": ">=0.2.0",
+		"@libsql/client": ">=0.10.0",
+		"@libsql/client-wasm": ">=0.10.0",
+		"@neondatabase/serverless": ">=0.10.0",
+		"@planetscale/database": ">=1.13",
+		"@tidbcloud/serverless": "*",
+		"@vercel/postgres": ">=0.8.0",
+		"@xata.io/client": "*",
+		"better-sqlite3": ">=7",
 		"bun-types": "*",
-		"duckdb": "^1.2.1",
-		"gel": "^2.0.2",
-		"mysql2": "^3.14.0",
-		"pg": "^8.14.0",
-		"pg-query-stream": "^4.8.0",
-		"postgres": "^3.4.5",
-		"@types/mssql": "^9.1.7",
-		"mssql": "^11.0.1"
+		"duckdb": "*",
+		"gel": ">=2",
+		"mysql2": ">=2",
+		"pg": ">=8",
+		"pg-query-stream": ">=4.8.0",
+		"postgres": ">=3",
+		"@types/mssql": "^9.1.4",
+		"mssql": "^11.0.1",
+		"expo-sqlite": ">=14.0.0",
+		"@op-engineering/op-sqlite": ">=2"
 	},
 	"peerDependenciesMeta": {
 		"duckdb": {
@@ -132,6 +134,9 @@
 			"optional": true
 		},
 		"@op-engineering/op-sqlite": {
+			"optional": true
+		},
+		"expo-sqlite": {
 			"optional": true
 		},
 		"@clickhouse/client": {
