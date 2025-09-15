@@ -1,4 +1,3 @@
-import { TupleParam } from '@clickhouse/client';
 import type { ClickHouseSQLTemplate } from '../clickhouse/session.ts';
 import {
 	Dialect,
@@ -105,7 +104,6 @@ export class ClickHouseDialect extends Dialect {
 
 		if (typeof value === 'bigint') {
 			this.pushParams(params, `${value}`, lastParamIdx + paramsCount + 1, 'single');
-			// params.push([`param${lastParamIdx + params.length + 1}`, `${value}`] as any);
 			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]), addParamsCount: 1 };
 		}
 
@@ -119,7 +117,6 @@ export class ClickHouseDialect extends Dialect {
 			}
 
 			this.pushParams(params, mappedValue, lastParamIdx + paramsCount + 1, 'single');
-			// params.push([`param${lastParamIdx + params.length + 1}`, mappedValue] as any);
 			return {
 				sql: this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx] ?? arrayTypeToCast),
 				addParamsCount: 1,
@@ -134,21 +131,18 @@ export class ClickHouseDialect extends Dialect {
 			|| value instanceof Date
 		) {
 			this.pushParams(params, value, lastParamIdx + paramsCount + 1, 'single');
-			// params.push([`param${lastParamIdx + params.length + 1}`, value] as any);
 			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]), addParamsCount: 1 };
 		}
 
-		if (value instanceof Map || value instanceof TupleParam) {
+		if (value instanceof Map || (typeof value === 'object' && value.constructor?.name === 'TupleParam')) {
 			// Map, Tuple type
 			this.pushParams(params, value, lastParamIdx + paramsCount + 1, 'single');
-			// params.push([`param${lastParamIdx + params.length + 1}`, value] as any);
 			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]), addParamsCount: 1 };
 		}
 
 		if (typeof value === 'object') {
 			// should be JSON type
 			this.pushParams(params, JSON.stringify(value), lastParamIdx + paramsCount + 1, 'single');
-			// params.push([`param${lastParamIdx + params.length + 1}`, JSON.stringify(value)] as any);
 			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx] ?? 'JSON'), addParamsCount: 1 };
 		}
 
