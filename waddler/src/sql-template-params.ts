@@ -29,6 +29,10 @@ export abstract class Dialect implements BuildQueryConfig {
 		colIdx: number;
 		paramsCount: number;
 	}): { sql: string; addParamsCount?: number };
+
+	valueToRawSQL(_value: Value): { sql: string } {
+		throw new Error(`method valueToRawSQL is not implemented for dialect ${this.constructor.name}`);
+	}
 }
 
 export abstract class SQLChunk {
@@ -56,6 +60,14 @@ export class SQLQuery<DialectT extends Dialect = Dialect> extends SQLChunk {
 
 	toSQL() {
 		return this.generateSQL();
+	}
+
+	/**
+	 * Currently method is implemented only for ClickHouse dialect.
+	 * @returns
+	 */
+	toRawSQL() {
+		return this.sqlWrapper.getRawQuery(this.dialect);
 	}
 }
 

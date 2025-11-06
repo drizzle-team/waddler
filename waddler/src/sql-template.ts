@@ -26,6 +26,14 @@ export abstract class SQLTemplate<T, DialectT extends Dialect = Dialect> {
 		return this.sqlWrapper.getQuery<DialectT>(this.dialect);
 	}
 
+	/**
+	 * Currently method is implemented only for ClickHouse dialect.
+	 * @returns
+	 */
+	toRawSQL() {
+		return this.sqlWrapper.getRawQuery(this.dialect);
+	}
+
 	catch<TResult = never>(
 		onRejected?: ((reason: any) => TResult | PromiseLike<TResult>) | null | undefined,
 	): Promise<T[] | TResult> {

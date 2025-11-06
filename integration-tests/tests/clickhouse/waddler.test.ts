@@ -490,7 +490,83 @@ test('all types in sql.values test', async () => {
 		.command();
 
 	await sql.unsafe(`select * from \`all_data_types\`;`, [], { rowMode: 'object' }).query();
-	// console.log(res1[0]);
+});
+
+test('all types in sql.toRawSQL test', async () => {
+	await dropAllDataTypesTable(sql);
+	await createAllDataTypesTable(sql);
+
+	const expectedRes = {
+		int8: 127,
+		int16: 32767,
+		int32: 2147483647,
+		int64: 9223372036854775807n,
+		int128: 170141183460469231731687303715884105727n,
+		int256: 57896044618658097711785492504343953926634992332820282019728792003956564819967n,
+		uint8: 255,
+		uint16: 65535,
+		uint32: 4294967295,
+		uint64: 18446744073709551615n,
+		uint128: 340282366920938463463374607431768211455n,
+		uint256: 115792089237316195423570985008687907853269984665640564039457584007913129639935n,
+		float32: 10.123,
+		float64: 100.123456,
+		bfloat16: 1.1171875,
+		decimal32: 10.23,
+		decimal64: 100.23,
+		decimal128: 1000.23,
+		decimal256: 10000.23,
+		string: `qwe'"rty`,
+		fixed_string: `qwe'"rty12`,
+		date: '2024-10-31',
+		date32: '2024-10-31',
+		date_time: new Date('2024-10-31T14:25:29'),
+		date_time64: new Date('2024-10-31T14:25:29.123'),
+		enum: 'hello',
+		uuid: '61f0c404-5cb3-11e7-907b-a6006ad3dba0',
+		json: {
+			name: 'alex',
+			age: 26,
+			bookIds: [1, 2, 3],
+			vacationRate: 2.5,
+			aliases: ['sasha', 'sanya'],
+			isMarried: true,
+		},
+		ipv4: '116.253.40.133',
+		ipv6: '2a02:aa08:e000:3100::2',
+		boolean: true,
+		variant_uint8_string: 'qwerty',
+		low_cardinality_string: 'qwerty',
+		nullable_string: '',
+		point: '(10,-10)',
+		ring: '[(0,0),(10,0),(10,10),(0,10)]',
+		line_string: '[(0,0),(10,0),(10,10),(0,10)]',
+		multi_line_string: '[[(0,0),(10,0),(10,10),(0,10)],[(1,1),(2,2),(3,3)]]',
+		polygon: '[[(20,20),(50,20),(50,50),(20,50)],[(30,30),(50,50),(50,30)]]',
+		multi_polygon: '[[[(0,0),(10,0),(10,10),(0,10)]],[[(20,20),(50,20),(50,50),(20,50)],[(30,30),(50,50),(50,30)]]]',
+		tuple_uint8_string: new TupleParam([0, 'a']),
+		map_string_uint8: new Map([['key1', 1], ['key2', 10]]),
+		dynamic: 'qwerty',
+	} as Record<string, any>;
+
+	for (const valueKey of Object.keys(expectedRes)) {
+		const rawSql0 = sql`insert into \`all_data_types\`(${sql.raw(valueKey)}) values(${expectedRes[valueKey]});`
+			.toRawSQL();
+		const rawSql1 = sqlQuery`insert into \`all_data_types\`(${sql.raw(valueKey)}) values(${expectedRes[valueKey]});`
+			.toRawSQL();
+		expect(rawSql0).toEqual(rawSql1);
+		await sql.unsafe(rawSql0, {}).command();
+		const selectQuery = sql`select (${sql.raw(valueKey)}) from \`all_data_types\` where ${sql.raw(valueKey)} = ${
+			expectedRes[valueKey]
+		};`;
+		const selectQueryRawSql = selectQuery.toRawSQL();
+		const res0 = await sql.unsafe(selectQueryRawSql);
+		const res1 = await sql.unsafe(`select (${valueKey}) from \`all_data_types\`;`);
+		// bigints starting from int128 or uint128 need to be inlined as strings for comparisons to work correctly.
+		expect(res0.length !== 0 || res1.length !== 0).toBe(true);
+
+		await sql.unsafe(`truncate table \`all_data_types\`;`).command();
+	}
 });
 
 test('all array types in sql.values test', async () => {
@@ -555,7 +631,6 @@ test('all array types in sql.values test', async () => {
 	const query = sql`insert into \`all_array_data_types\` values ${sql.values([allArrayDataTypesValues], types)};`
 		.command();
 	await query;
-	// console.log(query.toSQL());
 
 	const res = await sql.unsafe(`select * from \`all_array_data_types\`;`, [], { rowMode: 'object' }).query();
 
@@ -684,7 +759,122 @@ test('all array types in sql.values test', async () => {
 		.command();
 
 	await sql.unsafe(`select * from \`all_array_data_types\`;`, [], { rowMode: 'object' }).query();
-	// console.log(res1[0]);
+});
+
+test('all array types in sql.toRawSQL test', async () => {
+	await dropAllArrayDataTypesTable(sql);
+	await createAllArrayDataTypesTable(sql);
+
+	const json = {
+		name: 'alex',
+		age: 26,
+		bookIds: [1, 2, 3],
+		vacationRate: 2.5,
+		aliases: ['sasha', 'sanya'],
+		isMarried: true,
+	};
+
+	const expectedRes = {
+		int8_array: [-1, 2, 127],
+		int16_array: [-4, 5, 32767],
+		int32_array: [-7, 8, 2147483647],
+		int64_array: [-10, 11, 9223372036854775807n],
+		int128_array: [-13, 14, 170141183460469231731687303715884105727n],
+		int256_array: [
+			-16,
+			17,
+			57896044618658097711785492504343953926634992332820282019728792003956564819967n,
+		],
+		uint8_array: [1, 2, 255],
+		uint16_array: [4, 5, 65535],
+		uint32_array: [7, 8, 4294967295],
+		uint64_array: [10, 11, 18446744073709551615n],
+		uint128_array: [13, 14, 340282366920938463463374607431768211455n],
+		uint256_array: [
+			16,
+			17,
+			115792089237316195423570985008687907853269984665640564039457584007913129639935n,
+		],
+		float32_array: [-1.234, 2.345],
+		float64_array: [-3.456, 4.567],
+		bfloat16_array: [-0.59765625, 0.69921875],
+		decimal32_array: [0.123, -1.234],
+		decimal64_array: [1.234, -2.345],
+		decimal128_array: [3.456, -4.567],
+		decimal256_array: [5.678, -6.789],
+		string_array: [`qwe'"rty1`, `qwe'"rty2`],
+		fixed_string_array: [`qwe'"rty12`, `qwe'"rty23`],
+		date_array: ['2024-10-31', '2024-12-01'],
+		date32_array: ['2024-10-30', '2024-11-30'],
+		dateTime_array: ['2024-10-31 14:25:29', '2024-12-01 14:25:29'],
+		dateTime64_array: ['2024-10-30 14:25:29.123', '2024-11-30 14:25:29.123'],
+		enum_array: ['hello', 'world'],
+		uuid_array: [
+			'61f0c404-5cb3-11e7-907b-a6006ad3dba0',
+			'61f0c404-5cb3-11e7-907b-a6006ad3dba0',
+		],
+		json_array: [json, json],
+		ipv4_array: ['116.253.40.133', '116.253.40.134'],
+		ipv6_array: ['2a02:aa08:e000:3100::2', '2a02:aa08:e000:3100::1'],
+		boolean_array: [true, false],
+		variant_uint8_string_array: ['qwerty', 1],
+		low_cardinality_string_array: ['qwerty1', 'qwerty2'],
+		nullable_string_array: [null, null],
+		point_array: '[(10,-10),(11,-11)]',
+		ring_array: '[[(0,0),(10,0),(10,10),(0,10)]]',
+		line_string_array: '[[(0,0),(10,0),(10,10),(0,10)]]',
+		multi_line_string_array: '[[[(0,0),(10,0),(10,10),(0,10)],[(1,1),(2,2),(3,3)]]]',
+		polygon_array: '[[[(20,20),(50,20),(50,50),(20,50)],[(30,30),(50,50),(50,30)]]]',
+		multi_polygon_array:
+			'[[[[(0,0),(10,0),(10,10),(0,10)]],[[(20,20),(50,20),(50,50),(20,50)],[(30,30),(50,50),(50,30)]]]]',
+		tuple_uint8_string_array: [new TupleParam([1, 'a']), new TupleParam([2, 'b'])],
+		map_string_uint8_array: [new Map([['key1', 1], ['key2', 10]]), new Map([['key1', 2], ['key2', 11]])],
+		dynamic_array: ['qwerty', 'qwerty1'],
+	} as Record<string, any>;
+
+	for (const valueKey of Object.keys(expectedRes)) {
+		const rawSql0 = sql`insert into \`all_array_data_types\`(${sql.raw(valueKey)}) values(${expectedRes[valueKey]});`
+			.toRawSQL();
+		const rawSql1 = sqlQuery`insert into \`all_array_data_types\`(${sql.raw(valueKey)}) values(${
+			expectedRes[valueKey]
+		});`
+			.toRawSQL();
+		expect(rawSql0).toEqual(rawSql1);
+		await sql.unsafe(rawSql0, {}).command();
+		let res0: Record<string, any>[] = [];
+		if (
+			// values of those types need to be cast when used in a select query.
+			![
+				'int128_array',
+				'int256_array',
+				'uint128_array',
+				'uint256_array',
+				'decimal32_array',
+				'decimal64_array',
+				'decimal128_array',
+				'decimal256_array',
+				'date_array',
+				'date32_array',
+				'dateTime_array',
+				'dateTime64_array',
+				'uuid_array',
+				'json_array',
+				'ipv4_array',
+				'ipv6_array',
+				'variant_uint8_string_array',
+			].includes(valueKey)
+		) {
+			const selectQuery = sql`select (${sql.raw(valueKey)}) from \`all_array_data_types\` where ${
+				sql.raw(valueKey)
+			} = ${expectedRes[valueKey]};`;
+			const selectQueryRawSql = selectQuery.toRawSQL();
+			res0 = await sql.unsafe(selectQueryRawSql);
+		}
+		const res1 = await sql.unsafe(`select (${valueKey}) from \`all_array_data_types\`;`);
+		expect(res0.length !== 0 || res1.length !== 0).toBe(true);
+
+		await sql.unsafe(`truncate table \`all_array_data_types\`;`).command();
+	}
 });
 
 test('all nd-array types in sql.values test', async () => {

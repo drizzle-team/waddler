@@ -152,6 +152,63 @@ export class ClickHouseDialect extends Dialect {
 
 		throw new Error(`you can't specify ${typeof value} as value.`);
 	}
+
+	override valueToRawSQL(value: Value): { sql: string } {
+		if (Array.isArray(value)) {
+			const mappedArray = value.map((valueI) => this.valueToRawSQL(valueI).sql);
+			const mappedValue = `[${mappedArray.join(',')}]`;
+
+			return { sql: mappedValue };
+		}
+
+		if (
+			typeof value === 'bigint'
+			|| typeof value === 'number'
+			|| typeof value === 'boolean'
+			|| value === null
+		) {
+			return { sql: `${value}` };
+		}
+
+		if (value instanceof Date) {
+			return { sql: `'${value.toISOString().replace('T', ' ').replace('Z', '')}'`.replace(/\.0+/, '') };
+		}
+		if (
+			typeof value === 'string'
+		) {
+			return { sql: `'${value.replace(/\\/g, '\\\\').replace(/'/g, String.raw`\'`)}'` };
+		}
+
+		if (value instanceof Map) {
+			// Map type
+			const mappedEntries: string[] = [];
+			for (const entry of value) {
+				mappedEntries.push(entry.map((entryI) => this.valueToRawSQL(entryI).sql).join(','));
+			}
+			const mappedValue = `map(${mappedEntries.join(',')})`;
+			return { sql: mappedValue };
+		}
+
+		if (typeof value === 'object' && value.constructor?.name === 'TupleParam') {
+			const mappedTupleParam = (value as { values: any[] }).values.map((tupleParamI) =>
+				this.valueToRawSQL(tupleParamI).sql
+			);
+			const mappedValue = `(${mappedTupleParam.join(',')})`;
+			return { sql: mappedValue };
+		}
+
+		if (typeof value === 'object') {
+			// should be JSON type
+
+			return { sql: `'${JSON.stringify(value)}'` };
+		}
+
+		if (value === undefined) {
+			throw new Error("value can't be undefined, maybe you mean sql.default?");
+		}
+
+		throw new Error(`you can't specify ${typeof value} as value.`);
+	}
 }
 
 export class ClickHouseSQLCommonParam extends SQLCommonParam {

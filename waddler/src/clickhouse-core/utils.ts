@@ -1,5 +1,3 @@
-import { TupleParam } from '@clickhouse/client';
-
 export function makeClickHouseArray(array: any[], typeToCast?: string) {
 	let stringifyArray: boolean = true;
 	let baseTypeToCast: string | undefined;
@@ -31,7 +29,9 @@ export function makeClickHouseArray(array: any[], typeToCast?: string) {
 		}
 
 		// Map type
-		if (value instanceof Map || value instanceof TupleParam) {
+		if (
+			value instanceof Map || (typeof value === 'object' && value !== null && value.constructor?.name === 'TupleParam')
+		) {
 			return value;
 		}
 

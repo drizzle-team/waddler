@@ -116,6 +116,31 @@ export class SQLWrapper {
 		return this;
 	}
 
+	getRawQuery(dialect: Dialect) {
+		let query = '';
+
+		for (const chunk of this.queryChunks) {
+			if (
+				chunk instanceof SQLString
+				|| chunk instanceof SQLRaw
+				|| chunk instanceof SQLDefault
+			) {
+				query += chunk.generateSQL().sql;
+			}
+
+			if (chunk instanceof SQLIdentifier) {
+				query += chunk.generateSQL({ dialect }).sql;
+			}
+
+			if (chunk instanceof SQLValues || chunk instanceof SQLCommonParam) {
+				const sql = dialect.valueToRawSQL(chunk.value).sql;
+				query += sql;
+			}
+		}
+
+		return query;
+	}
+
 	getQuery<
 		DialectT extends Dialect,
 		ParamsType extends 'array' | 'object' = IsEqual<DialectT, ClickHouseDialect> extends true ? 'object' : 'array',
