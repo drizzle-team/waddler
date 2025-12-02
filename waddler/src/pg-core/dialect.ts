@@ -1,7 +1,9 @@
-import { Dialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
-import type { Identifier, IdentifierObject, Raw, Value, Values } from '../../types.ts';
+import { Dialect, SQLDefault, SQLIdentifier, SQLQuery, SQLRaw, SQLValues } from '../sql-template-params.ts';
+import { type SQL, SQLWrapper } from '../sql.ts';
+import type { Identifier, IdentifierObject, Raw, SQLParamType, Value, Values } from '../types.ts';
+import { makePgArray } from './utils.ts';
 
-export class GelDialect extends Dialect {
+export class PgDialect extends Dialect {
 	escapeParam(lastParamIdx: number): string {
 		return `$${lastParamIdx}`;
 	}
@@ -64,17 +66,39 @@ export class GelDialect extends Dialect {
 			lastParamIdx: number;
 			params: Value[] | Record<string, any>;
 		},
-	): string {
+	): { sql: string; addParamsCount?: number } {
 		if (value instanceof SQLDefault) {
-			return value.generateSQL().sql;
+			return { sql: value.generateSQL().sql };
+		}
+
+		if (value instanceof SQLRaw) {
+			return { sql: value.generateSQL().sql };
+		}
+
+		if (Array.isArray(value)) {
+			const mappedValue = makePgArray(value);
+			params.push(mappedValue as any);
+			return { sql: this.escapeParam(lastParamIdx + params.length), addParamsCount: 1 };
+		}
+
+		if (
+			typeof value === 'number'
+			|| typeof value === 'bigint'
+			|| typeof value === 'boolean'
+			|| typeof value === 'string'
+			|| value === null
+			|| value instanceof Date
+			|| typeof value === 'object'
+		) {
+			params.push(value);
+			return { sql: this.escapeParam(lastParamIdx + params.length), addParamsCount: 1 };
 		}
 
 		if (value === undefined) {
 			throw new Error("value can't be undefined, maybe you mean sql.default?");
 		}
 
-		params.push(value);
-		return this.escapeParam(lastParamIdx + params.length);
+		throw new Error(`you can't specify ${typeof value} as value.`);
 	}
 }
 
@@ -90,3 +114,19 @@ export const SQLFunctions = {
 	},
 	default: new SQLDefault(),
 };
+
+export interface PgSQLQuery extends Pick<SQL, 'identifier' | 'raw' | 'default' | 'values'> {
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+}
+
+const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
+	const sqlWrapper = new SQLWrapper();
+	sqlWrapper.with({ templateParams: { strings, params } });
+	const dialect = new PgDialect();
+
+	return new SQLQuery(sqlWrapper, dialect);
+}) as PgSQLQuery;
+
+Object.assign(sql, SQLFunctions);
+
+export { sql };

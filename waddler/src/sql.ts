@@ -50,14 +50,11 @@ export interface BuildQueryConfig {
 			colIdx: number;
 			paramsCount: number;
 		},
-	): string;
+	): { sql: string; addParamsCount?: number };
 }
 
 export interface SQL {
-	<T = RowData>(
-		strings: TemplateStringsArray,
-		...params: SQLParamType[]
-	): SQLTemplate<T>;
+	<T = RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLTemplate<T>;
 	identifier(value: Identifier<IdentifierObject>): SQLIdentifier<IdentifierObject>;
 	values(value: Values): SQLValues;
 	raw(value: Raw): SQLRaw;
@@ -73,12 +70,20 @@ export interface SQL {
 	default: SQLDefault;
 }
 
+export type OverridesType = { SQLCommonParam?: typeof SQLCommonParam };
+
 export class SQLWrapper {
+	public overrides: OverridesType = {};
+
 	constructor(
 		public queryChunks: SQLChunk[] = [],
 		public sql?: string,
 		public params?: UnsafeParamType[] | Record<string, UnsafeParamType>,
 	) {}
+
+	setOverrides(overrides: OverridesType) {
+		Object.assign(this.overrides, overrides);
+	}
 
 	with({ templateParams, rawParams }: {
 		templateParams?: { strings?: TemplateStringsArray; params: SQLParamType[] };
@@ -98,7 +103,10 @@ export class SQLWrapper {
 				} else if (param instanceof SQLChunk) this.queryChunks.push(param, new SQLString(strings[paramIndex + 1]!));
 				else {
 					paramsCheck(param);
-					this.queryChunks.push(new SQLCommonParam(param), new SQLString(strings[paramIndex + 1]!));
+					this.queryChunks.push(
+						new (this.overrides.SQLCommonParam ?? SQLCommonParam)(param),
+						new SQLString(strings[paramIndex + 1]!),
+					);
 				}
 			}
 		} else if (rawParams) {
@@ -106,6 +114,31 @@ export class SQLWrapper {
 			this.params = rawParams.params;
 		}
 		return this;
+	}
+
+	getRawQuery(dialect: Dialect) {
+		let query = '';
+
+		for (const chunk of this.queryChunks) {
+			if (
+				chunk instanceof SQLString
+				|| chunk instanceof SQLRaw
+				|| chunk instanceof SQLDefault
+			) {
+				query += chunk.generateSQL().sql;
+			}
+
+			if (chunk instanceof SQLIdentifier) {
+				query += chunk.generateSQL({ dialect }).sql;
+			}
+
+			if (chunk instanceof SQLValues || chunk instanceof SQLCommonParam) {
+				const sql = dialect.valueToRawSQL(chunk.value).sql;
+				query += sql;
+			}
+		}
+
+		return query;
 	}
 
 	getQuery<

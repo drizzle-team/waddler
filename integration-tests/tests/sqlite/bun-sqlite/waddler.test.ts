@@ -3,7 +3,8 @@ import { beforeAll, expect, test } from 'bun:test';
 import { createAllDataTypesTable, createUsersTable, dropAllDataTypesTable, dropUsersTable } from '../sqlite-core';
 
 import { vi } from 'vitest';
-import { type BunSqliteSQL, sql as sqlQuery, waddler } from 'waddler/bun-sqlite';
+import { type BunSqliteSQL, waddler } from 'waddler/bun-sqlite';
+import { sql as sqlQuery } from 'waddler/sqlite-core';
 import { filter1 } from './test-filters1';
 import { filter2 } from './test-filters2';
 
@@ -159,7 +160,7 @@ test('all types in sql.values test', async () => {
 		2147483647,
 		BigInt('9007199254740992') + BigInt(1),
 		101.23,
-		'qwerty',
+		`qwe'"rty`,
 		JSON.stringify({
 			name: 'alex',
 			age: 26,
@@ -185,7 +186,7 @@ test('all types in sql.values test', async () => {
 		2147483647,
 		9007199254740992, // it will return right bigint( BigInt('9007199254740992') + BigInt(1), ) if you call client.defaultSafeIntegers(true);
 		101.23,
-		'qwerty',
+		`qwe'"rty`,
 		JSON.stringify({
 			name: 'alex',
 			age: 26,
@@ -357,4 +358,41 @@ test('standalone sql test', async () => {
 		sql: 'toStartOfHour("test") >= from and toStartOfHour("test") < to;',
 		params: [],
 	});
+});
+
+test('query database test from doc', async () => {
+	await sql.unsafe('drop table if exists users;').run();
+	await sql.unsafe(`create table if not exists users (
+    			id    integer primary key autoincrement,
+    			name  text    not null,
+    			age   integer not null,
+    			email text    not null unique
+    		);
+  			`).run();
+
+	const user = [
+		'John',
+		30,
+		'john@example.com',
+	];
+	await sql`
+		insert into ${sql.identifier('users')}(${sql.identifier(['name', 'age', 'email'])}) 
+		  values ${sql.values([user])};
+	`.run();
+
+	const _users = await sql`select * from ${sql.identifier('users')};`.all();
+
+	/*
+  	const users: {
+  	  id: number;
+  	  name: string;
+  	  age: number;
+  	  email: string;
+  	}[]
+  	*/
+	await sql`update ${sql.identifier('users')} set age = ${31} where email = ${user[2]};`.run();
+
+	await sql`delete from ${sql.identifier('users')} where email = ${user[2]};`.run();
+
+	await sql.unsafe('drop table if exists users;').run();
 });

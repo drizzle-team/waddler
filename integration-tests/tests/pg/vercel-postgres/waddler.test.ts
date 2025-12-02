@@ -4,7 +4,8 @@ import { createClient, createPool } from '@vercel/postgres';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
 import { queryStream } from 'waddler/extensions/pg-query-stream';
-import { sql as sqlQuery, waddler } from 'waddler/vercel-postgres';
+import { sql as sqlQuery } from 'waddler/pg-core';
+import { waddler } from 'waddler/vercel-postgres';
 import { commonTests } from '../../common.test.ts';
 import { vitestExpectSoftDate } from '../../utils.ts';
 import {
@@ -15,6 +16,7 @@ import {
 	dropAllDataTypesTable,
 	dropUsersTable,
 	nodePgTests,
+	pgDocTests,
 } from '../pg-core.ts';
 import { filter1 } from './test-filters1.ts';
 import { filter2 } from './test-filters2.ts';
@@ -52,6 +54,7 @@ beforeEach<{ sql: SQL }>((ctx) => {
 
 commonTests();
 commonPgTests();
+pgDocTests();
 
 test('connection test', async () => {
 	const sql0 = waddler();

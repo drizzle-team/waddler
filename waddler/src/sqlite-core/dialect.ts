@@ -1,12 +1,13 @@
-import type { BetterSqlite3SQLTemplate } from '~/sqlite/better-sqlite3/session.ts';
-import type { BunSqliteSQLTemplate } from '~/sqlite/bun-sqlite/session.ts';
-import type { D1SQLTemplate } from '~/sqlite/d1/session.ts';
-import type { DurableSqliteSQLTemplate } from '~/sqlite/durable-sqlite/session.ts';
-import type { LibsqlSQLTemplate } from '~/sqlite/libsql/session.ts';
-import { Dialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
-import type { Identifier, Raw, Value, Values } from '../../types.ts';
-import type { ExpoSqliteSQLTemplate } from '../expo-sqlite/session.ts';
-import type { OpSqliteSQLTemplate } from '../op-sqlite/session.ts';
+import { Dialect, SQLDefault, SQLIdentifier, SQLQuery, SQLRaw, SQLValues } from '../sql-template-params.ts';
+import { type SQL, SQLWrapper } from '../sql.ts';
+import type { BetterSqlite3SQLTemplate } from '../sqlite/better-sqlite3/session.ts';
+import type { BunSqliteSQLTemplate } from '../sqlite/bun-sqlite/session.ts';
+import type { D1SQLTemplate } from '../sqlite/d1/session.ts';
+import type { DurableSqliteSQLTemplate } from '../sqlite/durable-sqlite/session.ts';
+import type { ExpoSqliteSQLTemplate } from '../sqlite/expo-sqlite/session.ts';
+import type { LibsqlSQLTemplate } from '../sqlite/libsql/session.ts';
+import type { OpSqliteSQLTemplate } from '../sqlite/op-sqlite/session.ts';
+import type { Identifier, Raw, SQLParamType, Value, Values } from '../types.ts';
 
 export type SqliteIdentifierObject = {
 	table?: string;
@@ -56,19 +57,27 @@ export class SqliteDialect extends Dialect {
 			value: Value;
 			params: Value[] | Record<string, any>;
 		},
-	): string {
+	): { sql: string; addParamsCount?: number } {
 		if (value instanceof SQLDefault) {
-			return value.generateSQL().sql;
+			return { sql: value.generateSQL().sql };
+		}
+
+		if (value instanceof SQLRaw) {
+			return { sql: value.generateSQL().sql };
 		}
 
 		if (typeof value === 'object' && value.constructor.name === 'Object') {
 			params.push(JSON.stringify(value));
-			return this.escapeParam();
+			return { sql: this.escapeParam(), addParamsCount: 1 };
 		}
 
 		params.push(value);
-		return this.escapeParam();
+		return { sql: this.escapeParam(), addParamsCount: 1 };
 	}
+}
+
+export interface SqliteSQL extends Pick<SQL, 'raw' | 'values'> {
+	identifier(value: Identifier<SqliteIdentifierObject>): SQLIdentifier<SqliteIdentifierObject>;
 }
 
 export class UnsafePromise<
@@ -126,3 +135,19 @@ export const SQLFunctions = {
 		return new SQLRaw(value);
 	},
 };
+
+export interface SqliteSQLQuery extends SqliteSQL {
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+}
+
+const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
+	const sqlWrapper = new SQLWrapper();
+	sqlWrapper.with({ templateParams: { strings, params } });
+	const dialect = new SqliteDialect();
+
+	return new SQLQuery(sqlWrapper, dialect);
+}) as SqliteSQLQuery;
+
+Object.assign(sql, SQLFunctions);
+
+export { sql };

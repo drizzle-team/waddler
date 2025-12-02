@@ -3,7 +3,8 @@ import { afterAll, beforeAll, expect, test } from 'bun:test';
 import type Docker from 'dockerode';
 import { vi } from 'vitest';
 import type { SQL } from 'waddler';
-import { sql as sqlQuery, waddler } from 'waddler/bun-sql';
+import { waddler } from 'waddler/bun-sql';
+import { sql as sqlQuery } from 'waddler/pg-core';
 import {
 	createAllArrayDataTypesTable,
 	createAllDataTypesTable,
@@ -248,9 +249,9 @@ test('all types in sql.values test', async () => {
 		10,
 		BigInt('9007199254740992') + BigInt(1),
 		true,
-		'qwerty',
-		'qwerty',
-		'qwerty',
+		`qwe'"rty`,
+		`qwe'"rty`,
+		`qwe'"r`,
 		'20.4',
 		20.4,
 		20.4,
@@ -276,9 +277,9 @@ test('all types in sql.values test', async () => {
 		10,
 		String(BigInt('9007199254740992') + BigInt(1)),
 		true,
-		'qwerty',
-		'qwerty',
-		'qwerty',
+		`qwe'"rty`,
+		`qwe'"rty`,
+		`qwe'"r`,
 		'20.4',
 		20.4,
 		20.4,
@@ -314,9 +315,9 @@ test('all array types in sql.values test', async () => {
 		[10],
 		[String(BigInt('9007199254740992') + BigInt(1))],
 		[true],
-		['qwerty'],
-		['qwerty'],
-		['qwerty'],
+		[`qwe'"rty`],
+		[`qwe'"rty`],
+		[`qwe'"r`],
 		[20.4],
 		[20.4],
 		[20.4],
@@ -351,9 +352,9 @@ test('all array types in sql.values test', async () => {
 		[10],
 		[String(BigInt('9007199254740992') + BigInt(1))],
 		[true],
-		['qwerty'],
-		['qwerty'],
-		['qwerty'],
+		[`qwe'"rty`],
+		[`qwe'"rty`],
+		[`qwe'"r`],
 		['20.4'],
 		[20.4],
 		[20.4],
@@ -507,4 +508,38 @@ test('standalone sql test #1', async () => {
 		sql: 'toStartOfHour("test") >= from and toStartOfHour("test") < to;',
 		params: [],
 	});
+});
+
+test('query database test from doc', async () => {
+	await sql.unsafe('drop table if exists users;');
+	await sql.unsafe(`create table users (
+    	id integer primary key generated always as identity,
+    	name varchar(255) not null,
+    	age integer not null,
+    	email varchar(255) not null unique
+	);
+  	`);
+
+	const user = [
+		'John',
+		30,
+		'john@example.com',
+	];
+	await sql`insert into ${sql.identifier('users')} values ${sql.values([[sql.default, ...user]])};`;
+
+	const _users = await sql`select * from ${sql.identifier('users')};`;
+
+	/*
+  			const users: {
+  			  id: number;
+  			  name: string;
+  			  age: number;
+  			  email: string;
+  			}[]
+  			*/
+	await sql`update ${sql.identifier('users')} set age = ${31} where email = ${user[2]};`;
+
+	await sql`delete from ${sql.identifier('users')} where email = ${user[2]};`;
+
+	await sql.unsafe('drop table if exists users;');
 });

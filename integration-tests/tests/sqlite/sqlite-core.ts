@@ -255,3 +255,44 @@ export const commonSqliteTests = () => {
 };
 
 export const defaultValue = 3;
+
+export const sqliteDocTests = () => {
+	describe('sqlite_doc_tests', () => {
+		test<{ sql: BetterSqlite3SQL }>('query database test from doc', async (ctx) => {
+			await ctx.sql.unsafe('drop table if exists users;').run();
+			await ctx.sql.unsafe(`create table if not exists users (
+    			id    integer primary key autoincrement,
+    			name  text    not null,
+    			age   integer not null,
+    			email text    not null unique
+    		);
+  			`).run();
+
+			const user = [
+				'John',
+				30,
+				'john@example.com',
+			];
+			await ctx.sql`
+  			  insert into ${ctx.sql.identifier('users')}(${ctx.sql.identifier(['name', 'age', 'email'])}) 
+  			    values ${ctx.sql.values([user])};
+  			`.run();
+
+			const _users = await ctx.sql`select * from ${ctx.sql.identifier('users')};`.all();
+
+			/*
+  			const users: {
+  			  id: number;
+  			  name: string;
+  			  age: number;
+  			  email: string;
+  			}[]
+  			*/
+			await ctx.sql`update ${ctx.sql.identifier('users')} set age = ${31} where email = ${user[2]};`.run();
+
+			await ctx.sql`delete from ${ctx.sql.identifier('users')} where email = ${user[2]};`.run();
+
+			await ctx.sql.unsafe('drop table if exists users;').run();
+		});
+	});
+};

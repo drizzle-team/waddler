@@ -3,7 +3,8 @@ import type { Sql } from 'postgres';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
-import { sql as sqlQuery, waddler } from 'waddler/postgres-js';
+import { sql as sqlQuery } from 'waddler/pg-core';
+import { waddler } from 'waddler/postgres-js';
 import { commonTests } from '../../common.test.ts';
 import { createPgDockerDB } from '../../utils.ts';
 import {
@@ -16,6 +17,7 @@ import {
 	defaultValue,
 	dropAllDataTypesTable,
 	dropUsersTable,
+	pgDocTests,
 } from '../pg-core.ts';
 import { filter1 } from './test-filters1.ts';
 import { filter2 } from './test-filters2.ts';
@@ -80,6 +82,7 @@ beforeEach<{ sql: SQL }>((ctx) => {
 
 commonTests();
 commonPgTests();
+pgDocTests();
 
 test('connection test', async () => {
 	const pool = postgres({ ...pgConnectionParams });
@@ -269,9 +272,9 @@ test('all types in sql.values, sql.raw in select test', async () => {
 		10,
 		BigInt('9007199254740992') + BigInt(1),
 		true,
-		'qwerty',
-		'qwerty',
-		'qwerty',
+		`qwe'"rty`,
+		`qwe'"rty`,
+		`qwe'"r`,
 		'20.4',
 		20.4,
 		20.4,
@@ -311,9 +314,9 @@ test('all types in sql.values, sql.raw in select test', async () => {
 		10,
 		String(BigInt('9007199254740992') + BigInt(1)),
 		true,
-		'qwerty',
-		'qwerty',
-		'qwerty',
+		`qwe'"rty`,
+		`qwe'"rty`,
+		`qwe'"r`,
 		'20.4',
 		20.4,
 		20.4,
@@ -373,9 +376,9 @@ test('all array types in sql.values test', async () => {
 		[10],
 		[BigInt('9007199254740992') + BigInt(1)],
 		[true],
-		['qwerty'],
-		['qwerty'],
-		['qwerty'],
+		[`qwe'"rty`],
+		[`qwe'"rty`],
+		[`qwe'"r`],
 		[20.4],
 		[20.4],
 		[20.4],
@@ -396,9 +399,9 @@ test('all array types in sql.values test', async () => {
 		[10],
 		[String(BigInt('9007199254740992') + BigInt(1))],
 		[true],
-		['qwerty'],
-		['qwerty'],
-		['qwerty'],
+		[`qwe'"rty`],
+		[`qwe'"rty`],
+		[`qwe'"r`],
 		['20.4'],
 		[20.4],
 		[20.4],

@@ -1,4 +1,4 @@
-import * as waddlerTools from 'waddler/gel';
+import * as waddlerTools from 'waddler/gel-core';
 
 export const filter2 = ({ user_id, name, email }: { user_id?: number; name?: string; email?: string }) => {
 	const filters = [];

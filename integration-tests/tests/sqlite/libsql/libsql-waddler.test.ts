@@ -3,9 +3,10 @@ import { type Client, createClient } from '@libsql/client';
 import retry from 'async-retry';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { LibsqlSQL } from 'waddler/libsql';
-import { sql as sqlQuery, waddler } from 'waddler/libsql';
+import { waddler } from 'waddler/libsql';
+import { sql as sqlQuery } from 'waddler/sqlite-core';
 import { commonTests } from '../../common.test';
-import { commonSqliteTests, createUsersTable, dropUsersTable } from '../sqlite-core.ts';
+import { commonSqliteTests, createUsersTable, dropUsersTable, sqliteDocTests } from '../sqlite-core.ts';
 import { libsqlTests } from './common.ts';
 import { filter1 } from './test-filters1.ts';
 import { filter2 } from './test-filters2.ts';
@@ -46,6 +47,7 @@ afterAll(() => {
 
 commonTests();
 commonSqliteTests();
+sqliteDocTests();
 
 test('connection test', async () => {
 	const client = createClient({

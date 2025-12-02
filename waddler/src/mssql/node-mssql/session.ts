@@ -1,0 +1,94 @@
+import type { ConnectionPool, Request } from 'mssql';
+import { WaddlerQueryError } from '../../errors/index.ts';
+import type { MsSqlDialect } from '../../mssql-core/dialect.ts';
+import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
+import { SQLTemplate } from '../../sql-template.ts';
+import type { SQLWrapper } from '../../sql.ts';
+import { AutoPool } from './pool.ts';
+
+export type NodeMsSqlClient = Pick<ConnectionPool, 'request'> | AutoPool;
+
+export class NodeMsSqlSQLTemplate<T> extends SQLTemplate<T> {
+	constructor(
+		override sqlWrapper: SQLWrapper,
+		protected readonly client: NodeMsSqlClient,
+		dialect: MsSqlDialect,
+		configOptions: SQLTemplateConfigOptions,
+		private options: { rowMode: 'array' | 'object'; getParamName?: (lastParamNumber: number) => string } = {
+			rowMode: 'object',
+		},
+	) {
+		super(sqlWrapper, dialect, configOptions);
+	}
+
+	async execute() {
+		const { params, sql } = this.sqlWrapper.getQuery(this.dialect);
+		let finalResult;
+		let finalMetadata: any | undefined;
+
+		let queryClient = this.client as ConnectionPool;
+		if (this.client instanceof AutoPool) {
+			queryClient = await this.client.$instance();
+		}
+
+		const request = queryClient.request() as Request & { arrayRowMode: boolean };
+
+		const getParamName = this.options.getParamName
+			?? ((lastParamNumber: number) => this.dialect.escapeParam(lastParamNumber).slice(1));
+
+		for (const [index, param] of params.entries()) {
+			request.input(getParamName(index + 1), param);
+		}
+
+		if (this.options.rowMode === 'array') request.arrayRowMode = true;
+
+		try {
+			const queryResult = await request.query(sql);
+
+			// TODO recordset contains columns field that has all columns types. Should I add this to metadata?
+			finalResult = queryResult.recordset;
+			finalMetadata = {
+				output: queryResult.output,
+				rowsAffected: queryResult.rowsAffected,
+				columns: queryResult.recordset?.columns,
+			};
+		} catch (error) {
+			throw new WaddlerQueryError(sql, params, error as Error);
+		}
+
+		this.logger.logQuery(sql, params, finalMetadata);
+		return finalResult as T[];
+	}
+
+	async *stream() {
+		const { sql, params } = this.sqlWrapper.getQuery(this.dialect);
+
+		let queryClient = this.client as ConnectionPool;
+		if (this.client instanceof AutoPool) {
+			queryClient = await this.client.$instance();
+		}
+
+		const request = queryClient.request() as Request & { arrayRowMode: boolean };
+		request.stream = true;
+		if (this.options.rowMode === 'array') request.arrayRowMode = true;
+
+		for (const [index, param] of params.entries()) {
+			request.input(this.dialect.escapeParam(index + 1), param);
+		}
+
+		// wrapping mysql2 driver error in new js error to add stack trace to it
+		try {
+			const stream = request.toReadableStream();
+
+			request.query(sql);
+
+			for await (const row of stream) {
+				yield row;
+			}
+		} catch (error) {
+			throw new WaddlerQueryError(sql, params, error as Error);
+		} finally {
+			request.cancel();
+		}
+	}
+}

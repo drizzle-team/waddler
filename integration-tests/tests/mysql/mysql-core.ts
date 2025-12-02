@@ -295,11 +295,11 @@ export const commonMysqlAllTypesTests = (driver: 'mysql2' | 'planetscale-serverl
 				100.23,
 				101.23,
 				1,
-				Buffer.from('qwerty'),
-				Buffer.from('qwerty'),
-				'qwerty',
-				'qwerty',
-				'qwerty',
+				Buffer.from("qwe'rt"),
+				Buffer.from("qwe'rt"),
+				"qwe'rt",
+				"qwe'rt",
+				"qwe'rty",
 				true,
 				'2024-10-31', // date
 				new Date('2024-10-31T14:25:29.425'), // datetime
@@ -339,11 +339,11 @@ export const commonMysqlAllTypesTests = (driver: 'mysql2' | 'planetscale-serverl
 					double: 100.23,
 					float: 101.23,
 					serial: '1',
-					binary: new Uint8Array(Buffer.from('qwerty')),
-					varbinary: new Uint8Array(Buffer.from('qwerty')),
-					char: 'qwerty',
-					varchar: 'qwerty',
-					text: 'qwerty',
+					binary: new Uint8Array(Buffer.from("qwe'rt")),
+					varbinary: new Uint8Array(Buffer.from("qwe'rt")),
+					char: "qwe'rt",
+					varchar: "qwe'rt",
+					text: "qwe'rty",
 					boolean: 1,
 					date: '2024-10-31', // date: new Date('2024-10-30T22:00:00.000Z'), // '2024-10-31',
 					datetime: '2024-10-31 12:25:29', // new Date('2024-10-31T14:25:29'),
@@ -376,11 +376,11 @@ export const commonMysqlAllTypesTests = (driver: 'mysql2' | 'planetscale-serverl
 					double: 100.23,
 					float: 101.23,
 					serial: 1,
-					binary: Buffer.from('qwerty'),
-					varbinary: Buffer.from('qwerty'),
-					char: 'qwerty',
-					varchar: 'qwerty',
-					text: 'qwerty',
+					binary: Buffer.from("qwe'rt"),
+					varbinary: Buffer.from("qwe'rt"),
+					char: "qwe'rt",
+					varchar: "qwe'rt",
+					text: "qwe'rty",
 					boolean: 1,
 					date: new Date('2024-10-31T00:00:00.000'), // '2024-10-31',
 					datetime: new Date('2024-10-31T14:25:29'),
@@ -548,6 +548,45 @@ export const commonMysqlAllTypesTests = (driver: 'mysql2' | 'planetscale-serverl
 			);
 			expect(predicate).toBe(true);
 			// expect(res[0]).toStrictEqual(expectedRes);
+		});
+	});
+};
+
+export const mysqlDocTests = () => {
+	describe('mysql_doc_tests', () => {
+		test<{ sql: SQL }>('query database test from doc', async (ctx) => {
+			await ctx.sql.unsafe('drop table if exists users;');
+			await ctx.sql.unsafe(`CREATE TABLE users (
+				id serial,
+				name varchar(255) NOT NULL,
+        		age int NOT NULL,
+        		email varchar(255) NOT NULL UNIQUE,
+				CONSTRAINT PRIMARY KEY(id)
+			);
+    		`);
+
+			const user = [
+				'John',
+				30,
+				'john@example.com',
+			];
+			await ctx.sql`insert into ${ctx.sql.identifier('users')} values ${ctx.sql.values([[ctx.sql.default, ...user]])};`;
+
+			const _users = await ctx.sql`select * from ${ctx.sql.identifier('users')};`;
+
+			/*
+  			const users: {
+  			  id: number;
+  			  name: string;
+  			  age: number;
+  			  email: string;
+  			}[]
+  			*/
+			await ctx.sql`update ${ctx.sql.identifier('users')} set age = ${31} where email = ${user[2]};`;
+
+			await ctx.sql`delete from ${ctx.sql.identifier('users')} where email = ${user[2]};`;
+
+			await ctx.sql.unsafe('drop table if exists users;');
 		});
 	});
 };

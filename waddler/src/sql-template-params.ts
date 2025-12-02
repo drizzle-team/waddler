@@ -28,7 +28,11 @@ export abstract class Dialect implements BuildQueryConfig {
 		types: string[];
 		colIdx: number;
 		paramsCount: number;
-	}): string;
+	}): { sql: string; addParamsCount?: number };
+
+	valueToRawSQL(_value: Value): { sql: string } {
+		throw new Error(`method valueToRawSQL is not implemented for dialect ${this.constructor.name}`);
+	}
 }
 
 export abstract class SQLChunk {
@@ -57,15 +61,19 @@ export class SQLQuery<DialectT extends Dialect = Dialect> extends SQLChunk {
 	toSQL() {
 		return this.generateSQL();
 	}
+
+	/**
+	 * Currently method is implemented only for ClickHouse dialect.
+	 * @returns
+	 */
+	toRawSQL() {
+		return this.sqlWrapper.getRawQuery(this.dialect);
+	}
 }
 
 export class SQLCommonParam extends SQLChunk {
-	INT32_MAX = 2_147_483_647;
-	INT32_MIN = -2_147_483_648;
-
 	constructor(
 		readonly value: UnsafeParamType,
-		public type: string = 'String',
 	) {
 		super();
 	}
@@ -73,27 +81,10 @@ export class SQLCommonParam extends SQLChunk {
 	generateSQL(
 		{ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number },
 	) {
-		// bigint case
-		if (typeof this.value === 'bigint') this.type = 'Int64';
-
-		// integer case
-		if (typeof this.value === 'number' && this.value % 1 === 0) {
-			this.type = 'Int32';
-			if (this.value > this.INT32_MAX || this.value < this.INT32_MIN) {
-				this.type = 'Int64';
-			}
-		}
-
-		// array case
-		if (Array.isArray(this.value)) {
-			const nodeType = typeof this.value[0];
-			if (nodeType === 'string') this.type = 'Array(String)';
-		}
-
 		const params = dialect.createEmptyParams();
 		dialect.pushParams(params, this.value, lastParamIdx + 1, 'single');
 		return {
-			sql: dialect.escapeParam(lastParamIdx + 1, this.type),
+			sql: dialect.escapeParam(lastParamIdx + 1),
 			params,
 			paramsCount: 1,
 		};
@@ -227,7 +218,7 @@ export class SQLValues extends SQLChunk {
 			return `(${
 				rowValues
 					.map((value, index) => {
-						const sql = dialect.valueToSQL({
+						const { sql, addParamsCount = 0 } = dialect.valueToSQL({
 							value,
 							lastParamIdx,
 							params: this.params,
@@ -235,7 +226,7 @@ export class SQLValues extends SQLChunk {
 							colIdx: index,
 							paramsCount: this.paramsCount,
 						});
-						this.paramsCount++;
+						this.paramsCount += addParamsCount;
 						return sql;
 					})
 					.join(', ')

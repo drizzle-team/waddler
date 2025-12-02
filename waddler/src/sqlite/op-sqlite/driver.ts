@@ -1,16 +1,14 @@
 import type { DB } from '@op-engineering/op-sqlite';
-import type { SqliteIdentifierObject } from '~/sqlite/sqlite-core/index.ts';
 import type { Logger } from '../../logger.ts';
 import { DefaultLogger } from '../../logger.ts';
-import type { SQLIdentifier } from '../../sql-template-params.ts';
-import { SQLQuery } from '../../sql-template-params.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
-import type { Identifier, RowData, SQLParamType, UnsafeParamType, WaddlerConfig } from '../../types.ts';
-import { SQLFunctions, SqliteDialect, UnsafePromise } from '../sqlite-core/dialect.ts';
+import { SQLFunctions, SqliteDialect, UnsafePromise } from '../../sqlite-core/dialect.ts';
+import type { SqliteSQL } from '../../sqlite-core/index.ts';
+import type { RowData, SQLParamType, UnsafeParamType, WaddlerConfig } from '../../types.ts';
 import { OpSqliteSQLTemplate } from './session.ts';
 
-export interface OpSqliteSQL extends Omit<SQL, 'default' | 'unsafe'> {
+export interface OpSqliteSQL extends Omit<SQL, 'default' | 'unsafe' | 'identifier'>, SqliteSQL {
 	/**
 	 * sql.default is not implemented for sqlite because sqlite doesn't support feature of specifying 'default' keyword in insert statements.
 	 */
@@ -18,7 +16,6 @@ export interface OpSqliteSQL extends Omit<SQL, 'default' | 'unsafe'> {
 		strings: TemplateStringsArray,
 		...params: SQLParamType[]
 	): OpSqliteSQLTemplate<T>;
-	identifier(value: Identifier<SqliteIdentifierObject>): SQLIdentifier<SqliteIdentifierObject>;
 	unsafe<RowMode extends 'array' | 'object'>(
 		query: string,
 		params?: UnsafeParamType[],
@@ -30,22 +27,6 @@ export interface OpSqliteSQL extends Omit<SQL, 'default' | 'unsafe'> {
 		OpSqliteSQLTemplate<any>
 	>;
 }
-
-export interface OpSqliteSQLQuery extends Pick<SQL, 'raw' | 'values'>, Pick<OpSqliteSQL, 'identifier'> {
-	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
-}
-
-const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
-	const sqlWrapper = new SQLWrapper();
-	sqlWrapper.with({ templateParams: { strings, params } });
-	const dialect = new SqliteDialect();
-
-	return new SQLQuery(sqlWrapper, dialect);
-}) as OpSqliteSQLQuery;
-
-Object.assign(sql, SQLFunctions);
-
-export { sql };
 
 const createSqlTemplate = (
 	client: DB,

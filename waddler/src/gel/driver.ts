@@ -1,35 +1,22 @@
 import type { Client, ConnectOptions } from 'gel';
 import createClient from 'gel';
+import { GelDialect, SQLFunctions } from '../gel-core/dialect.ts';
 import type { Logger } from '../logger.ts';
 import { DefaultLogger } from '../logger.ts';
-import { SQLQuery } from '../sql-template-params.ts';
 import type { SQL } from '../sql.ts';
 import { SQLWrapper } from '../sql.ts';
-import type { SQLParamType, UnsafeParamType, WaddlerConfig } from '../types.ts';
+import type { RowData, SQLParamType, UnsafeParamType, WaddlerConfig } from '../types.ts';
 import { isConfig } from '../utils.ts';
-import { GelDialect, SQLFunctions } from './gel-core/dialect.ts';
 import { GelSQLTemplate } from './session.ts';
 
-export interface GelSQLQuery extends Pick<SQL, 'identifier' | 'raw' | 'default' | 'values'> {
-	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+export interface GelSQL extends SQL {
+	<T = RowData>(strings: TemplateStringsArray, ...params: SQLParamType[]): GelSQLTemplate<T>;
 }
-
-const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
-	const sqlWrapper = new SQLWrapper();
-	sqlWrapper.with({ templateParams: { strings, params } });
-	const dialect = new GelDialect();
-
-	return new SQLQuery(sqlWrapper, dialect);
-}) as GelSQLQuery;
-
-Object.assign(sql, SQLFunctions);
-
-export { sql };
 
 const createSqlTemplate = (
 	client: Client,
 	configOptions: WaddlerConfig = {},
-): SQL => {
+): GelSQL => {
 	const dialect = new GelDialect();
 	let logger: Logger | undefined;
 	if (configOptions.logger === true) {

@@ -2,7 +2,9 @@ import type Docker from 'dockerode';
 import type { Client } from 'gel';
 import createClient, { DateDuration, Duration, LocalDate, LocalDateTime, LocalTime, RelativeDuration } from 'gel';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
-import { sql as sqlQuery, waddler } from 'waddler/gel';
+import type { GelSQL } from 'waddler/gel';
+import { waddler } from 'waddler/gel';
+import { sql as sqlQuery } from 'waddler/gel-core';
 import { commonTests } from '../common.test.ts';
 import { createGelDockerDB } from '../utils.ts';
 import {
@@ -31,7 +33,7 @@ let gelConnectionParams: {
 let gelConnectionString: string;
 const tlsSecurity = 'insecure' as const;
 
-let sql: SQL;
+let sql: GelSQL;
 beforeAll(async () => {
 	const dockerPayload = await createGelDockerDB();
 	const sleep = 1000;
@@ -77,20 +79,21 @@ commonTests();
 commonPgTests();
 
 test('connection test', async () => {
-	const client = createClient({ ...gelConnectionParams, tlsSecurity: 'insecure' });
+	// const client = createClient(gelConnectionString + `?tls_security=${tlsSecurity}`);
+	const client = createClient({ ...gelConnectionParams, tlsSecurity });
 	const sql1 = waddler({ client });
 	await sql1`select 1;`;
 
 	await client.close();
 
-	const sql2 = waddler({ connection: { ...gelConnectionParams, tlsSecurity: 'insecure' } });
+	const sql2 = waddler({ connection: { ...gelConnectionParams, tlsSecurity } });
 	await sql2`select 2;`;
 
-	const sql21 = waddler({ connection: { dsn: gelConnectionString, tlsSecurity: 'insecure' } });
+	const sql21 = waddler({ connection: { dsn: gelConnectionString, tlsSecurity } });
 	await sql21`select 21;`;
 
-	// const sql22 = waddler(gelConnectionString);
-	// await sql22`select 22;`;
+	const sql22 = waddler(gelConnectionString + `?tls_security=${tlsSecurity}`);
+	await sql22`select 22;`;
 });
 
 // UNSAFE-------------------------------------------------------------------
@@ -190,7 +193,7 @@ test('all types in sql.values, sql.raw in select test', async () => {
 	await createAllDataTypesTable(gelConnectionString, tlsSecurity);
 
 	const allDataTypesValues = [
-		'qwerty',
+		"qwe'rty",
 		true,
 		32767,
 		2147483647,
@@ -220,7 +223,7 @@ test('all types in sql.values, sql.raw in select test', async () => {
 	];
 
 	const expectedRes = [
-		'qwerty',
+		"qwe'rty",
 		true,
 		32767,
 		2147483647,
@@ -496,6 +499,38 @@ test('standalone sql test', async () => {
 		sql: 'toStartOfHour("test") >= from and toStartOfHour("test") < to;',
 		params: [],
 	});
+});
+
+test('query database test from doc', async () => {
+	await createUsersTable(gelConnectionString, tlsSecurity);
+	const user = [
+		'John',
+		30,
+		'john@example.com',
+	];
+	await sql`
+		insert into ${sql.identifier('users_')}(${sql.identifier(['name', 'age', 'email'])}) 
+		values ${sql.values([user])};
+	`;
+	//   query: 'insert into "users"("name", "age", "email") values ($1, $2, $3);',
+	//   params: [ 'John', 30, 'john@example.com' ]
+
+	const _users = await sql`select * from ${sql.identifier('users_')};`;
+
+	/*
+    const users: {
+      id: string;
+      __type__: string;
+      age: number;
+      email: string;
+      name: string;
+    }[]
+    */
+	await sql`update ${sql.identifier('users_')} set age = ${31} where email = ${user[2]};`;
+
+	await sql`delete from ${sql.identifier('users_')} where email = ${user[2]};`;
+
+	await dropUsersTable(gelConnectionString, tlsSecurity);
 });
 
 // test('all nd-array types in sql.values test', async () => {

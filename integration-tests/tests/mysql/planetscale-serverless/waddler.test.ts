@@ -2,13 +2,21 @@ import 'dotenv/config';
 import { Client } from '@planetscale/database';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
-import { sql as sqlQuery, waddler } from 'waddler/planetscale-serverless';
+import { sql as sqlQuery } from 'waddler/mysql-core';
+import type { PlanetscaleServerlessSQL } from 'waddler/planetscale-serverless';
+import { waddler } from 'waddler/planetscale-serverless';
 import { commonTests } from '../../common.test';
-import { commonMysqlAllTypesTests, commonMysqlTests, createUsersTable, dropUsersTable } from '../mysql-core';
+import {
+	commonMysqlAllTypesTests,
+	commonMysqlTests,
+	createUsersTable,
+	dropUsersTable,
+	mysqlDocTests,
+} from '../mysql-core';
 import { filter1 } from './test-filters1';
 import { filter2 } from './test-filters2';
 
-let sql: ReturnType<typeof waddler>;
+let sql: PlanetscaleServerlessSQL;
 beforeAll(async () => {
 	const connectionString = process.env['PLANETSCALE_CONNECTION_STRING'];
 	if (!connectionString) {
@@ -23,6 +31,10 @@ beforeAll(async () => {
 beforeEach<{ sql: SQL }>((ctx) => {
 	ctx.sql = sql;
 });
+
+commonTests();
+commonMysqlTests();
+mysqlDocTests();
 
 test('connection test', async () => {
 	const connectionString = process.env['PLANETSCALE_CONNECTION_STRING'];
@@ -113,9 +125,6 @@ test('logger test', async () => {
 
 	consoleMock.mockRestore();
 });
-
-commonTests();
-commonMysqlTests();
 
 // ALL TYPES with sql.unsafe and sql.values-------------------------------------------------------------------
 commonMysqlAllTypesTests('planetscale-serverless');

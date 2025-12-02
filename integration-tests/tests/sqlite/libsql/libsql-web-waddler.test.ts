@@ -6,7 +6,7 @@ import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { LibsqlSQL } from 'waddler/libsql';
 import { waddler } from 'waddler/libsql/web';
 import { commonTests } from '../../common.test.ts';
-import { commonSqliteTests } from '../sqlite-core.ts';
+import { commonSqliteTests, sqliteDocTests } from '../sqlite-core.ts';
 import { libsqlTests } from './common.ts';
 
 let sql: LibsqlSQL;
@@ -45,6 +45,7 @@ afterAll(() => {
 
 commonTests();
 commonSqliteTests();
+sqliteDocTests();
 
 test('connection test', async () => {
 	const url = process.env['LIBSQL_REMOTE_URL'];

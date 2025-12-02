@@ -1,4 +1,4 @@
-import * as waddlerTools from 'waddler/duckdb-neo';
+import * as waddlerTools from 'waddler/duckdb-core';
 
 export const filter2 = ({ id, name, email }: { id?: number; name?: string; email?: string }) => {
 	const filters = [];

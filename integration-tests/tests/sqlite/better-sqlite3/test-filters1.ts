@@ -1,4 +1,4 @@
-import { sql } from 'waddler/better-sqlite3';
+import { sql } from 'waddler/sqlite-core';
 
 export const filter1 = ({ id, name, email }: { id?: number; name?: string; email?: string }) => {
 	const filters = [];

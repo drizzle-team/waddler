@@ -1,9 +1,9 @@
 import type { Client, Connection } from '@planetscale/database';
-import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
+import type { MySQLDialect } from '../../mysql-core/dialect.ts';
 import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
-import type { MySQLDialect } from '../mysql-core/dialect.ts';
+import type { SQLWrapper } from '../../sql.ts';
 
 export class PlanetscaleServerlessSQLTemplate<T> extends SQLTemplate<T> {
 	private rawQueryConfig = { as: 'object' } as const;

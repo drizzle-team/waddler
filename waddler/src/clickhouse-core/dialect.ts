@@ -1,7 +1,15 @@
-import { TupleParam } from '@clickhouse/client';
 import type { ClickHouseSQLTemplate } from '../clickhouse/session.ts';
-import { Dialect, SQLCommonParam, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
-import type { Identifier, IdentifierObject, Raw, Value, Values } from '../types.ts';
+import {
+	Dialect,
+	SQLCommonParam,
+	SQLDefault,
+	SQLIdentifier,
+	SQLQuery,
+	SQLRaw,
+	SQLValues,
+} from '../sql-template-params.ts';
+import { type SQL, SQLWrapper } from '../sql.ts';
+import type { Identifier, IdentifierObject, Raw, SQLParamType, UnsafeParamType, Value, Values } from '../types.ts';
 import { getArrayDepth, makeClickHouseArray } from './utils.ts';
 
 export class ClickHouseDialect extends Dialect {
@@ -83,21 +91,20 @@ export class ClickHouseDialect extends Dialect {
 			colIdx: number;
 			paramsCount: number;
 		},
-	): string {
+	): { sql: string; addParamsCount?: number } {
 		// TODO: add mapValueToType
 
 		if (value instanceof SQLDefault) {
-			return value.generateSQL().sql;
+			return { sql: value.generateSQL().sql };
 		}
 
 		if (value instanceof SQLRaw) {
-			return value.generateSQL().sql;
+			return { sql: value.generateSQL().sql };
 		}
 
 		if (typeof value === 'bigint') {
 			this.pushParams(params, `${value}`, lastParamIdx + paramsCount + 1, 'single');
-			// params.push([`param${lastParamIdx + params.length + 1}`, `${value}`] as any);
-			return this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]);
+			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]), addParamsCount: 1 };
 		}
 
 		if (Array.isArray(value)) {
@@ -110,8 +117,10 @@ export class ClickHouseDialect extends Dialect {
 			}
 
 			this.pushParams(params, mappedValue, lastParamIdx + paramsCount + 1, 'single');
-			// params.push([`param${lastParamIdx + params.length + 1}`, mappedValue] as any);
-			return this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx] ?? arrayTypeToCast);
+			return {
+				sql: this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx] ?? arrayTypeToCast),
+				addParamsCount: 1,
+			};
 		}
 
 		if (
@@ -122,22 +131,19 @@ export class ClickHouseDialect extends Dialect {
 			|| value instanceof Date
 		) {
 			this.pushParams(params, value, lastParamIdx + paramsCount + 1, 'single');
-			// params.push([`param${lastParamIdx + params.length + 1}`, value] as any);
-			return this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]);
+			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]), addParamsCount: 1 };
 		}
 
-		if (value instanceof Map || value instanceof TupleParam) {
+		if (value instanceof Map || (typeof value === 'object' && value.constructor?.name === 'TupleParam')) {
 			// Map, Tuple type
 			this.pushParams(params, value, lastParamIdx + paramsCount + 1, 'single');
-			// params.push([`param${lastParamIdx + params.length + 1}`, value] as any);
-			return this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]);
+			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx]), addParamsCount: 1 };
 		}
 
 		if (typeof value === 'object') {
 			// should be JSON type
 			this.pushParams(params, JSON.stringify(value), lastParamIdx + paramsCount + 1, 'single');
-			// params.push([`param${lastParamIdx + params.length + 1}`, JSON.stringify(value)] as any);
-			return this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx] ?? 'JSON');
+			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1, types[colIdx] ?? 'JSON'), addParamsCount: 1 };
 		}
 
 		if (value === undefined) {
@@ -145,6 +151,104 @@ export class ClickHouseDialect extends Dialect {
 		}
 
 		throw new Error(`you can't specify ${typeof value} as value.`);
+	}
+
+	override valueToRawSQL(value: Value): { sql: string } {
+		if (Array.isArray(value)) {
+			const mappedArray = value.map((valueI) => this.valueToRawSQL(valueI).sql);
+			const mappedValue = `[${mappedArray.join(',')}]`;
+
+			return { sql: mappedValue };
+		}
+
+		if (
+			typeof value === 'bigint'
+			|| typeof value === 'number'
+			|| typeof value === 'boolean'
+			|| value === null
+		) {
+			return { sql: `${value}` };
+		}
+
+		if (value instanceof Date) {
+			return { sql: `'${value.toISOString().replace('T', ' ').replace('Z', '')}'`.replace(/\.0+/, '') };
+		}
+		if (
+			typeof value === 'string'
+		) {
+			return { sql: `'${value.replace(/\\/g, '\\\\').replace(/'/g, String.raw`\'`)}'` };
+		}
+
+		if (value instanceof Map) {
+			// Map type
+			const mappedEntries: string[] = [];
+			for (const entry of value) {
+				mappedEntries.push(entry.map((entryI) => this.valueToRawSQL(entryI).sql).join(','));
+			}
+			const mappedValue = `map(${mappedEntries.join(',')})`;
+			return { sql: mappedValue };
+		}
+
+		if (typeof value === 'object' && value.constructor?.name === 'TupleParam') {
+			const mappedTupleParam = (value as { values: any[] }).values.map((tupleParamI) =>
+				this.valueToRawSQL(tupleParamI).sql
+			);
+			const mappedValue = `(${mappedTupleParam.join(',')})`;
+			return { sql: mappedValue };
+		}
+
+		if (typeof value === 'object') {
+			// should be JSON type
+
+			return { sql: `'${JSON.stringify(value)}'` };
+		}
+
+		if (value === undefined) {
+			throw new Error("value can't be undefined, maybe you mean sql.default?");
+		}
+
+		throw new Error(`you can't specify ${typeof value} as value.`);
+	}
+}
+
+export class ClickHouseSQLCommonParam extends SQLCommonParam {
+	INT32_MAX = 2_147_483_647;
+	INT32_MIN = -2_147_483_648;
+
+	constructor(
+		value: UnsafeParamType,
+		public type: string = 'String',
+	) {
+		super(value);
+	}
+
+	override generateSQL(
+		{ dialect, lastParamIdx }: { dialect: Dialect; lastParamIdx: number },
+	) {
+		// bigint case
+		if (typeof this.value === 'bigint') this.type = 'Int64';
+
+		// integer case
+		if (typeof this.value === 'number' && this.value % 1 === 0) {
+			this.type = 'Int32';
+			if (this.value > this.INT32_MAX || this.value < this.INT32_MIN) {
+				this.type = 'Int64';
+			}
+		}
+
+		// array case
+		if (Array.isArray(this.value)) {
+			const nodeType = typeof this.value[0];
+			if (nodeType === 'string') this.type = 'Array(String)';
+		}
+
+		const params = dialect.createEmptyParams();
+		dialect.pushParams(params, this.value, lastParamIdx + 1, 'single');
+		return {
+			sql: dialect.escapeParam(lastParamIdx + 1, this.type),
+			params,
+			paramsCount: 1,
+		};
 	}
 }
 
@@ -183,6 +287,47 @@ export class UnsafePromise<
 		const result = this.driver.execute();
 		return Promise.resolve(result).then(onfulfilled, onrejected);
 	}
+}
+
+export interface ClickHouseCoreSQL extends Pick<SQL, 'identifier' | 'raw' | 'default'> {
+	/**
+	 * @param values - A two-dimensional array of rows to insert; each inner array represents one row of values.
+	 * @param types - (Optional) An array of ClickHouse data types (e.g. ['Int32', 'String']) used to cast each column value.
+	 *
+	 * If omitted, or if there are fewer types than columns, any missing types default to 'String'.
+	 *
+	 * For full list of types, see https://clickhouse.com/docs/sql-reference/data-types
+	 *
+	 * @example
+	 * ```ts
+	 * const rows = [
+	 *   [1, 'qwerty1'],
+	 *   [2, 'qwerty2']
+	 * ];
+	 * const types = ['Int32', 'String'];
+	 *
+	 * sql`INSERT INTO <tableIdentifier> VALUES ${sql.values(rows, types)};`
+	 * ```
+	 *
+	 * This generates and executes:
+	 *
+	 * ```sql
+	 * INSERT INTO <tableIdentifier>
+	 * VALUES ({param1:Int32}, {param2:String}), ({param3:Int32}, {param4:String});
+	 * ```
+	 *
+	 * with these query parameters:
+	 * ```ts
+	 * {
+	 *   param1: 1,
+	 *   param2: 'qwerty1',
+	 *   param3: 2,
+	 *   param4: 'qwerty2'
+	 * }
+	 * ```
+	 */
+	values(value: Values, types?: DbType[]): SQLValues;
+	param(value: any, type: DbType): ClickHouseSQLCommonParam;
 }
 
 export type DbType =
@@ -241,10 +386,27 @@ export const SQLFunctions = {
 		return new SQLValues(value, types);
 	},
 	param: (value: any, type?: DbType) => {
-		return new SQLCommonParam(value, type);
+		return new ClickHouseSQLCommonParam(value, type);
 	},
 	raw: (value: Raw) => {
 		return new SQLRaw(value);
 	},
 	default: new SQLDefault(),
 };
+
+export interface ClickHouseSQLQuery extends ClickHouseCoreSQL {
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery<ClickHouseDialect>;
+}
+
+const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
+	const sqlWrapper = new SQLWrapper();
+	sqlWrapper.setOverrides({ SQLCommonParam: ClickHouseSQLCommonParam });
+	sqlWrapper.with({ templateParams: { strings, params } });
+	const dialect = new ClickHouseDialect();
+
+	return new SQLQuery(sqlWrapper, dialect);
+}) as ClickHouseSQLQuery;
+
+Object.assign(sql, SQLFunctions);
+
+export { sql };

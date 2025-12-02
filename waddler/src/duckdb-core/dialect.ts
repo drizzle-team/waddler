@@ -1,5 +1,7 @@
-import { Dialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../sql-template-params.ts';
-import type { Identifier, IdentifierObject, Raw, Values } from '../types.ts';
+import { Dialect, SQLDefault, SQLIdentifier, SQLQuery, SQLRaw, SQLValues } from '../sql-template-params.ts';
+import type { SQL } from '../sql.ts';
+import { SQLWrapper } from '../sql.ts';
+import type { Identifier, IdentifierObject, Raw, SQLParamType, Values } from '../types.ts';
 
 export class DuckdbDialect extends Dialect {
 	escapeParam(lastParamIdx: number): string {
@@ -58,9 +60,13 @@ export class DuckdbDialect extends Dialect {
 	}
 
 	// SQLValues
-	valueToSQL<DuckdbValue>({ value }: { value: DuckdbValue }): string {
+	valueToSQL<DuckdbValue>({ value }: { value: DuckdbValue }): { sql: string; addParamsCount?: number } {
 		if (value instanceof SQLDefault) {
-			return value.generateSQL().sql;
+			return { sql: value.generateSQL().sql };
+		}
+
+		if (value instanceof SQLRaw) {
+			return { sql: value.generateSQL().sql };
 		}
 
 		if (
@@ -69,26 +75,28 @@ export class DuckdbDialect extends Dialect {
 			|| typeof value === 'boolean'
 			|| value === null
 		) {
-			return `${value}`;
+			return { sql: `${value}` };
 		}
 
 		if (value instanceof Date) {
-			return `'${value.toISOString()}'`;
+			return { sql: `'${value.toISOString()}'` };
 		}
 
 		if (typeof value === 'string') {
-			return `'${value}'`;
+			return { sql: `'${value.replaceAll("'", "''")}'` };
 		}
 
 		if (Array.isArray(value)) {
-			return `[${value.map((arrayValue) => this.valueToSQL({ value: arrayValue }))}]`;
+			return { sql: `[${value.map((arrayValue) => this.valueToSQL({ value: arrayValue }).sql)}]` };
 		}
 
 		if (typeof value === 'object') {
+			return { sql: `'${JSON.stringify(value)}'` };
+			// TODO: revise
 			// object case
-			throw new Error(
-				"value can't be object. you can't specify [ [ {...}, ...], ...] as parameter for sql.values.",
-			);
+			// throw new Error(
+			// 	"value can't be object. you can't specify [ [ {...}, ...], ...] as parameter for sql.values.",
+			// );
 		}
 
 		if (value === undefined) {
@@ -115,3 +123,19 @@ export const SQLFunctions = {
 	},
 	default: new SQLDefault(),
 };
+
+export interface DuckdbSQLQuery extends Pick<SQL, 'identifier' | 'raw' | 'default' | 'values'> {
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+}
+
+const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
+	const sqlWrapper = new SQLWrapper();
+	sqlWrapper.with({ templateParams: { strings, params } });
+	const dialect = new DuckdbDialect();
+
+	return new SQLQuery(sqlWrapper, dialect);
+}) as DuckdbSQLQuery;
+
+Object.assign(sql, SQLFunctions);
+
+export { sql };

@@ -1,9 +1,9 @@
 import type { Client } from 'gel';
-import type { SQLWrapper } from '~/sql.ts';
 import { WaddlerQueryError } from '../errors/index.ts';
+import type { GelDialect } from '../gel-core/dialect.ts';
 import type { SQLTemplateConfigOptions } from '../sql-template.ts';
 import { SQLTemplate } from '../sql-template.ts';
-import type { GelDialect } from './gel-core/dialect.ts';
+import type { SQLWrapper } from '../sql.ts';
 
 export class GelSQLTemplate<T> extends SQLTemplate<T> {
 	constructor(

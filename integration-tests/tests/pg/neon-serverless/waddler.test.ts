@@ -10,12 +10,14 @@ import {
 	dropAllDataTypesTable,
 	dropUsersTable,
 	nodePgTests,
+	pgDocTests,
 } from '../pg-core.ts';
 
 import type { SQL } from 'waddler';
 import { queryStream } from 'waddler/extensions/pg-query-stream';
 import type { NeonClient } from 'waddler/neon-serverless';
-import { sql as sqlQuery, waddler } from 'waddler/neon-serverless';
+import { waddler } from 'waddler/neon-serverless';
+import { sql as sqlQuery } from 'waddler/pg-core';
 import { vitestExpectSoftDate } from '../../utils.ts';
 import { filter1 } from './test-filters1.ts';
 import { filter2 } from './test-filters2.ts';
@@ -45,6 +47,7 @@ afterAll(async () => {
 
 commonTests();
 commonPgTests();
+pgDocTests();
 
 test('connection test', async () => {
 	const client = new Client(connectionString);

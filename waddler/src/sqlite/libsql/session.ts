@@ -1,10 +1,10 @@
 import type { Client, InArgs, InStatement } from '@libsql/client';
 
-import type { SQLWrapper } from '~/sql.ts';
-import type { SqliteDialect } from '~/sqlite/sqlite-core/dialect.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
 import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
+import type { SQLWrapper } from '../../sql.ts';
+import type { SqliteDialect } from '../../sqlite-core/dialect.ts';
 
 export class LibsqlSQLTemplate<T> extends SQLTemplate<T> {
 	returningData: boolean = true;

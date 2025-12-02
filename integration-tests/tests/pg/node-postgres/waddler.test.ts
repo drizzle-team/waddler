@@ -4,7 +4,8 @@ import pg from 'pg';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
 import { queryStream } from 'waddler/extensions/pg-query-stream';
-import { sql as sqlQuery, waddler } from 'waddler/node-postgres';
+import { waddler } from 'waddler/node-postgres';
+import { sql as sqlQuery } from 'waddler/pg-core';
 import { commonTests } from '../../common.test.ts';
 import { createPgDockerDB } from '../../utils.ts';
 import {
@@ -15,6 +16,7 @@ import {
 	dropAllDataTypesTable,
 	dropUsersTable,
 	nodePgTests,
+	pgDocTests,
 } from '../pg-core.ts';
 import { filter1 } from './test-filters1.ts';
 import { filter2 } from './test-filters2.ts';
@@ -74,6 +76,7 @@ beforeEach<{ sql: SQL }>((ctx) => {
 
 commonTests();
 commonPgTests();
+pgDocTests();
 
 test('connection test', async () => {
 	const client = new Client({ ...pgConnectionParams });

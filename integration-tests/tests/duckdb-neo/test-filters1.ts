@@ -1,4 +1,4 @@
-import { sql } from 'waddler/duckdb-neo';
+import { sql } from 'waddler/duckdb-core';
 
 export const filter1 = ({ id, name, email }: { id?: number; name?: string; email?: string }) => {
 	const filters = [];

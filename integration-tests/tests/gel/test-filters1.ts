@@ -1,4 +1,4 @@
-import { sql } from 'waddler/gel';
+import { sql } from 'waddler/gel-core';
 
 export const filter1 = ({ user_id, name, email }: { user_id?: number; name?: string; email?: string }) => {
 	const filters = [];

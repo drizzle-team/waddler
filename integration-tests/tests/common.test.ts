@@ -1,8 +1,9 @@
 import { describe, expect, test } from 'vitest';
 import type { SQL } from 'waddler';
-import { PgDialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues, SQLWrapper } from 'waddler';
+import { SQLDefault, SQLIdentifier, SQLRaw, SQLValues, SQLWrapper } from 'waddler';
 import type { ClickHouseSQL } from 'waddler/clickhouse';
-import type { SQL as DuckdbSQL } from 'waddler/duckdb';
+import type { DuckdbSQL } from 'waddler/duckdb';
+import { PgDialect } from 'waddler/pg-core';
 import type { SqliteSQL } from './sqlite/sqlite-core';
 
 declare module 'vitest' {

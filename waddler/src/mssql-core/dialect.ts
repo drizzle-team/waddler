@@ -1,14 +1,14 @@
-import { Dialect, SQLDefault, SQLIdentifier, SQLRaw, SQLValues } from '../../sql-template-params.ts';
-import type { Identifier, IdentifierObject, Raw, Value, Values } from '../../types.ts';
-import { makePgArray } from './utils.ts';
+import { Dialect, SQLDefault, SQLIdentifier, SQLQuery, SQLRaw, SQLValues } from '../sql-template-params.ts';
+import { type SQL, SQLWrapper } from '../sql.ts';
+import type { Identifier, IdentifierObject, Raw, SQLParamType, Values } from '../types.ts';
 
-export class PgDialect extends Dialect {
-	escapeParam(lastParamIdx: number): string {
-		return `$${lastParamIdx}`;
+export class MsSqlDialect extends Dialect {
+	escapeParam(lastParamNumber: number): string {
+		return `@p${lastParamNumber}`;
 	}
 
 	escapeIdentifier(identifier: string): string {
-		return `"${identifier}"`;
+		return `[${identifier}]`;
 	}
 
 	checkIdentifierObject(object: IdentifierObject) {
@@ -60,20 +60,19 @@ export class PgDialect extends Dialect {
 
 	// SQLValues
 	valueToSQL(
-		{ value, lastParamIdx, params }: {
-			value: Value;
+		{ value, params, lastParamIdx, paramsCount }: {
+			value: any;
+			params: any[] | Record<string, any>;
 			lastParamIdx: number;
-			params: Value[] | Record<string, any>;
+			paramsCount: number;
 		},
-	): string {
+	): { sql: string; addParamsCount?: number } {
 		if (value instanceof SQLDefault) {
-			return value.generateSQL().sql;
+			return { sql: value.generateSQL().sql };
 		}
 
-		if (Array.isArray(value)) {
-			const mappedValue = makePgArray(value);
-			params.push(mappedValue as any);
-			return this.escapeParam(lastParamIdx + params.length);
+		if (value instanceof SQLRaw) {
+			return { sql: value.generateSQL().sql };
 		}
 
 		if (
@@ -83,10 +82,15 @@ export class PgDialect extends Dialect {
 			|| typeof value === 'string'
 			|| value === null
 			|| value instanceof Date
-			|| typeof value === 'object'
+			|| Buffer.isBuffer(value)
 		) {
 			params.push(value);
-			return this.escapeParam(lastParamIdx + params.length);
+			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1), addParamsCount: 1 };
+		}
+
+		if (typeof value === 'object') {
+			params.push(JSON.stringify(value));
+			return { sql: this.escapeParam(lastParamIdx + paramsCount + 1), addParamsCount: 1 };
 		}
 
 		if (value === undefined) {
@@ -109,3 +113,19 @@ export const SQLFunctions = {
 	},
 	default: new SQLDefault(),
 };
+
+export interface MsSqlSQLQuery extends Pick<SQL, 'identifier' | 'raw' | 'default' | 'values'> {
+	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
+}
+
+const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
+	const sqlWrapper = new SQLWrapper();
+	sqlWrapper.with({ templateParams: { strings, params } });
+	const dialect = new MsSqlDialect();
+
+	return new SQLQuery(sqlWrapper, dialect);
+}) as MsSqlSQLQuery;
+
+Object.assign(sql, SQLFunctions);
+
+export { sql };

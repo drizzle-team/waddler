@@ -3,9 +3,10 @@ import { neon } from '@neondatabase/serverless';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
 import type { NeonHttpClient } from 'waddler/neon-http';
-import { sql as sqlQuery, waddler } from 'waddler/neon-http';
+import { waddler } from 'waddler/neon-http';
+import { sql as sqlQuery } from 'waddler/pg-core';
 import { commonTests } from '../../common.test.ts';
-import { commonPgTests, createUsersTable, dropUsersTable, nodePgTests } from '../pg-core.ts';
+import { commonPgTests, createUsersTable, dropUsersTable, nodePgTests, pgDocTests } from '../pg-core.ts';
 import { filter1 } from './test-filters1.ts';
 import { filter2 } from './test-filters2.ts';
 
@@ -29,6 +30,7 @@ beforeEach<{ sql: SQL }>((ctx) => {
 
 commonTests();
 commonPgTests();
+pgDocTests();
 
 test('connection test', async () => {
 	const client = neon(connectionString);

@@ -3,8 +3,9 @@ import 'dotenv/config';
 import retry from 'async-retry';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
+import { sql as sqlQuery } from 'waddler/pg-core';
 import type { XataHttpClient } from 'waddler/xata-http';
-import { sql as sqlQuery, waddler } from 'waddler/xata-http';
+import { waddler } from 'waddler/xata-http';
 import { commonTests } from '../../common.test.ts';
 import { vitestExpectSoftDate } from '../../utils.ts';
 import {
@@ -18,6 +19,7 @@ import {
 	dropAllDataTypesTable,
 	dropAllNdarrayDataTypesTable,
 	dropUsersTable,
+	pgDocTests,
 } from '../pg-core.ts';
 import { getXataClient } from '../xata/xata.ts';
 import { filter1 } from './test-filters1.ts';
@@ -98,6 +100,7 @@ test('logger test', async () => {
 
 commonTests();
 commonPgTests();
+pgDocTests();
 
 // There is no need for a connection test because the only connection setup is already handled in the beforeAll function.
 // test('connection test', async () => {});
@@ -226,9 +229,9 @@ test('all types in sql.values test', async () => {
 		10,
 		BigInt('9007199254740992') + BigInt(1),
 		true,
-		'qwerty',
-		'qwerty',
-		'qwerty',
+		`qwe'"rty`,
+		`qwe'"rty`,
+		`qwe'"r`,
 		'20.4',
 		20.4,
 		20.4,
@@ -254,9 +257,9 @@ test('all types in sql.values test', async () => {
 		10,
 		9007199254740992, // should be BigInt('9007199254740992') + BigInt(1),
 		true,
-		'qwerty',
-		'qwerty',
-		'qwerty',
+		`qwe'"rty`,
+		`qwe'"rty`,
+		`qwe'"r`,
 		20.4,
 		20.4,
 		20.4,
@@ -296,9 +299,9 @@ test('all array types in sql.values test', async () => {
 		[10],
 		[String(BigInt('9007199254740992') + BigInt(1))],
 		[true],
-		['qwerty'],
-		['qwerty'],
-		['qwerty'],
+		[`qwe'"rty`],
+		[`qwe'"rty`],
+		[`qwe'"r`],
 		[20.4],
 		[20.4],
 		[20.4],
@@ -337,9 +340,9 @@ test('all array types in sql.values test', async () => {
 		[10],
 		[9007199254740992], // should be [BigInt('9007199254740992') + BigInt(1),]
 		[true],
-		['qwerty'],
-		['qwerty'],
-		['qwerty'],
+		[`qwe'"rty`],
+		[`qwe'"rty`],
+		[`qwe'"r`],
 		[20.4],
 		[20.4],
 		[20.4],

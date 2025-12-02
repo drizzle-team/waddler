@@ -2,17 +2,15 @@
 import { Database } from 'bun:sqlite';
 import type { Logger } from '../../logger.ts';
 import { DefaultLogger } from '../../logger.ts';
-import type { SQLIdentifier } from '../../sql-template-params.ts';
-import { SQLQuery } from '../../sql-template-params.ts';
 import type { SQL } from '../../sql.ts';
 import { SQLWrapper } from '../../sql.ts';
-import type { Identifier, RowData, SQLParamType, UnsafeParamType, WaddlerConfig } from '../../types.ts';
+import { SQLFunctions, SqliteDialect, UnsafePromise } from '../../sqlite-core/dialect.ts';
+import type { SqliteSQL } from '../../sqlite-core/dialect.ts';
+import type { RowData, SQLParamType, UnsafeParamType, WaddlerConfig } from '../../types.ts';
 import { isConfig } from '../../utils.ts';
-import { SQLFunctions, SqliteDialect, UnsafePromise } from '../sqlite-core/dialect.ts';
-import type { SqliteIdentifierObject } from '../sqlite-core/index.ts';
 import { BunSqliteSQLTemplate } from './session.ts';
 
-export interface BunSqliteSQL extends Omit<SQL, 'default' | 'unsafe' | 'identifier'> {
+export interface BunSqliteSQL extends Omit<SQL, 'default' | 'unsafe' | 'identifier'>, SqliteSQL {
 	/**
 	 * sql.default is not implemented for sqlite because sqlite doesn't support feature of specifying 'default' keyword in insert statements.
 	 */
@@ -20,7 +18,6 @@ export interface BunSqliteSQL extends Omit<SQL, 'default' | 'unsafe' | 'identifi
 		strings: TemplateStringsArray,
 		...params: SQLParamType[]
 	): BunSqliteSQLTemplate<T>;
-	identifier(value: Identifier<SqliteIdentifierObject>): SQLIdentifier<SqliteIdentifierObject>;
 	unsafe<RowMode extends 'array' | 'object'>(
 		query: string,
 		params?: UnsafeParamType[],
@@ -32,22 +29,6 @@ export interface BunSqliteSQL extends Omit<SQL, 'default' | 'unsafe' | 'identifi
 		BunSqliteSQLTemplate<any>
 	>;
 }
-
-export interface BunSqlite3SQLQuery extends Pick<SQL, 'raw' | 'values'>, Pick<BunSqliteSQL, 'identifier'> {
-	(strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery;
-}
-
-const sql = ((strings: TemplateStringsArray, ...params: SQLParamType[]): SQLQuery => {
-	const sqlWrapper = new SQLWrapper();
-	sqlWrapper.with({ templateParams: { strings, params } });
-	const dialect = new SqliteDialect();
-
-	return new SQLQuery(sqlWrapper, dialect);
-}) as BunSqlite3SQLQuery;
-
-Object.assign(sql, SQLFunctions);
-
-export { sql };
 
 const createSqlTemplate = (
 	client: Database,

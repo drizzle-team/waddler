@@ -1,7 +1,8 @@
 import { D1Database, D1DatabaseAPI } from '@miniflare/d1';
 import { createSQLiteDB } from '@miniflare/shared';
 import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
-import { type D1SQL, sql as sqlQuery, waddler } from 'waddler/d1';
+import { type D1SQL, waddler } from 'waddler/d1';
+import { sql as sqlQuery } from 'waddler/sqlite-core';
 import { commonTests } from '../../common.test';
 import {
 	commonSqliteTests,
@@ -9,6 +10,7 @@ import {
 	createUsersTable,
 	dropAllDataTypesTable,
 	dropUsersTable,
+	sqliteDocTests,
 } from '../sqlite-core';
 import { filter1 } from './test-filters1';
 import { filter2 } from './test-filters2';
@@ -27,6 +29,7 @@ beforeEach<{ sql: D1SQL }>((ctx) => {
 
 commonTests();
 commonSqliteTests();
+sqliteDocTests();
 
 test('connection test', async () => {
 	const sqliteDb = await createSQLiteDB(':memory:');
@@ -167,7 +170,7 @@ test('all types in sql.values test', async () => {
 		2147483647,
 		9007199254740992, // BigInt('9007199254740992') + BigInt(1),
 		101.23,
-		'qwerty',
+		`qwe'"rty`,
 		JSON.stringify({
 			name: 'alex',
 			age: 26,
@@ -193,7 +196,7 @@ test('all types in sql.values test', async () => {
 		2147483647,
 		9007199254740992,
 		101.23,
-		'qwerty',
+		`qwe'"rty`,
 		JSON.stringify({
 			name: 'alex',
 			age: 26,

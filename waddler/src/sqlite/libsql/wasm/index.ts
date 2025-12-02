@@ -1,5 +1,5 @@
 import { type Client, type Config, createClient } from '@libsql/client-wasm';
-import type { WaddlerConfig } from '~/types.ts';
+import type { WaddlerConfig } from '../../../types.ts';
 import { isConfig } from '../../../utils.ts';
 import { createSqlTemplate } from '../driver-core.ts';
 

@@ -1,6 +1,6 @@
 import type { RowList, Sql } from 'postgres';
-import type { PgDialect } from '~/pg/pg-core/dialect.ts';
 import { WaddlerQueryError } from '../../errors/index.ts';
+import type { PgDialect } from '../../pg-core/dialect.ts';
 import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
 import { SQLTemplate } from '../../sql-template.ts';
 import type { SQLWrapper } from '../../sql.ts';

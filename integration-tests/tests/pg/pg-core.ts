@@ -121,7 +121,7 @@ export const dropUsersTable = async (sql: SQL) => {
 	await sql.unsafe(`drop table if exists users;`);
 };
 
-export const commonPgTests = () => {
+export const commonPgTests = (dialect?: string) => {
 	describe('common_pg_tests', () => {
 		// default ------------------------------------------------------------------------------
 		test<{ sql: SQL }>('sql.default test using with sql.values.', (ctx) => {
@@ -138,13 +138,13 @@ export const commonPgTests = () => {
 		test('base test with number param', (ctx) => {
 			const res = ctx.sql`select ${1};`.toSQL();
 
-			expect(res).toStrictEqual({ sql: `select $1;`, params: [1] });
+			expect(res).toStrictEqual({ sql: `select $1${dialect === 'cockroach' ? '::int4' : ''};`, params: [1] });
 		});
 
 		test('base test with bigint param', (ctx) => {
 			const res = ctx.sql`select ${BigInt(10)};`.toSQL();
 
-			expect(res).toStrictEqual({ sql: `select $1;`, params: [10n] });
+			expect(res).toStrictEqual({ sql: `select $1${dialect === 'cockroach' ? '::int8' : ''};`, params: [10n] });
 		});
 
 		test('base test with string param', (ctx) => {
@@ -173,6 +173,7 @@ export const commonPgTests = () => {
 
 		// sql.append
 		test<{ sql: SQL }>('sql.append test.', (ctx) => {
+			const typeCast = dialect === 'cockroach' ? '::int4' : '';
 			const query = ctx.sql<undefined>`select * from users where id = ${1}`;
 
 			query.append(ctx.sql` or id = ${3}`);
@@ -180,7 +181,7 @@ export const commonPgTests = () => {
 
 			const res = query.toSQL();
 			expect(res).toStrictEqual({
-				sql: 'select * from users where id = $1 or id = $2 or id = $3;',
+				sql: `select * from users where id = $1${typeCast} or id = $2${typeCast} or id = $3${typeCast};`,
 				params: [1, 3, 4],
 			});
 		});
@@ -396,9 +397,9 @@ export const nodePgTests = () => {
 				10,
 				BigInt('9007199254740992') + BigInt(1),
 				true,
-				'qwerty',
-				'qwerty',
-				'qwerty',
+				"qwe'rty",
+				"qwe'rty",
+				"qwe'rt",
 				'20.4',
 				20.4,
 				20.4,
@@ -434,9 +435,9 @@ export const nodePgTests = () => {
 				smallserial: 10,
 				bigserial: String(BigInt('9007199254740992') + BigInt(1)),
 				boolean: true,
-				text: 'qwerty',
-				varchar: 'qwerty',
-				char: 'qwerty',
+				text: "qwe'rty",
+				varchar: "qwe'rty",
+				char: "qwe'rt",
 				numeric: '20.4',
 				real: 20.4,
 				double_precision: 20.4,
@@ -503,9 +504,9 @@ export const nodePgTests = () => {
 				10,
 				BigInt('9007199254740992') + BigInt(1),
 				true,
-				'qwerty',
-				'qwerty',
-				'qwerty',
+				`qwe'"rty`,
+				`qwe'"rty`,
+				`qwe'"r`,
 				'20.4',
 				20.4,
 				20.4,
@@ -531,9 +532,9 @@ export const nodePgTests = () => {
 				10,
 				String(BigInt('9007199254740992') + BigInt(1)),
 				true,
-				'qwerty',
-				'qwerty',
-				'qwerty',
+				`qwe'"rty`,
+				`qwe'"rty`,
+				`qwe'"r`,
 				'20.4',
 				20.4,
 				20.4,
@@ -576,9 +577,9 @@ export const nodePgTests = () => {
 				[10],
 				[String(BigInt('9007199254740992') + BigInt(1))],
 				[true],
-				['qwerty'],
-				['qwerty'],
-				['qwerty'],
+				[`qwe'"rty`],
+				[`qwe'"rty`],
+				[`qwe'"r`],
 				[20.4],
 				[20.4],
 				[20.4],
@@ -613,9 +614,9 @@ export const nodePgTests = () => {
 				[10],
 				[String(BigInt('9007199254740992') + BigInt(1))],
 				[true],
-				['qwerty'],
-				['qwerty'],
-				['qwerty'],
+				[`qwe'"rty`],
+				[`qwe'"rty`],
+				[`qwe'"r`],
 				[20.4],
 				[20.4],
 				[20.4],
@@ -715,6 +716,43 @@ export const nodePgTests = () => {
 			expect(predicate).toBe(true);
 
 			await dropAllNdarrayDataTypesTable(ctx.sql);
+		});
+	});
+};
+export const pgDocTests = () => {
+	describe('pg_doc_tests', () => {
+		test<{ sql: SQL }>('query database test from doc', async (ctx) => {
+			await ctx.sql.unsafe('drop table if exists users;');
+			await ctx.sql.unsafe(`create table users (
+    			id integer primary key generated always as identity,
+    			name varchar(255) not null,
+    			age integer not null,
+    			email varchar(255) not null unique
+			);
+  			`);
+
+			const user = [
+				'John',
+				30,
+				'john@example.com',
+			];
+			await ctx.sql`insert into ${ctx.sql.identifier('users')} values ${ctx.sql.values([[ctx.sql.default, ...user]])};`;
+
+			const _users = await ctx.sql`select * from ${ctx.sql.identifier('users')};`;
+
+			/*
+  			const users: {
+  			  id: number;
+  			  name: string;
+  			  age: number;
+  			  email: string;
+  			}[]
+  			*/
+			await ctx.sql`update ${ctx.sql.identifier('users')} set age = ${31} where email = ${user[2]};`;
+
+			await ctx.sql`delete from ${ctx.sql.identifier('users')} where email = ${user[2]};`;
+
+			await ctx.sql.unsafe('drop table if exists users;');
 		});
 	});
 };

@@ -4,7 +4,9 @@ import type { Connection } from 'mysql2/promise';
 import mysql from 'mysql2/promise';
 import { afterAll, beforeAll, beforeEach, expect, test, vi } from 'vitest';
 import type { SQL } from 'waddler';
-import { sql as sqlQuery, waddler } from 'waddler/mysql2';
+import { sql as sqlQuery } from 'waddler/mysql-core';
+import type { MySql2SQL } from 'waddler/mysql2';
+import { waddler } from 'waddler/mysql2';
 import { commonTests } from '../../common.test';
 import { createMysqlDockerDB } from '../../utils';
 import {
@@ -15,6 +17,7 @@ import {
 	defaultValue,
 	dropAllDataTypesTable,
 	dropUsersTable,
+	mysqlDocTests,
 } from '../mysql-core';
 import { filter1 } from './test-filters1';
 import { filter2 } from './test-filters2';
@@ -29,7 +32,7 @@ let mysqlConnectionParams: {
 	database: string;
 };
 
-let sql: ReturnType<typeof waddler>;
+let sql: MySql2SQL;
 beforeAll(async () => {
 	const dockerPayload = await createMysqlDockerDB();
 	const sleep = 1000;
@@ -69,6 +72,10 @@ beforeEach<{ sql: SQL }>((ctx) => {
 	ctx.sql = sql;
 });
 
+commonTests();
+commonMysqlTests();
+mysqlDocTests();
+
 test('connection test', async () => {
 	// pool(promise)
 	const pool = mysql.createPool({ ...mysqlConnectionParams });
@@ -101,7 +108,7 @@ test('connection test', async () => {
 	await sql2`select 2;`;
 
 	const url =
-		`postgres://${mysqlConnectionParams.user}:${mysqlConnectionParams.password}@${mysqlConnectionParams.host}:${mysqlConnectionParams.port}/${mysqlConnectionParams.database}`;
+		`mysql://${mysqlConnectionParams.user}:${mysqlConnectionParams.password}@${mysqlConnectionParams.host}:${mysqlConnectionParams.port}/${mysqlConnectionParams.database}`;
 	const sql21 = waddler({ connection: url });
 	await sql21`select 21;`;
 
@@ -176,9 +183,6 @@ test('logger test', async () => {
 
 	consoleMock.mockRestore();
 });
-
-commonTests();
-commonMysqlTests();
 
 // ALL TYPES with sql.unsafe and sql.values-------------------------------------------------------------------
 commonMysqlAllTypesTests('mysql2');
