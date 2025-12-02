@@ -1,0 +1,97 @@
+import {
+	type Client,
+	type HTTPQueryOptions,
+	type Pool,
+	type PoolClient,
+	type QueryArrayConfig,
+	type QueryConfig,
+	types,
+} from '@neondatabase/serverless';
+
+import type { PgDialect } from '~/pg/pg-core/dialect.ts';
+import type { SQLWrapper } from '~/sql.ts';
+import { WaddlerQueryError } from '../../errors/index.ts';
+import type { SQLTemplateConfigOptions } from '../../sql-template.ts';
+import { SQLTemplate } from '../../sql-template.ts';
+
+export type NeonClient = Pool | PoolClient | Client;
+
+const pgTypeConfig: Required<HTTPQueryOptions<any, any>['types']> = {
+	// @ts-expect-error
+	getTypeParser: (typeId: number, format: string) => {
+		if (typeId === types.builtins.INTERVAL) return (val: any) => val;
+		if (typeId === 1187) return (val: any) => val;
+		// @ts-expect-error
+		return types.getTypeParser(typeId, format);
+	},
+};
+
+export class NeonServerlessSQLTemplate<T> extends SQLTemplate<T> {
+	private rawQueryConfig: QueryConfig;
+	private queryConfig: QueryArrayConfig;
+
+	constructor(
+		override sqlWrapper: SQLWrapper,
+		protected readonly client: NeonClient,
+		dialect: PgDialect,
+		configOptions: SQLTemplateConfigOptions,
+		private options: { rowMode: 'array' | 'object' } = { rowMode: 'object' },
+	) {
+		super(sqlWrapper, dialect, configOptions);
+
+		const query = this.sqlWrapper.getQuery(this.dialect).sql;
+		this.rawQueryConfig = {
+			text: query,
+			types: pgTypeConfig,
+		};
+		this.queryConfig = {
+			rowMode: 'array',
+			text: query,
+			types: pgTypeConfig,
+		};
+	}
+
+	async execute() {
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
+		let finalRes, finalMetadata: any | undefined;
+
+		// wrapping neon-serverless driver error in new js error to add stack trace to it
+		try {
+			const queryResult = await ((this.options.rowMode === 'array')
+				? this.client.query(this.queryConfig, params)
+				: await this.client.query(this.rawQueryConfig, params));
+			({ rows: finalRes, ...finalMetadata } = queryResult);
+		} catch (error) {
+			throw new WaddlerQueryError(query, params, error as Error);
+		}
+
+		this.logger.logQuery(query, params, finalMetadata);
+		return finalRes as T[];
+	}
+
+	async *stream() {
+		const queryStreamObj = this.configOptions?.extensions?.find((it) => it.name === 'WaddlerPgQueryStream');
+		// If no extensions were defined, or some were defined but did not include WaddlerPgQueryStream, we should throw an error.
+		if (!queryStreamObj) {
+			throw new Error(
+				'To use stream feature, you would need to provide queryStream() function to waddler extensions, example: waddler("", { extensions: [queryStream()] })',
+			);
+		}
+
+		const { sql: query, params } = this.sqlWrapper.getQuery(this.dialect);
+		const queryStream = new queryStreamObj.constructor(query, params, {
+			types: this.queryConfig.types,
+			// rowMode: 'array',
+		});
+		this.logger.logQuery(query, params);
+
+		try {
+			const stream = this.client.query(queryStream);
+			for await (const row of stream) {
+				yield row;
+			}
+		} catch (error) {
+			throw new WaddlerQueryError(query, params, error as Error);
+		}
+	}
+}

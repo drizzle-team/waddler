@@ -1,0 +1,12 @@
+{
+	"extends": "../tsconfig.json",
+	"compilerOptions": {
+		"checkJs": false,
+		"noEmit": true,
+		"paths": {
+			"~/*": ["./tests/*"]
+		}
+	},
+	"include": ["tests"],
+	"exclude": ["tests/sqlite/op-sqlite", "tests/sqlite/expo-sqlite"]
+}

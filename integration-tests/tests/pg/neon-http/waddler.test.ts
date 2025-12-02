@@ -1,0 +1,179 @@
+import 'dotenv/config';
+import { neon } from '@neondatabase/serverless';
+import { beforeAll, beforeEach, expect, test, vi } from 'vitest';
+import type { SQL } from 'waddler';
+import type { NeonHttpClient } from 'waddler/neon-http';
+import { sql as sqlQuery, waddler } from 'waddler/neon-http';
+import { commonTests } from '../../common.test.ts';
+import { commonPgTests, createUsersTable, dropUsersTable, nodePgTests } from '../pg-core.ts';
+import { filter1 } from './test-filters1.ts';
+import { filter2 } from './test-filters2.ts';
+
+let pgClient: NeonHttpClient;
+let connectionString: string;
+
+let sql: ReturnType<typeof waddler>;
+beforeAll(async () => {
+	const connectionString_ = process.env['NEON_HTTP_CONNECTION_STRING'];
+	if (!connectionString_) {
+		throw new Error('NEON_HTTP_CONNECTION_STRING is not defined');
+	}
+	connectionString = connectionString_;
+	pgClient = neon(connectionString);
+	sql = waddler({ client: pgClient });
+});
+
+beforeEach<{ sql: SQL }>((ctx) => {
+	ctx.sql = sql;
+});
+
+commonTests();
+commonPgTests();
+
+test('connection test', async () => {
+	const client = neon(connectionString);
+	const sql1 = waddler({ client });
+	await sql1`select 1;`;
+
+	const sql2 = waddler(connectionString);
+	await sql2`select 2;`;
+
+	const sql3 = waddler({ connection: connectionString });
+	await sql3`select 3;`;
+
+	const sql4 = waddler({ connection: { connectionString } });
+	await sql4`select 4;`;
+});
+
+test('logger test', async () => {
+	const loggerQuery = 'select $1;';
+	const loggerParams = [1];
+	const loggerText = `Query: ${loggerQuery} -- params: ${JSON.stringify(loggerParams)}`;
+
+	// metadata example:
+	// {
+	//   command: 'SELECT',
+	//   fields: [
+	//     {
+	//       name: '?column?',
+	//       dataTypeID: 25,
+	//       tableID: 0,
+	//       columnID: 0,
+	//       dataTypeSize: -1,
+	//       dataTypeModifier: -1,
+	//       format: 'text'
+	//     }
+	//   ],
+	//   rowAsArray: false,
+	//   rowCount: 1
+	// }
+	const logger = {
+		logQuery: (query: string, params: unknown[], metadata: any) => {
+			expect(query).toEqual(loggerQuery);
+			expect(params).toStrictEqual(loggerParams);
+
+			const metadataKeys = Object.keys(metadata);
+			const predicate = ['command', 'fields', 'rowAsArray', 'rowCount'].map((key) => metadataKeys.includes(key)).every(
+				(value) => value === true,
+			);
+			expect(predicate).toBe(true);
+		},
+	};
+
+	let loggerSql: SQL;
+
+	// case 0
+	const client = neon(connectionString);
+	loggerSql = waddler({ client, logger });
+	await loggerSql`select ${1};`;
+
+	const consoleMock = vi.spyOn(console, 'log').mockImplementation(() => {});
+	loggerSql = waddler({ client, logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
+
+	loggerSql = waddler({ client, logger: false });
+	await loggerSql`select ${1};`;
+
+	// case 1
+	loggerSql = waddler(connectionString, { logger });
+	await loggerSql`select ${1};`;
+
+	loggerSql = waddler(connectionString, { logger: true });
+	await loggerSql`select ${1};`;
+	expect(consoleMock).toBeCalledWith(expect.stringContaining(loggerText));
+
+	loggerSql = waddler(connectionString, { logger: false });
+	await loggerSql`select ${1};`;
+
+	consoleMock.mockRestore();
+});
+
+nodePgTests();
+
+test('sql query api test', async () => {
+	const filter = sqlQuery`id = ${1} or ${sqlQuery`id = ${2}`}`;
+	filter.append(sqlQuery` and email = ${'hello@test.com'}`);
+
+	const query = sql`select * from ${sqlQuery.identifier('users')} where ${filter};`;
+
+	expect(query.toSQL()).toStrictEqual({
+		sql: 'select * from "users" where id = $1 or id = $2 and email = $3;',
+		params: [1, 2, 'hello@test.com'],
+	});
+	expect(filter.toSQL()).toStrictEqual({
+		sql: 'id = $1 or id = $2 and email = $3',
+		params: [1, 2, 'hello@test.com'],
+	});
+});
+
+test('embeding SQLQuery and SQLTemplate test #1', async () => {
+	await dropUsersTable(sql);
+	await createUsersTable(sql);
+
+	await sql`insert into users values ${
+		sql.values([[1, 'a', 23, 'example1@gmail.com'], [2, 'b', 24, 'example2@gmail.com']])
+	}`;
+
+	await sql`select * from ${sql.identifier('users')};`;
+
+	const query1 = sql`select * from ${sql.identifier('users')} where ${filter1({ id: 1, name: 'a' })};`;
+	expect(query1.toSQL()).toStrictEqual({
+		sql: 'select * from "users" where id = $1 and name = $2;',
+		params: [1, 'a'],
+	});
+
+	const res1 = await query1;
+	expect(res1.length).not.toBe(0);
+
+	const query2 = sql`select * from ${sql.identifier('users')} where ${filter2({ id: 1, name: 'a' })};`;
+	expect(query2.toSQL()).toStrictEqual({
+		sql: 'select * from "users" where id = $1 and name = $2;',
+		params: [1, 'a'],
+	});
+
+	const res2 = await query2;
+	expect(res2.length).not.toBe(0);
+
+	const query3 = sql`select * from ${sql.identifier('users')} where ${sql`id = ${1}`};`;
+	expect(query3.toSQL()).toStrictEqual({
+		sql: 'select * from "users" where id = $1;',
+		params: [1],
+	});
+
+	const res3 = await query3;
+	expect(res3.length).not.toBe(0);
+
+	await dropUsersTable(sql);
+});
+
+test('standalone sql test', async () => {
+	const timestampSelector = sqlQuery`toStartOfHour(${sqlQuery.identifier('test')})`;
+	const timestampFilter =
+		sqlQuery`${sqlQuery``}${timestampSelector} >= from and ${timestampSelector} < to${sqlQuery``}${sqlQuery`;`}`;
+
+	expect(timestampFilter.toSQL()).toStrictEqual({
+		sql: 'toStartOfHour("test") >= from and toStartOfHour("test") < to;',
+		params: [],
+	});
+});

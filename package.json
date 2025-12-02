@@ -1,69 +1,30 @@
 {
-	"name": "waddler",
-	"version": "0.0.12",
-	"main": "index.js",
-	"type": "module",
-	"repository": "https://github.com/drizzle-team/waddler",
-	"license": "MIT",
+	"name": "waddler-root",
+	"private": true,
 	"scripts": {
-		"start": "npx tsx ./src/test.ts",
-		"start:db": "npx tsx ./src/db-test.ts ",
-		"test": "vitest --config ./vitest.config.ts",
-		"lint": "concurrently -n eslint,dprint \"eslint --ext ts .\" \"dprint check --list-different\"",
-		"build": "pnpm tsx scripts/build.ts",
-		"pack": "(cd dist && npm pack --pack-destination ..) && rm -f package.tgz && mv *.tgz package.tgz"
+		"build": "cd waddler && pnpm lint && pnpm build",
+		"test": "cd integration-tests && pnpm test",
+		"test:bun": "cd integration-tests && pnpm test:bun"
 	},
-	"exports": {
-		".": {
-			"import": {
-				"types": "./index.d.ts",
-				"default": "./index.js"
-			},
-			"require": {
-				"types": "./index.d.cts",
-				"default": "./index.cjs"
-			}
-		},
-		"./neo": {
-			"import": {
-				"types": "./neo.d.ts",
-				"default": "./neo.js"
-			},
-			"require": {
-				"types": "./neo.d.cts",
-				"default": "./neo.cjs"
-			}
-		}
+	"pnpm": {
+		"onlyBuiltDependencies": ["duckdb", "better-sqlite3"]
 	},
 	"devDependencies": {
-		"@arethetypeswrong/cli": "^0.16.4",
-		"@duckdb/node-api": "1.1.2-alpha.4",
-		"@types/node": "^22.7.6",
-		"@typescript-eslint/eslint-plugin": "^8.10.0",
-		"concurrently": "^8.2.1",
-		"dprint": "^0.46.2",
-		"duckdb": "^1.1.1",
-		"eslint": "^8.50.0",
+		"@arethetypeswrong/cli": "0.18.1",
+		"@eslint/compat": "^1.2.7",
+		"@eslint/eslintrc": "^3.3.1",
+		"@eslint/js": "^9.23.0",
+		"eslint": "^9.23.0",
+		"@typescript-eslint/parser": "^8.31.1",
 		"eslint-plugin-import": "^2.31.0",
 		"eslint-plugin-no-instanceof": "^1.0.1",
-		"eslint-plugin-unicorn": "^56.0.0",
+		"eslint-plugin-unicorn": "^56.0.1",
 		"eslint-plugin-unused-imports": "^4.1.4",
-		"tsup": "^8.3.5",
+		"@typescript-eslint/eslint-plugin": "^8.28.0",
+		"concurrently": "^8.2.1",
+		"dprint": "^0.46.2",
+		"tsup": "^8.4.0",
 		"tsx": "^4.19.1",
-		"typescript": "^5.5.4",
-		"vitest": "^2.1.2",
-		"zx": "^8.1.9"
-	},
-	"peerDependencies": {
-		"@duckdb/node-api": "^1.1.2-alpha.4",
-		"duckdb": "^1.1.1"
-	},
-	"peerDependenciesMeta": {
-		"duckdb": {
-			"optional": true
-		},
-		"@duckdb/node-api": {
-			"optional": true
-		}
+		"typescript": "^5.8.3"
 	}
 }
