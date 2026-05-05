@@ -5,6 +5,8 @@ export { MySQLDialect } from './mysql/mysql-core/dialect.ts';
 export type { MySQLIdentifierObject } from './mysql/mysql-core/dialect.ts';
 export { PgDialect } from './pg/pg-core/dialect.ts';
 export { createRecyclingPool } from './recycling-pool.ts';
+export { SnowflakeDialect } from './snowflake-core/dialect.ts';
+export type { SnowflakeIdentifierObject } from './snowflake-core/dialect.ts';
 export * from './sql-template-params.ts';
 export * from './sql-template.ts';
 export * from './sql.ts';

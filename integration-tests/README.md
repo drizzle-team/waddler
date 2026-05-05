@@ -68,6 +68,30 @@ You can reuse the same connection string as `VERCEL_POOL_CONNECTION_STRING`.
 
 ##
 
+#### `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USERNAME`, `SNOWFLAKE_PASSWORD`
+
+1. Go to https://app.snowflake.com/ and sign in to your account.
+2. Open your account details and copy the account identifier into `SNOWFLAKE_ACCOUNT`.
+3. Use your Snowflake username and password for `SNOWFLAKE_USERNAME` and `SNOWFLAKE_PASSWORD`.
+
+Optional:
+
+- `SNOWFLAKE_DATABASE`
+- `SNOWFLAKE_SCHEMA`
+- `SNOWFLAKE_WAREHOUSE`
+- `SNOWFLAKE_ROLE`
+
+**For SSO Authentication:**
+
+- `SNOWFLAKE_AUTHENTICATOR` - Set to `EXTERNALBROWSER` for browser-based SSO, `OAUTH` for OAuth token auth, or `SNOWFLAKE_JWT` for key-pair authentication
+- `SNOWFLAKE_OAUTH_TOKEN` - Required when using `OAUTH` authenticator
+- `SNOWFLAKE_PRIVATE_KEY_PATH` - Path to private key file for `SNOWFLAKE_JWT` authenticator (`SNOWFLAKE_PRIVATE_KEY` is still accepted as a legacy alias)
+- `SNOWFLAKE_PRIVATE_KEY_PASSPHRASE` - Passphrase if private key is encrypted
+
+Connection strings support the default/SNOWFLAKE password authenticator, passwordless `EXTERNALBROWSER`, and native Okta SSO via an `https://*.okta.com` authenticator URL when its required password is present. Connection strings are intended for trusted application configuration. Use object-based configuration for `OAUTH`, `SNOWFLAKE_JWT`, `USERNAME_PASSWORD_MFA`, `OAUTH_AUTHORIZATION_CODE`, `OAUTH_CLIENT_CREDENTIALS`, `PROGRAMMATIC_ACCESS_TOKEN`, and `WORKLOAD_IDENTITY` so any required authentication options can be supplied.
+
+**Note on EXTERNALBROWSER:** This authenticator opens a browser window for login. Tests using this method require manual interaction and are typically run manually or in CI environments with pre-authenticated sessions.
+
 #### `RUN_EXTERNAL_DB_TESTS`
 
 If you want to run tests for any of the following drivers:
@@ -80,6 +104,7 @@ If you want to run tests for any of the following drivers:
 - `libsql/node`
 - `planetscale-serverless`
 - `tidb-serverless`
+- `snowflake`
 
 then set the `RUN_EXTERNAL_DB_TESTS` environment variable to any value (e.g. `1`).
 
