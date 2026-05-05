@@ -20,14 +20,21 @@ export class SnowflakeSQLTemplate<T> extends SQLTemplate<T, SnowflakeDialect> {
 		if (this.client.isUp()) return;
 
 		await new Promise<void>((resolve, reject) => {
-			this.client.connect((err) => {
+			const complete = (err?: Error | null) => {
 				if (err) {
 					reject(err);
 					return;
 				}
 
 				resolve();
-			});
+			};
+
+			if (typeof this.client.connectAsync === 'function') {
+				void this.client.connectAsync(complete);
+				return;
+			}
+
+			this.client.connect(complete);
 		});
 	}
 

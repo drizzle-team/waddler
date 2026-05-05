@@ -49,9 +49,18 @@ const parseConnectionString = (connectionString: string): ConnectionOptions => {
 	const account = url.hostname;
 	const username = decodeURIComponent(url.username);
 	const password = decodeURIComponent(url.password);
+	const authenticator = url.searchParams.get('authenticator') ?? undefined;
 
-	if (!account || !username || !password) {
-		throw new Error('Snowflake connection string must include account, username, and password');
+	// SSO-based authenticators don't require password in connection string
+	// (password may be empty or provided via browser flow)
+	const ssoAuthenticators = ['EXTERNALBROWSER', 'SNOWFLAKE_JWT', 'OAUTH'];
+	const isSSO = authenticator && ssoAuthenticators.includes(authenticator.toUpperCase());
+
+	if (!account || !username || (!password && !isSSO)) {
+		throw new Error(
+			'Snowflake connection string must include account, username, and password '
+				+ '(or use authenticator=EXTERNALBROWSER/OAUTH/SNOWFLAKE_JWT for SSO)',
+		);
 	}
 
 	const database = pathSegments[0];
@@ -62,7 +71,8 @@ const parseConnectionString = (connectionString: string): ConnectionOptions => {
 	return {
 		account,
 		username,
-		password,
+		password: password || undefined,
+		authenticator,
 		database,
 		schema,
 		warehouse,
@@ -157,3 +167,6 @@ export function waddler<TClient extends SnowflakeClient = SnowflakeClient>(
 		'Invalid parameter for waddler.',
 	);
 }
+
+// Re-export ConnectionOptions type from snowflake-sdk for better IDE support and documentation
+export { type ConnectionOptions } from 'snowflake-sdk';
