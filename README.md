@@ -69,6 +69,8 @@ For more information you can check the [docs](https://waddler.drizzle.team/docs/
 
 Waddler supports Snowflake's SSO authentication methods including browser-based login, OAuth, and key-pair authentication.
 
+`waddler/snowflake` wraps a single `snowflake-sdk` `Connection` and connects lazily on the first query or stream.
+
 ### Object-Based Configuration (Recommended for SSO)
 
 ```ts
@@ -109,7 +111,7 @@ const sqlKeyPair = waddler({
 
 ### Connection String with Authenticator
 
-For simple cases, you can include the authenticator in the connection string:
+Connection strings support the default Snowflake password authenticator, passwordless `EXTERNALBROWSER`, and native Okta SSO via an `https://*.okta.com` authenticator URL:
 
 ```ts
 // EXTERNALBROWSER via connection string (opens browser)
@@ -118,4 +120,4 @@ const sql = waddler(
 );
 ```
 
-**Note:** Connection strings cannot easily encode complex options like private keys or OAuth tokens. Use object-based configuration for these cases.
+**Note:** Connection strings are intended for trusted application configuration. Use object-based configuration for `OAUTH`, `SNOWFLAKE_JWT`, `USERNAME_PASSWORD_MFA`, `OAUTH_AUTHORIZATION_CODE`, `OAUTH_CLIENT_CREDENTIALS`, `PROGRAMMATIC_ACCESS_TOKEN`, and `WORKLOAD_IDENTITY` so any required authentication options can be supplied.

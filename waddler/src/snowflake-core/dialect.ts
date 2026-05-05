@@ -30,7 +30,7 @@ export class SnowflakeDialect extends Dialect {
 	}
 
 	escapeIdentifier(identifier: string): string {
-		return `"${identifier}"`;
+		return `"${identifier.replaceAll('"', '""')}"`;
 	}
 
 	checkIdentifierObject(object: SnowflakeIdentifierObject) {

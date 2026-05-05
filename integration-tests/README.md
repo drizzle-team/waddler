@@ -85,8 +85,10 @@ Optional:
 
 - `SNOWFLAKE_AUTHENTICATOR` - Set to `EXTERNALBROWSER` for browser-based SSO, `OAUTH` for OAuth token auth, or `SNOWFLAKE_JWT` for key-pair authentication
 - `SNOWFLAKE_OAUTH_TOKEN` - Required when using `OAUTH` authenticator
-- `SNOWFLAKE_PRIVATE_KEY` - Path to private key file for `SNOWFLAKE_JWT` authenticator
+- `SNOWFLAKE_PRIVATE_KEY_PATH` - Path to private key file for `SNOWFLAKE_JWT` authenticator (`SNOWFLAKE_PRIVATE_KEY` is still accepted as a legacy alias)
 - `SNOWFLAKE_PRIVATE_KEY_PASSPHRASE` - Passphrase if private key is encrypted
+
+Connection strings support the default/SNOWFLAKE password authenticator, passwordless `EXTERNALBROWSER`, and native Okta SSO via an `https://*.okta.com` authenticator URL when its required password is present. Connection strings are intended for trusted application configuration. Use object-based configuration for `OAUTH`, `SNOWFLAKE_JWT`, `USERNAME_PASSWORD_MFA`, `OAUTH_AUTHORIZATION_CODE`, `OAUTH_CLIENT_CREDENTIALS`, `PROGRAMMATIC_ACCESS_TOKEN`, and `WORKLOAD_IDENTITY` so any required authentication options can be supplied.
 
 **Note on EXTERNALBROWSER:** This authenticator opens a browser window for login. Tests using this method require manual interaction and are typically run manually or in CI environments with pre-authenticated sessions.
 
