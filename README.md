@@ -64,3 +64,58 @@ const db = waddler({ logger: new MyLogger() });
 ```
 
 For more information you can check the [docs](https://waddler.drizzle.team/docs/overview)
+
+## Snowflake SSO Authentication
+
+Waddler supports Snowflake's SSO authentication methods including browser-based login, OAuth, and key-pair authentication.
+
+### Object-Based Configuration (Recommended for SSO)
+
+```ts
+import { waddler } from 'waddler/snowflake';
+
+// External browser SSO (opens browser for login)
+const sql = waddler({
+  connection: {
+    account: 'myaccount',
+    username: 'myuser@example.com',
+    authenticator: 'EXTERNALBROWSER',
+    database: 'MY_DB',
+    warehouse: 'MY_WH',
+  }
+});
+
+// OAuth with token
+const sqlOAuth = waddler({
+  connection: {
+    account: 'myaccount',
+    username: 'myuser',
+    authenticator: 'OAUTH',
+    token: process.env.SNOWFLAKE_OAUTH_TOKEN,
+  }
+});
+
+// Key-pair authentication
+const sqlKeyPair = waddler({
+  connection: {
+    account: 'myaccount',
+    username: 'myuser',
+    authenticator: 'SNOWFLAKE_JWT',
+    privateKeyPath: '/path/to/rsa_key.p8',
+    privateKeyPass: 'passphrase', // if encrypted
+  }
+});
+```
+
+### Connection String with Authenticator
+
+For simple cases, you can include the authenticator in the connection string:
+
+```ts
+// EXTERNALBROWSER via connection string (opens browser)
+const sql = waddler(
+  'snowflake://user@account/DB/SCHEMA?warehouse=WH&authenticator=EXTERNALBROWSER'
+);
+```
+
+**Note:** Connection strings cannot easily encode complex options like private keys or OAuth tokens. Use object-based configuration for these cases.

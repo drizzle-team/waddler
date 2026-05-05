@@ -81,6 +81,15 @@ Optional:
 - `SNOWFLAKE_WAREHOUSE`
 - `SNOWFLAKE_ROLE`
 
+**For SSO Authentication:**
+
+- `SNOWFLAKE_AUTHENTICATOR` - Set to `EXTERNALBROWSER` for browser-based SSO, `OAUTH` for OAuth token auth, or `SNOWFLAKE_JWT` for key-pair authentication
+- `SNOWFLAKE_OAUTH_TOKEN` - Required when using `OAUTH` authenticator
+- `SNOWFLAKE_PRIVATE_KEY` - Path to private key file for `SNOWFLAKE_JWT` authenticator
+- `SNOWFLAKE_PRIVATE_KEY_PASSPHRASE` - Passphrase if private key is encrypted
+
+**Note on EXTERNALBROWSER:** This authenticator opens a browser window for login. Tests using this method require manual interaction and are typically run manually or in CI environments with pre-authenticated sessions.
+
 #### `RUN_EXTERNAL_DB_TESTS`
 
 If you want to run tests for any of the following drivers:

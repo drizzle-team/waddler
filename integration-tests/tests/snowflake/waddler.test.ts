@@ -218,6 +218,88 @@ if (snowflakeEnvReady) {
 			params: [],
 		});
 	});
+
 } else {
 	test.skip('Snowflake tests require RUN_EXTERNAL_DB_TESTS and Snowflake credentials', () => {});
+}
+
+test('connection string with authenticator parameter', () => {
+	const connectionString =
+		'snowflake://user@account/db/schema?warehouse=wh&authenticator=EXTERNALBROWSER';
+
+	expect(() => {
+		waddler(connectionString);
+	}).not.toThrow();
+});
+
+test('connection string with OAUTH authenticator', () => {
+	const connectionString =
+		'snowflake://user@account/db?authenticator=OAUTH';
+
+	expect(() => {
+		waddler(connectionString);
+	}).not.toThrow();
+});
+
+test('connection string with SNOWFLAKE_JWT authenticator', () => {
+	const connectionString =
+		'snowflake://user@account/db?authenticator=SNOWFLAKE_JWT';
+
+	expect(() => {
+		waddler(connectionString);
+	}).not.toThrow();
+});
+
+// SSO Authentication Tests (separate block to allow independent configuration)
+const ssoEnvReady = Boolean(
+	process.env['RUN_EXTERNAL_DB_TESTS']
+		&& process.env['SNOWFLAKE_ACCOUNT']
+		&& process.env['SNOWFLAKE_USERNAME']
+		&& process.env['SNOWFLAKE_AUTHENTICATOR'],
+);
+
+const getSSOConnectionOptions = (): ConnectionOptions | null => {
+	const account = process.env['SNOWFLAKE_ACCOUNT'];
+	const username = process.env['SNOWFLAKE_USERNAME'];
+	const authenticator = process.env['SNOWFLAKE_AUTHENTICATOR'];
+
+	if (!account || !username || !authenticator) {
+		return null;
+	}
+
+	return {
+		account,
+		username,
+		authenticator: authenticator as any,
+		database: process.env['SNOWFLAKE_DATABASE'],
+		schema: process.env['SNOWFLAKE_SCHEMA'],
+		warehouse: process.env['SNOWFLAKE_WAREHOUSE'],
+		role: process.env['SNOWFLAKE_ROLE'],
+		// OAuth-specific
+		token: process.env['SNOWFLAKE_OAUTH_TOKEN'],
+		// Key-pair specific
+		privateKeyPath: process.env['SNOWFLAKE_PRIVATE_KEY'],
+		privateKeyPass: process.env['SNOWFLAKE_PRIVATE_KEY_PASSPHRASE'],
+	};
+};
+
+if (ssoEnvReady) {
+	test('SSO connection with object-based config', async () => {
+		const ssoOptions = getSSOConnectionOptions();
+		if (!ssoOptions) {
+			throw new Error('SSO connection options not available');
+		}
+
+		// Note: EXTERNALBROWSER requires manual interaction in a browser
+		// This test is primarily for CI environments with pre-authenticated sessions
+		// or for manual testing
+		console.log(`Testing SSO connection with authenticator: ${ssoOptions.authenticator}`);
+
+		const sql = waddler({ connection: ssoOptions });
+		const result = await sql`select 1 as test`;
+		expect(result).toBeDefined();
+		expect(result.length).toBeGreaterThan(0);
+	}, 120000); // Longer timeout for browser auth (2 minutes)
+} else {
+	test.skip('SSO tests require RUN_EXTERNAL_DB_TESTS, SNOWFLAKE_ACCOUNT, SNOWFLAKE_USERNAME, and SNOWFLAKE_AUTHENTICATOR', () => {});
 }
