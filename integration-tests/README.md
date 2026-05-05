@@ -68,6 +68,19 @@ You can reuse the same connection string as `VERCEL_POOL_CONNECTION_STRING`.
 
 ##
 
+#### `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USERNAME`, `SNOWFLAKE_PASSWORD`
+
+1. Go to https://app.snowflake.com/ and sign in to your account.
+2. Open your account details and copy the account identifier into `SNOWFLAKE_ACCOUNT`.
+3. Use your Snowflake username and password for `SNOWFLAKE_USERNAME` and `SNOWFLAKE_PASSWORD`.
+
+Optional:
+
+- `SNOWFLAKE_DATABASE`
+- `SNOWFLAKE_SCHEMA`
+- `SNOWFLAKE_WAREHOUSE`
+- `SNOWFLAKE_ROLE`
+
 #### `RUN_EXTERNAL_DB_TESTS`
 
 If you want to run tests for any of the following drivers:
@@ -80,6 +93,7 @@ If you want to run tests for any of the following drivers:
 - `libsql/node`
 - `planetscale-serverless`
 - `tidb-serverless`
+- `snowflake`
 
 then set the `RUN_EXTERNAL_DB_TESTS` environment variable to any value (e.g. `1`).
 
